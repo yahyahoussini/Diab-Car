@@ -38,7 +38,7 @@ async function carDataUrl(name) {
 const BG = '#080808';
 const TEXT = '#ffffff';
 const TEXT_2 = '#a5a5a5';
-const RED = '#b71920'; /* fill only — white on it is 6.62:1 */
+const RED = '#c80018'; /* the logo's red; fill only — white on it is 6.05:1 */
 const RED_SIGNAL = '#f0383f'; /* thin lines and red text on #080808: 5.10:1 */
 
 /* The real Diab Car mark (white cut, for the black card ground), read once and

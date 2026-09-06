@@ -67,9 +67,9 @@ Light mode ("white space")
 | `--text` | `#0A0A0A` | headings, prices | 19.8:1 on white |
 | `--text-2` | `#5C5C5C` | body secondary | 6.7:1 |
 | `--text-muted` | `#757575` | meta ≥ 12 px only | 4.6:1 (AA minimum) |
-| `--red` | `#B71920` | CTA fill, red text, lines, dots | red on white 6.6:1; white on red 6.6:1 |
-| `--red-hover` | `#9A1419` | CTA hover | 8.4:1 |
-| `--red-soft` | `rgba(183,25,32,.08)` | selected chip/tint | non-text |
+| `--red` | `#C80018` | CTA fill, red text, lines, dots | red on white 6.1:1; white on red 6.1:1 — **re-matched to the delivered logo, Sept 2026** (artwork samples at #C80018; was #B71920) |
+| `--red-hover` | `#A80014` | CTA hover | white on it 7.9:1 |
+| `--red-soft` | `rgba(200,0,24,.08)` | selected chip/tint | non-text |
 | `--silver` | `#C9CCD1` | metal accents, dividers in hero | non-text |
 
 Dark mode ("black road")
@@ -84,12 +84,12 @@ Dark mode ("black road")
 | `--text` | `#FFFFFF` | headings | 20:1 |
 | `--text-2` | `#A5A5A5` | body secondary | 8.1:1 |
 | `--text-muted` | `#8A8A8A` | meta | 5.8:1 |
-| `--red` | `#B71920` | **fills only** (buttons with white text 6.6:1) | as text on `#080808` = 3.0:1 → fails AA for text |
+| `--red` | `#C80018` | **fills only** (buttons with white text 6.1:1) | as text on `#080808` = 3.3:1 → fails AA for text |
 | `--red-signal` | `#F0383F` | red **text, thin lines, dots, focus rings** in dark mode | 5.1:1 on `#080808` |
 | `--red-glow` | `rgba(240,56,63,.35)` | hover glow, scanline | non-text |
 | `--silver` | `#C9CCD1` | numbers/instrument accents | 12.4:1 |
 
-Rules: red area ≤ 5% per screen; red text never under 12 px; **never black text on red** (2.99:1, fails); errors = red text + 1 px red border + icon (never a filled red box); the availability dot is red (signal = "look here", as in your brief), unavailable = hollow grey circle; admin adds amber `#D98E04` (attention) and green `#1F8A4C` (ready/completed) — nothing else.
+Rules: red area ≤ 5% per screen; red text never under 12 px; **never black text on red** (3.27:1, fails); errors = red text + 1 px red border + icon (never a filled red box); the availability dot is red (signal = "look here", as in your brief), unavailable = hollow grey circle; admin adds amber `#D98E04` (attention) and green `#1F8A4C` (ready/completed) — nothing else.
 
 ### 2.3 Typography
 

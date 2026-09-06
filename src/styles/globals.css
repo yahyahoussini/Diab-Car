@@ -32,12 +32,15 @@
      AA. Darkened to #6a6a6a: 5.41 / 4.96 / 4.58 — AA on all three grounds. */
   --text-muted: #6a6a6a;
 
-  --red: #b71920;
-  --red-hover: #9a1419;
-  --red-soft: rgba(183, 25, 32, 0.08);
-  /* In light mode the fill red is also the text red (6.62:1 on white). */
+  /* Matched to the delivered logo (Sept 2026): the artwork samples at #c80018,
+     so the CTA, the emblem and the favicon are one red. AA everywhere it is
+     used as text: 6.05:1 on white, 5.55 on --surface-1, 5.12 on --surface-2. */
+  --red: #c80018;
+  --red-hover: #a80014;
+  --red-soft: rgba(200, 0, 24, 0.08);
+  /* In light mode the fill red is also the text red (6.05:1 on white). */
   --red-signal: var(--red);
-  --red-glow: rgba(183, 25, 32, 0.22);
+  --red-glow: rgba(200, 0, 24, 0.22);
   --on-red: #ffffff;
 
   --silver: #c9ccd1;
@@ -122,11 +125,11 @@
   --text-2: #a5a5a5;
   --text-muted: #8a8a8a;
 
-  /* --red stays the FILL red (white on it = 6.62:1). As text on #080808 it
-     is only 3.03:1, so red text, thin lines, dots and focus rings in dark
+  /* --red stays the FILL red (white on it = 6.05:1). As text on #080808 it
+     is only 3.31:1, so red text, thin lines, dots and focus rings in dark
      mode use --red-signal (5.10:1). Plan 2.2. */
-  --red: #b71920;
-  --red-hover: #c81d25;
+  --red: #c80018;
+  --red-hover: #dc0a22;
   --red-soft: rgba(240, 56, 63, 0.1);
   --red-signal: #f0383f;
   --red-glow: rgba(240, 56, 63, 0.35);

@@ -1,7 +1,7 @@
 import { cn } from '@/lib/cn';
 
 /**
- * The real Diab Car mark (delivered Sept 2026 as public/brand/badge-icon.png,
+ * The real Diab Car mark (delivered Sept 2026, master in docs/inputs/logo/badge-icon.png,
  * trimmed and re-encoded by the brand pipeline). Two files, not one: the mark
  * is a single flat colour, so light mode uses the black cut and dark mode the
  * white one — swapped with the `dark` class, the same mechanism the tokens use.
