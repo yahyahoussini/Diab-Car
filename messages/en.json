@@ -96,7 +96,13 @@
     "contact": "Contact",
     "book": "Book",
     "openMenu": "Open menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "services": "Services",
+    "delivery": "Delivery",
+    "automatic": "Automatic",
+    "soon": "soon",
+    "primaryNav": "Primary navigation",
+    "mobileNav": "Mobile navigation"
   },
   "footer": {
     "about": "Self-drive car rental agency in Casablanca since {year}. 24/7 delivery at Mohammed V Airport, all-inclusive prices in dirhams, transparent deposit.",
@@ -120,6 +126,22 @@
       "fri": "Fri",
       "sat": "Sat",
       "sun": "Sun"
+    },
+    "country": "Morocco",
+    "servicesPlaces": "Services & places",
+    "language": "Language",
+    "legalLinks": "Legal links",
+    "copyright": "© {year} {legalName}",
+    "rc": "Trade register {rc}",
+    "ice": "ICE {ice}",
+    "cndp": "CNDP receipt no. {n}",
+    "labels": {
+      "address": "Address",
+      "landline": "Landline",
+      "mobile": "Mobile",
+      "whatsapp": "WhatsApp",
+      "fax": "Fax",
+      "email": "Email"
     }
   },
   "widget": {
@@ -138,7 +160,7 @@
     "driverAge": "Driver aged 25 or over",
     "promo": "Promo code",
     "addPromo": "+ Add a promo code",
-    "submit": "See available cars",
+    "submit": "Find a car",
     "submitLong": "Request a monthly quote",
     "submitChauffeur": "Request a driver",
     "manage": "Manage my booking",
@@ -148,14 +170,33 @@
       "airport": "Airport delivery 24/7"
     },
     "errors": {
-      "dates": "The return date must be after the pick-up date."
-    }
+      "dates": "The return date must be after the pick-up date.",
+      "locationRequired": "Choose a pick-up location.",
+      "addressRequired": "Enter your address in Casablanca.",
+      "past": "Those dates are in the past.",
+      "minDuration": "The minimum rental is {hours} h.",
+      "hours": "This location is open from {opens} to {closes}."
+    },
+    "searching": "Searching…",
+    "modify": "Edit",
+    "locationLabel": "Pick-up location",
+    "locationPlaceholder": "Airport, agency or district",
+    "noLocation": "No matching location",
+    "dropoffLabel": "Drop-off location",
+    "datesLabel": "Pick-up and return",
+    "datesDone": "Confirm these dates",
+    "days": "{count, plural, one {# day} other {# days}}",
+    "calendarLabel": "Choose your rental dates",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "pickupTime": "Pick-up time",
+    "returnTime": "Return time"
   },
   "home": {
     "hero": {
-      "eyebrow": "Car rental · Casablanca & Mohammed V Airport",
-      "title1": "Casablanca,",
-      "title2": "at your own pace.",
+      "eyebrow": "Car rental · Casablanca",
+      "title1": "Your road.",
+      "title2": "Your car.",
       "subtitle": "Recent cars delivered to the airport or to your door. All-inclusive prices in dirhams, a transparent deposit and a WhatsApp reply in under 10 minutes.",
       "cta": "View the fleet",
       "ctaSecondary": "Message us on WhatsApp",
@@ -164,6 +205,15 @@
         "since": "years of experience",
         "airport": "airport delivery",
         "languages": "languages spoken"
+      },
+      "carAlt": "Premium SUV from the Diab Car fleet, front three-quarter view",
+      "trust": {
+        "label": "Trust signals",
+        "rating": "{rating}/5 on Google ({count} reviews)",
+        "since": "Since {year}",
+        "gearbox": "Manual & automatic",
+        "airport": "Airport support 24/7",
+        "airportNote": "Delivery at Mohammed V airport, by prior booking."
       }
     },
     "categories": {
@@ -762,5 +812,19 @@
     "text": "We use an audience-measurement cookie (Google Analytics) to improve the site. No advertising.",
     "accept": "Accept",
     "decline": "Decline"
+  },
+  "locations": {
+    "otherAddress": "Another address in Casablanca",
+    "otherAddressLabel": "Your address",
+    "otherAddressPlaceholder": "Street, district, building…",
+    "feeOnRequest": "on request",
+    "deliveryHint": "delivery",
+    "groups": {
+      "airport": "Airport",
+      "agency": "Agency",
+      "delivery": "Delivery in Casablanca",
+      "other": "Other",
+      "recent": "Recent"
+    }
   }
 }

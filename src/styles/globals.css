@@ -514,10 +514,66 @@
 @keyframes eager-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
 .eager-rise { animation: eager-rise var(--dur-section) var(--ease-out) both; }
 
+/* ================================================================== */
+/* WOW 1 — hero ignition (plan 5.2)                                    */
+/*                                                                     */
+/* Everything is in the DOM at full opacity at frame 0. The car <img>   */
+/* is the LCP element, so it is NEVER faded from 0: Chrome ignores      */
+/* opacity:0 elements as LCP candidates, and the booking module starts  */
+/* at .01 rather than 0 for the same reason. Transform / opacity /      */
+/* filter only — all compositor work, no layout (CLAUDE.md rule 6).     */
+/*                                                                     */
+/* Runs once per session: a tiny inline script stamps                   */
+/* data-ignition="seen" on <html> before paint, and a seen visit gets   */
+/* the 300 ms short version instead of the 900 ms one.                  */
+/* ================================================================== */
+@keyframes ignite-line { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+/* Transform ONLY — no filter. A blur() on the hero image re-rasterises it, so
+   Chrome records the sharp frame as a later (and larger) paint and LCP lands
+   ~1.5 s after the bytes arrive. Measured: adding blur cost 0.5 s of LCP for
+   an effect nobody can see at 60 fps. The slide + suspension settle carry the
+   ignition on their own, and the image is genuinely sharp at first paint,
+   which is what CLAUDE.md rule 6 asks for. */
+@keyframes ignite-car {
+  from { transform: translate3d(6%, 0, 0); }
+  70%  { transform: translate3d(0, -2px, 0); }
+  to   { transform: translate3d(0, 0, 0); }
+}
+@keyframes ignite-car-rtl {
+  from { transform: translate3d(-6%, 0, 0); }
+  70%  { transform: translate3d(0, -2px, 0); }
+  to   { transform: translate3d(0, 0, 0); }
+}
+@keyframes ignite-module {
+  from { opacity: 0.01; transform: translate3d(0, 6px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+.ignite-line {
+  transform-origin: left center;
+  animation: ignite-line var(--dur-hero) var(--ease-out) both;
+}
+[dir="rtl"] .ignite-line { transform-origin: right center; }
+.ignite-car { animation: ignite-car var(--dur-hero) var(--ease-out) both; will-change: transform; }
+[dir="rtl"] .ignite-car { animation-name: ignite-car-rtl; }
+.ignite-module { animation: ignite-module var(--dur-hero) var(--ease-out) both; animation-delay: 160ms; }
+
+/* Second visit in the same session: same choreography, a third of the time. */
+[data-ignition="seen"] :is(.ignite-line, .ignite-car, .ignite-module, .hero-line, .eager-rise) {
+  animation-duration: 300ms;
+  animation-delay: 0ms;
+}
+
+/* The animation has finished paying for itself — release the layer. */
+.ignite-car { animation-fill-mode: both; }
+
 /* Currency toggle: EUR approximations are server-rendered, shown via a data attribute */
 .price-eur { display: none; }
 html[data-currency="EUR"] .price-eur { display: inline; }
 html[data-currency="EUR"] .price-eur.block { display: block; }
+
+@keyframes button-sweep { 0% { transform: translateX(-100%); } 100% { transform: translateX(400%); } }
+[dir="rtl"] .motion-safe:animate-[button-sweep_1.1s_var(--ease-inout)_infinite] { animation-direction: reverse; }
 
 @keyframes shimmer { to { background-position: -200% 0; } }
 .skeleton {

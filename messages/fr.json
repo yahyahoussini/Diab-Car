@@ -96,7 +96,13 @@
     "contact": "Contact",
     "book": "Réserver",
     "openMenu": "Ouvrir le menu",
-    "closeMenu": "Fermer le menu"
+    "closeMenu": "Fermer le menu",
+    "services": "Services",
+    "delivery": "Livraison",
+    "automatic": "Automatique",
+    "soon": "bientôt",
+    "primaryNav": "Navigation principale",
+    "mobileNav": "Navigation mobile"
   },
   "footer": {
     "about": "Agence de location de voitures sans chauffeur à Casablanca depuis {year}. Livraison à l’aéroport Mohammed V 24h/24, prix tout inclus en dirhams, caution transparente.",
@@ -120,6 +126,22 @@
       "fri": "Ven",
       "sat": "Sam",
       "sun": "Dim"
+    },
+    "country": "Maroc",
+    "servicesPlaces": "Services & lieux",
+    "language": "Langue",
+    "legalLinks": "Liens légaux",
+    "copyright": "© {year} {legalName}",
+    "rc": "RC Casablanca {rc}",
+    "ice": "ICE {ice}",
+    "cndp": "Récépissé CNDP n° {n}",
+    "labels": {
+      "address": "Adresse",
+      "landline": "Fixe",
+      "mobile": "Mobile",
+      "whatsapp": "WhatsApp",
+      "fax": "Fax",
+      "email": "E-mail"
     }
   },
   "widget": {
@@ -138,7 +160,7 @@
     "driverAge": "Conducteur de 25 ans et plus",
     "promo": "Code promo",
     "addPromo": "+ Ajouter un code promo",
-    "submit": "Voir les véhicules disponibles",
+    "submit": "Rechercher une voiture",
     "submitLong": "Demander un devis mensuel",
     "submitChauffeur": "Demander un chauffeur",
     "manage": "Gérer ma réservation",
@@ -148,14 +170,33 @@
       "airport": "Livraison aéroport 24/7"
     },
     "errors": {
-      "dates": "La date de retour doit être après la date de départ."
-    }
+      "dates": "La date de retour doit être après la date de départ.",
+      "locationRequired": "Choisissez un lieu de prise en charge.",
+      "addressRequired": "Indiquez votre adresse à Casablanca.",
+      "past": "Ces dates sont déjà passées.",
+      "minDuration": "La durée minimum est de {hours} h.",
+      "hours": "Ce lieu ouvre de {opens} à {closes}."
+    },
+    "searching": "Recherche…",
+    "modify": "Modifier",
+    "locationLabel": "Lieu de prise en charge",
+    "locationPlaceholder": "Aéroport, agence ou quartier",
+    "noLocation": "Aucun lieu ne correspond",
+    "dropoffLabel": "Lieu de restitution",
+    "datesLabel": "Départ et retour",
+    "datesDone": "Valider ces dates",
+    "days": "{count, plural, one {# jour} other {# jours}}",
+    "calendarLabel": "Choisir les dates de location",
+    "previousMonth": "Mois précédent",
+    "nextMonth": "Mois suivant",
+    "pickupTime": "Heure de départ",
+    "returnTime": "Heure de retour"
   },
   "home": {
     "hero": {
-      "eyebrow": "Location de voitures · Casablanca & Aéroport Mohammed V",
-      "title1": "Casablanca,",
-      "title2": "à votre rythme.",
+      "eyebrow": "Location de voitures · Casablanca",
+      "title1": "Votre route.",
+      "title2": "Votre voiture.",
       "subtitle": "Voitures récentes livrées à l’aéroport ou à votre porte. Prix tout inclus en dirhams, caution transparente, réponse WhatsApp en moins de 10 minutes.",
       "cta": "Voir la flotte",
       "ctaSecondary": "Nous écrire sur WhatsApp",
@@ -164,6 +205,15 @@
         "since": "ans d’expérience",
         "airport": "livraison aéroport",
         "languages": "langues parlées"
+      },
+      "carAlt": "SUV premium de la flotte Diab Car, vue trois quarts avant",
+      "trust": {
+        "label": "Points de confiance",
+        "rating": "{rating}/5 Google ({count} avis)",
+        "since": "Depuis {year}",
+        "gearbox": "Manuel & automatique",
+        "airport": "Assistance aéroport 24/7",
+        "airportNote": "Livraison à l’aéroport Mohammed V, sur réservation."
       }
     },
     "categories": {
@@ -762,5 +812,19 @@
     "text": "Nous utilisons un cookie de mesure d’audience (Google Analytics) pour améliorer le site. Aucune publicité.",
     "accept": "Accepter",
     "decline": "Refuser"
+  },
+  "locations": {
+    "otherAddress": "Autre adresse à Casablanca",
+    "otherAddressLabel": "Votre adresse",
+    "otherAddressPlaceholder": "Rue, quartier, immeuble…",
+    "feeOnRequest": "sur devis",
+    "deliveryHint": "livraison",
+    "groups": {
+      "airport": "Aéroport",
+      "agency": "Agence",
+      "delivery": "Livraison à Casablanca",
+      "other": "Autre",
+      "recent": "Récent"
+    }
   }
 }

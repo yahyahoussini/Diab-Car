@@ -10,11 +10,12 @@ export const seedSettings = {
   name: 'Diab Car',
   legalName: 'DIAB CAR SARL',
   tagline: { fr: 'Location de voitures à Casablanca', en: 'Car rental in Casablanca', ar: 'كراء السيارات في الدار البيضاء', es: 'Alquiler de coches en Casablanca' },
-  phonePrimary: '+212659775582', // verify (Telecontact mobile)
+  phonePrimary: '+212659775582', // confirmed GSM
   phoneSecondary: '+212625236229', // verify (Telecontact mobile)
-  phoneLandline: '+212522260305', // verify (Charika)
-  whatsapp: '+212659775582', // verify which number is WhatsApp-enabled
-  email: 'contact@diabcar.ma', // verify
+  phoneLandline: '+212522260305', // confirmed
+  fax: '+212522260361', // confirmed
+  whatsapp: '+212659775582', // confirmed WhatsApp
+  email: 'diabcar@gmail.com', // confirmed — plan 4.10 keeps gmail until a diabcar.ma mailbox exists
   addressLine: '356 Boulevard Zerktouni', // Telecontact + Charika
   city: 'Casablanca',
   postalCode: '20000', // verify
@@ -52,6 +53,9 @@ export const seedSettings = {
     { minDays: 30, discountPct: 25 },
   ],
   monthlyFrom: { economy: 6500, suv: 9500, premium: 19000 },
+  // CNDP receipt number (plan 9.4). Empty until Diab Car files the declaration;
+  // the footer legal row hides the line while it is empty (CLAUDE.md rule 11).
+  cndpReceipt: '',
   gbpUrl: '',
   gaId: '',
   indexNowKey: '',
@@ -274,11 +278,68 @@ export const seedExtras = [
   { id: 'x-chauffeur', key: 'chauffeur', type: 'per_day', price: 400, active: true, name: d('Chauffeur (8 h / jour)', 'Driver (8 h / day)', 'سائق (8 ساعات/يوم)', 'Conductor (8 h/día)') },
 ];
 
+/**
+ * Pickup / drop-off points, loaded from docs/inputs/locations.csv (plan 4.2).
+ *
+ *  kind          'airport' | 'agency' | 'district' | 'address'
+ *  deliveryFee   MAD, or null when the CSV still says TODO — the UI renders
+ *                null as "sur devis" rather than inventing a number
+ *                (CLAUDE.md rule 11: unverified is hidden, never guessed).
+ *  hours         { opens, closes } local Casablanca time, or null
+ *  is24h         true | false | null (null = not yet confirmed by Diab Car)
+ *
+ * The free-text option ("Autre adresse à Casablanca") is not a row here: it is
+ * appended by the booking module, because it carries no fee, hours or pin.
+ */
 export const seedLocations = [
-  { id: 'l-agency', key: 'agency', type: 'agency', fee: 0, active: true, name: d('Agence — 356 Bd Zerktouni', 'Agency — 356 Bd Zerktouni', 'الوكالة — 356 شارع الزرقطوني', 'Agencia — 356 Bd Zerktouni') },
-  { id: 'l-cmn', key: 'airport', type: 'airport', fee: 0, active: true, name: d('Aéroport Mohammed V (CMN)', 'Mohammed V Airport (CMN)', 'مطار محمد الخامس (CMN)', 'Aeropuerto Mohammed V (CMN)') },
-  { id: 'l-voyageurs', key: 'station', type: 'station', fee: 0, active: true, name: d('Gare Casa-Voyageurs', 'Casa-Voyageurs station', 'محطة الدار البيضاء المسافرين', 'Estación Casa-Voyageurs') },
-  { id: 'l-address', key: 'address', type: 'address', fee: 0, active: true, name: d('Hôtel / domicile (Casablanca)', 'Hotel / home (Casablanca)', 'فندق / منزل (الدار البيضاء)', 'Hotel / domicilio (Casablanca)') },
+  {
+    id: 'l-agence-zerktouni', key: 'agence-zerktouni', kind: 'agency', active: true,
+    name: d('Agence Diab Car — Bd Zerktouni', 'Diab Car agency — Bd Zerktouni', 'وكالة دياب كار — شارع الزرقطوني', 'Agencia Diab Car — Bd Zerktouni'),
+    address: '356 boulevard Zerktouni, Casablanca 20000', lat: 33.5883, lng: -7.6314,
+    deliveryFee: 0, hours: { opens: '08:00', closes: '20:00' }, is24h: false, // TODO: confirm hours and exact coordinates
+  },
+  {
+    id: 'l-aeroport-mohammed-v', key: 'aeroport-mohammed-v', kind: 'airport', active: true,
+    name: d('Aéroport Mohammed V (CMN)', 'Mohammed V Airport (CMN)', 'مطار محمد الخامس', 'Aeropuerto Mohammed V (CMN)'),
+    address: 'Aéroport Mohammed V, Nouaceur', lat: 33.3675, lng: -7.5898,
+    deliveryFee: null, hours: { opens: '00:00', closes: '23:59' }, is24h: null, // TODO: meeting point? terminal 1/2? fee? 24/7?
+  },
+  {
+    id: 'l-maarif', key: 'maarif', kind: 'district', active: true,
+    name: d('Maârif', 'Maarif', 'المعاريف', 'Maarif'),
+    address: 'Casablanca', lat: 33.5820, lng: -7.6360,
+    deliveryFee: null, hours: { opens: '08:00', closes: '20:00' }, is24h: false, // TODO: delivery fee and delay
+  },
+  {
+    id: 'l-anfa', key: 'anfa', kind: 'district', active: true,
+    name: d('Anfa', 'Anfa', 'أنفا', 'Anfa'),
+    address: 'Casablanca', lat: 33.5900, lng: -7.6600,
+    deliveryFee: null, hours: { opens: '08:00', closes: '20:00' }, is24h: false,
+  },
+  {
+    id: 'l-ain-diab', key: 'ain-diab', kind: 'district', active: true,
+    name: d('Aïn Diab / Corniche', 'Ain Diab / Corniche', 'عين الذئاب / الكورنيش', 'Ain Diab / Corniche'),
+    address: 'Casablanca', lat: 33.5960, lng: -7.6780,
+    deliveryFee: null, hours: { opens: '08:00', closes: '20:00' }, is24h: false,
+  },
+  {
+    id: 'l-centre-ville', key: 'centre-ville', kind: 'district', active: true,
+    name: d('Centre-ville', 'City centre', 'وسط المدينة', 'Centro'),
+    address: 'Casablanca', lat: 33.5950, lng: -7.6180,
+    deliveryFee: null, hours: { opens: '08:00', closes: '20:00' }, is24h: false,
+  },
+  {
+    id: 'l-casa-voyageurs', key: 'casa-voyageurs', kind: 'district', active: true,
+    name: d('Gare Casa-Voyageurs', 'Casa-Voyageurs station', 'محطة الدار البيضاء المسافرين', 'Estación Casa-Voyageurs'),
+    address: 'Casablanca', lat: 33.5895, lng: -7.5990,
+    deliveryFee: null, hours: { opens: '08:00', closes: '20:00' }, is24h: false,
+  },
+  {
+    id: 'l-sidi-maarouf', key: 'sidi-maarouf', kind: 'district', active: true,
+    name: d('Sidi Maârouf / Casanearshore', 'Sidi Maarouf / Casanearshore', 'سيدي معروف', 'Sidi Maarouf'),
+    address: 'Casablanca', lat: 33.5330, lng: -7.6470,
+    deliveryFee: null, hours: { opens: '08:00', closes: '20:00' }, is24h: false,
+  },
 ];
 
 export const seedFaqs = [

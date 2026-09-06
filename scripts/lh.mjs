@@ -554,6 +554,23 @@ async function main() {
 
   /* --- audits: sequential on purpose, parallel Lighthouse runs
          contaminate each other's simulated throttling ---------------- */
+  /* Warm every URL first. `next start` compiles and fills the ISR cache on the
+     first hit, which showed up as a 1289 ms server-response-time and inflated
+     LCP by more than a second — measuring a cold cache miss, not the site.
+     Steady-state TTFB for a static page here is 30-40 ms, and on Cloudflare it
+     is served from the edge cache, so the warm number is the honest one. */
+  console.log('  Warming the cache (first hit compiles and fills ISR)...');
+  for (const url of urls) {
+    for (let i = 0; i < 2; i += 1) {
+      try {
+        const response = await fetch(url, { signal: AbortSignal.timeout(30_000) });
+        await response.arrayBuffer().catch(() => {});
+      } catch {
+        /* the audit below will report it properly */
+      }
+    }
+  }
+
   const blocks = [];
   for (const url of urls) {
     const best = await auditUrl(lighthouse, url, chrome.port, options.runs);

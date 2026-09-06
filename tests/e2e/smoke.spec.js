@@ -110,6 +110,14 @@ test.describe('public home pages', () => {
 
       await expect(page.locator('main#main'), `<main id="main"> on /${locale}`).toBeVisible();
 
+      /* A message key that does not exist renders as its own dotted path. In a
+         SERVER component next-intl does that silently — no console error — so
+         nothing else here would catch it. It shipped once (home.hero.trust.*),
+         hence this guard. */
+      const body = await page.locator('body').innerText();
+      const rawKeys = body.match(/\b(?:common|nav|footer|home|widget|locations|fleet|vehicle|booking|seo|cookie)\.[a-zA-Z]\w*(?:\.\w+)*/g) || [];
+      expect(rawKeys, `untranslated message keys visible on /${locale}: ${rawKeys.join(', ')}`).toEqual([]);
+
       expect(problems.errors, problems.describe(`/${locale}`)).toEqual([]);
     });
   }

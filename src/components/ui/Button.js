@@ -21,8 +21,29 @@ const sizes = {
   icon: 'h-11 w-11',
 };
 
-export default function Button({ href, external, variant = 'primary', size = 'md', className, children, ...props }) {
-  const classes = cn(base, variants[variant] || variants.primary, variant === 'link' ? '' : sizes[size] || sizes.md, className);
+/**
+ * Indeterminate progress as The Red Line, not a spinner (plan 4.13: "Loader:
+ * the red line, never 'Loading…'"). It rides along the bottom edge of the
+ * button, inside its rounded clip.
+ */
+function LoadingLine() {
+  return (
+    <span className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 overflow-hidden" aria-hidden="true">
+      <span className="block h-full w-1/3 bg-on-red/80 motion-safe:animate-[button-sweep_1.1s_var(--ease-inout)_infinite]" />
+    </span>
+  );
+}
+
+export default function Button({ href, external, variant = 'primary', size = 'md', className, children, loading = false, loadingLabel, ...props }) {
+  const classes = cn(base, variants[variant] || variants.primary, variant === 'link' ? '' : sizes[size] || sizes.md, loading && 'relative overflow-hidden', className);
+  if (loading && !href) {
+    return (
+      <button type="button" className={classes} aria-busy="true" disabled {...props}>
+        {loadingLabel || children}
+        <LoadingLine />
+      </button>
+    );
+  }
   if (href && external) {
     return (
       <a href={href} className={classes} target="_blank" rel="noopener noreferrer" {...props}>

@@ -1,6 +1,6 @@
 # Diab Car — build status
 
-**Updated:** 2026-09-06 · **Branch:** `build/v1` · **Last prompt:** PROMPT 01 — Tokens, fonts, logo, OG (Sprint 0a)
+**Updated:** 2026-09-06 · **Branch:** `build/v1` · **Last prompt:** PROMPT 03 — Header, footer, hero, booking module (Sprint 1a)
 
 This file is the running state of the build. It is rewritten at the end of **every** prompt in `docs/PROMPTS.md`.
 Decisions in the *Plan §10* column come from `docs/MASTER-PLAN.md` §10 (keep / rebuild / extend / delete); where §10 is
@@ -21,7 +21,7 @@ not *never touched again*.
 | 00 | — | Onboarding, baseline, checks | **done** |
 | 01 | 0a | Tokens, fonts, logo, OG | **done** |
 | 02 | 0b | UI kit, motion primitives, dev kit page | todo |
-| 03 | 1a | Header, footer, hero, booking module | todo |
+| 03 | 1a | Header, footer, hero, booking module | **done** |
 | 04 | 1b | Homepage sections, vehicle card, car images | todo |
 | 05 | 2a | Supabase: schema, roles, storage, seed | todo |
 | 06 | 2b | Availability engine: RPCs, holds, realtime | todo |
@@ -39,23 +39,26 @@ not *never touched again*.
 
 ---
 
-## Baseline checks — re-measured at PROMPT 01 (Lighthouse is still the PROMPT 00 run)
+## Baseline checks — re-measured at PROMPT 03
 
 | Command | Result | Note |
 |---|---|---|
 | `npm run build` | **pass** | 139 static pages, Next 16.3.4 + Turbopack, 1 warning (see below) |
-| `npm run lint` | **6 errors, 3 warnings** | all pre-existing, none build-breaking — listed below |
+| `npm run lint` | **10 errors, 3 warnings** | 5 pre-existing + 5 new in BookingWidget/Header (React Compiler rules) — see issue 14 |
 | `npm test` | **pass** — 41/41 | `src/lib/{pricing,whatsapp,format}.test.js` |
-| `npm run test:e2e` | **pass** — 5/5 | /fr /en /ar /es + /admin/login, zero console errors |
-| `npm run check:messages` | **pass** | 506 leaf keys, identical across fr/en/ar/es |
+| `npm run test:e2e` | **pass** — 7/7 | 4 locales + admin login + the booking module filled by keyboard in fr and ar |
+| `npm run check:messages` | **pass** | 562 leaf keys, identical across fr/en/ar/es |
 | `npm run check:contrast` | **pass** | 56 pairs, 56 pass, 0 fail; every token of plan §2.2 declared |
-| `npm run lh` — /fr | Perf **67** · A11y **97** · BP **100** · SEO **100** | LCP 2.69 s · TBT 2710 ms · CLS 0.000 |
-| `npm run lh` — /fr/location-voiture-casablanca | Perf **68** · A11y **89** · BP **100** · SEO **100** | LCP 2.82 s · TBT 1563 ms · CLS 0.000 |
+| `npm run lh` — /fr | Perf **74** · A11y **100** · BP **100** · SEO **100** | LCP 2.91 s · TBT 882 ms · CLS 0.000 — see issue 15 |
+| `npm run lh` — /fr/location-voiture-casablanca | Perf **64** · A11y **95** · BP **100** · SEO **100** | not re-tuned; the fleet page is rebuilt in PROMPT 07 |
 
-Budget (CLAUDE.md rule 7: LCP ≤ 2.0 s, INP ≤ 200 ms via TBT, CLS ≤ 0.05) — **CLS passes, LCP and TBT fail on both
-pages**. Those Lighthouse numbers are the PROMPT 00 pre-rebrand baseline and have not been re-measured
-since; the pages themselves are unchanged, but Archivo (90 kB) replaced Fraunces (37 kB) in the preload,
-so re-run `npm run lh` at the end of Sprint 1 before treating them as current.
+Budget (CLAUDE.md rule 7: LCP ≤ 2.0 s, INP ≤ 200 ms via TBT, CLS ≤ 0.05) — **CLS passes; LCP and TBT
+still fail.** PROMPT 03 moved Performance 65 → 74 and TBT 3121 → 882 ms (−72 %) by removing a
+`filter: blur()` from the LCP element, hinting its preload, dropping three below-the-fold image
+preloads and warming the ISR cache before measuring. What remains is CPU, not bytes: every request
+completes by ~284 ms while bootup-time is ~3.5 s under Lighthouse's 4× CPU throttle. Closing the gap
+means shipping less homepage JavaScript, which is PROMPT 04 (HomeSections rebuild) and Sprint 6
+("performance budget CI").
 
 ---
 
@@ -76,6 +79,10 @@ so re-run `npm run lh` at the end of Sprint 1 before treating them as current.
 | 11 | `--text-muted`, `--success`, `--warning` | deviate from the hexes printed in plan §2.2 (see the token comments for the measured ratios). §2.2's values fail AA on `--surface-1`/`--surface-2` | plan §2.2 needs a one-line amendment, or the deviation is accepted as-is |
 | 12 | `--accent*` compatibility aliases in `globals.css` | 37 files still reference the previous palette's token names; they now resolve onto BLACKLINE so nothing breaks | delete each alias as its last caller is rebuilt (prompts 02–13) |
 | 13 | Arabic OG cards | satori spaces Arabic words oddly in RTL (visible gap between title words) | cosmetic; revisit when §9.3 moves OG generation to build time |
+| 14 | `BookingWidget.js`, `Header.js` | 5 new React Compiler lint errors: `set-state-in-effect` (localStorage-after-mount, media-query sync, time-chip snap-back) and `refs` (a handler that focuses an input). Each is an idiomatic pattern the compiler cannot prove safe | fix with `useSyncExternalStore` in PROMPT 02's kit pass; 3 of the 8 the agents introduced are already fixed with derive-during-render |
+| 15 | homepage JS | LCP 2.91 s / TBT 882 ms vs a 2.0 s / 200 ms budget. All bytes land by 284 ms; bootup-time is ~3.5 s — it is JS execution, not transfer | PROMPT 04 (lighter HomeSections) then Sprint 6 performance CI |
+| 16 | `docs/inputs/photos/` | **empty** — zero masters. `npm run images` is built and self-tested but has nothing to process, so every car is a silhouette and the card hover crossfade has no rear image | blocked on plan §12 input #4 (real fleet photography) |
+| 17 | `/livraison`, `/automatique` | in the header Services dropdown but the routes do not exist until PROMPT 13; rendered with a "bientôt" marker rather than a dead link | PROMPT 13 |
 
 ---
 
@@ -138,20 +145,24 @@ so re-run `npm run lh` at the end of Sprint 1 before treating them as current.
 | Admin component | `src/components/admin/VehicleForm.js` | — | Vehicle identity, pricing, features, photos, four-language descriptions | **rebuild** | §10 "Rebuild … keep server actions pattern, forms"; §7.1 Flotte models and units | 4 | todo | Model/unit split, plates, purpose tags and photo variants all missing |
 | Site component — shell | `src/components/site/CookieBanner.js` | — | Consent-gated GA4 loader with accept/decline banner | **keep** | §10 row "…Cookie banner, JsonLd, Breadcrumbs, Markdown → Keep" | 0 | done | Uses btn-gold class; must move to red/neutral tokens. |
 | Site component — shell | `src/components/site/CurrencyProvider.js` | — | MAD/EUR context, localStorage, CSS-driven price toggle | **keep** | §10 row "…Currency, Theme, Language… → Keep" | 0 | done | Default eurRate 10.8 hard-coded; verify or move to settings. |
-| Site component — shell | `src/components/site/Footer.js` | — | Server footer: nav, services, contact, legal, hours | **rebuild** | §10 row "Header, Footer, Hero, … FaqAccordion → Rebuild" | 1 | todo | Uses zellige texture and gold links; contact facts come from settings. |
-| Site component — shell | `src/components/site/Header.js` | — | Sticky site header: nav, logo, theme, language, CTA | **rebuild** | §10 row "Header, Footer, Hero, … FaqAccordion → Rebuild" | 1 | todo | Six-link limit, red active underline, solid-after-24px per §4.1. |
+| Site component — shell | `src/components/site/Footer.js` | — | Server footer: nav, services, contact, legal, hours | **rebuild** | §10 row "Header, Footer, Hero, … FaqAccordion → Rebuild" | 1 | done | 3 columns, full contact block, CNDP slot hidden while settings.cndpReceipt is empty. |
+| Site component — booking | `src/components/site/RangeCalendarPanel.js` | — | Lazy-loaded react-aria RangeCalendar, locale-aware, RTL | **keep** | plan §4.2 range calendar; §5.4 "react-aria-components (calendar only)" | 1 | done | next/dynamic ssr:false — never in the initial homepage bundle |
+| Dev tooling | `scripts/images.mjs` | — | Build-time AVIF/WebP car image pipeline + manifest | **keep** | plan §2.5 delivery sizes; §9.1 zero per-request CPU | 1 | done | Self-tested on a synthetic master; no real photos to process yet |
+| Dev tooling | `tests/e2e/booking.spec.js` | — | Fills the booking module by keyboard in fr and ar | **keep** | PROMPT 03 task 8 | 1 | done | Asserts the ?pickup&dropoff&from&to search URL |
+| Public asset | `public/images/cars/manifest.json` | `/images/cars/manifest.json` | Which photo angles exist per vehicle | **extend** | plan §2.5 | 1 | todo | Empty until docs/inputs/photos receives masters |
+| Site component — shell | `src/components/site/Header.js` | — | Sticky site header: nav, logo, theme, language, CTA | **rebuild** | §10 row "Header, Footer, Hero, … FaqAccordion → Rebuild" | 1 | done | Services dropdown, redline active state, full-screen mobile panel with the slide-then-navigate. |
 | Site component — shell | `src/components/site/LanguageSwitcher.js` | — | Locale dropdown writing NEXT_LOCALE cookie, swapping route | **keep** | §10 row "…Theme, Language, Cookie banner… → Keep" | 0 | done | Token-only changes; language view transition added in sprint 6. |
 | Site component — shell | `src/components/site/Logo.js` | — | Logo wordmark plus gold gradient mark SVG | **rebuild** | §10 row "Logo → Rebuild (badge SVG + wordmark)" | 0 | done | Wordmark + Badge (TEMP shield). LogoMark kept as a compatibility alias. |
 | Site component — shell | `src/components/site/MotionProvider.js` | — | LazyMotion strict wrapper with reduced-motion MotionConfig | **keep** | §10 silent; matches locked stack §5.4 (Motion 13, LazyMotion strict) | 0 | done | Only the easing constant changes when motion tokens land. |
 | Site component — shell | `src/components/site/ThemeProvider.js` | — | next-themes provider, class attribute, system default | **keep** | §10 row "…Theme, Language… → Keep (tokens change under them)" | 0 | done | Unchanged; the theme view-transition work sits in ThemeToggle. |
 | Site component — shell | `src/components/site/ThemeToggle.js` | — | Dark/light toggle using startViewTransition and masked icon | **keep** | §10 "Theme" keep group (provider named, toggle implied); §11 sprint 0 theme transition | 0 | done | Hard-coded theme-color hexes violate token rule; swap for §2 values. |
 | Site component — shell | `src/components/site/WhatsAppFab.js` | — | Floating WhatsApp button hidden on funnel pages | **rebuild** | §10 row "…, Marquee, WhatsAppFab, FaqAccordion → Rebuild" | 3 | todo | Currently hidden on vehicle pages to dodge overlap bug; fix properly. |
-| Site component — home | `src/components/site/Hero.js` | — | Homepage hero: title, CTAs, trust counters, booking widget | **rebuild** | §10 row "Header, Footer, Hero, HeroTitle… → Rebuild" | 1 | todo | Zellige/gold backdrop; hero image must become the LCP element. |
-| Site component — home | `src/components/site/HeroTitle.js` | — | CSS-keyframe masked hero line reveal plus FadeIn | **rebuild** | §10 row "Header, Footer, Hero, HeroTitle… → Rebuild" | 1 | todo | Applies text-gradient-gold to last line; that utility is deleted. |
+| Site component — home | `src/components/site/Hero.js` | — | Homepage hero: title, CTAs, trust counters, booking widget | **rebuild** | §10 row "Header, Footer, Hero, HeroTitle… → Rebuild" | 1 | done | WOW 1 ignition, plain <img> LCP element with a hinted preload, verified-only trust strip. |
+| Site component — home | `src/components/site/HeroTitle.js` | — | CSS-keyframe masked hero line reveal plus FadeIn | **rebuild** | §10 row "Header, Footer, Hero, HeroTitle… → Rebuild" | 1 | done | Two-line masked reveal; nothing starts at opacity 0. |
 | Site component — home | `src/components/site/HomeSections.js` | — | Ten homepage sections: categories, fleet, pricing, reviews, FAQ | **rebuild** | §10 row "…HomeSections, VehicleCard… → Rebuild" to §§4–5 | 1 | todo | 20 kB monolith; section set and order change per §4.3. |
 | Site component — home | `src/components/site/Marquee.js` | — | CSS brand-name marquee strip with edge fades | **rebuild** | §10 row "…Marquee… → Rebuild — Marquee becomes the road divider" | 1 | todo | Hard-coded brand list unverified against the real fleet. |
 | Site component — booking | `src/components/site/BookingForm.js` | — | Multi-step reservation form with quote and server action | **rebuild** | §10 row "…BookingForm… → Rebuild (structure reused: BookingForm zod schema)" | 3 | todo | Zod schema reused; needs hold timer, Turnstile, gold classes removed. |
-| Site component — booking | `src/components/site/BookingWidget.js` | — | Search widget: locations, dates, times, promo code | **rebuild** | §10 row "…BookingWidget, FleetFilters… → Rebuild"; spec in §4.2 | 1 | todo | Exports TIMES used by three files; needs range calendar, select-truncation fix. |
+| Site component — booking | `src/components/site/BookingWidget.js` | — | Search widget: locations, dates, times, promo code | **rebuild** | §10 row "…BookingWidget, FleetFilters… → Rebuild"; spec in §4.2 | 1 | done | Searchable combobox, lazy RangeCalendar, time chips, inline validation, CompactSearchBar. |
 | Site component — booking | `src/components/site/FleetFilters.js` | — | Category, transmission and sort filters synced to URL | **rebuild** | §10 row "…FleetFilters… → Rebuild (structure reused: FleetFilters URL sync)" | 3 | todo | URL-sync logic explicitly reused; counts become live availability in sprint 3. |
 | Site component — booking | `src/components/site/VehicleQuote.js` | — | Sticky vehicle-page panel: dates, extras, live total | **rebuild** | §10 row "…VehicleQuote, BookingForm… → Rebuild"; spec in §4.6 | 3 | todo | Add availability block and alternatives; FAB overlap and select bugs here. |
 | Site component — fleet | `src/components/site/VehicleCard.js` | — | Fleet card: image, badges, specs, price, link | **rebuild** | §10 row "…VehicleCard, BookingWidget… → Rebuild"; spec in §4.5 | 1 | todo | Needs every availability state from §4.5; zellige/plate utilities removed. |
@@ -165,7 +176,7 @@ so re-run `npm run lh` at the end of Sprint 1 before treating them as current.
 | Site component — primitives | `src/components/site/icons.js` | — | Inline SVG icons: WhatsApp, arrow, check, star | **extend** | §10 silent; §11 sprint 0 base UI kit needs more icons | 0 | todo | currentColor and palette-free except the brand-coloured Google mark. |
 | Site component — primitives | `src/components/site/Price.js` | — | Server-rendered MAD price with CSS-revealed EUR approximation | **keep** | §10 row "Reveal (CSS scroll-driven), Price (server)… → Keep" | 0 | done | Callers must show day and total once dates known. |
 | UI kit | `src/components/ui/Badge.js` | — | Pill badge with six semantic colour tones | **rebuild** | §10 silent; §11 sprint 0 kit lists Chip | 0 | todo | gold tone dies with the palette; uppercase already disabled for RTL. |
-| UI kit | `src/components/ui/Button.js` | — | Button or link with variants, sizes, gold primary | **rebuild** | §10 silent; §11 sprint 0 "base UI kit (Button with sweep/magnetic…)" | 0 | todo | btn-gold plus three hard-coded rgba shadows; all gold must go. |
+| UI kit | `src/components/ui/Button.js` | — | Button or link with variants, sizes, gold primary | **rebuild** | §10 silent; §11 sprint 0 "base UI kit (Button with sweep/magnetic…)" | 0 | todo | Gained loading + loadingLabel (red line, not a spinner); full kit rebuild is PROMPT 02. |
 | UI kit | `src/components/ui/Counter.js` | — | Animated count-up rendering final value in SSR | **keep** | §10 silent; §11 sprint 6 lists count-ups as polish, not rebuild | 1 | done | Palette-free and reduced-motion aware; only verifiable numbers may render. |
 | UI kit | `src/components/ui/Field.js` | — | Form primitives: Label, Input, Select, Textarea, Checkbox | **rebuild** | §10 silent; §11 sprint 0 kit lists Input, Select | 0 | todo | Inline hex in the select chevron data-URI; fix time-select truncation. |
 | UI kit | `src/components/ui/Magnetic.js` | — | Magnetic pointer-follow wrapper for primary CTAs | **keep** | §10 silent; §5.3 micro-interactions keep magnetic CTA | 0 | done | Palette-free, 8px clamp, reduced-motion aware; may fold into Button. |
@@ -188,7 +199,7 @@ so re-run `npm run lh` at the end of Sprint 1 before treating them as current.
 | Lib — data | `src/lib/data/demo-adapter.js` | — | In-memory CRUD implementation of the data adapter contract | **extend** | §10 row 3: `src/lib/data/*` => Extend; demo adapter keeps working for local dev | 2 | todo | CLAUDE.md rule 12: must still boot with no Supabase after §6 extension. |
 | Lib — data | `src/lib/data/demo-store.js` | — | globalThis-backed in-memory store created from the seed fixtures | **extend** | §10 row 3: `src/lib/data/*` => Extend (demo store named explicitly) | 2 | todo | Add §6.2 collections so demo-adapter parity tests in Sprint 2 pass. |
 | Lib — data | `src/lib/data/index.js` | — | Adapter selector plus convenience read and write wrappers | **extend** | §10 row 3: `src/lib/data/*` => Extend for units, blocks, holds, events, customers, notifications | 2 | todo | Add wrappers for §6.2 units, blocks, holds, events, customers, notifications. |
-| Lib — data | `src/lib/data/seed.js` | — | Demo seed: settings, fleet, seasons, extras, FAQs, posts, reviews | **extend** | §10 row 9 (Schema + seed): `src/lib/data/seed.js` => Extend (§6.2), fix contacts, remove sample reviews | 2 | todo | Fix fax +212 5 22 26 03 61 and diabcar@gmail.com; drop sample reviews. |
+| Lib — data | `src/lib/data/seed.js` | — | Demo seed: settings, fleet, seasons, extras, FAQs, posts, reviews | **extend** | §10 row 9 (Schema + seed): `src/lib/data/seed.js` => Extend (§6.2), fix contacts, remove sample reviews | 2 | todo | Contacts fixed and all 8 locations loaded from the CSV; units/blocks/holds still Sprint 2. |
 | Lib — data | `src/lib/data/supabase-adapter.js` | — | Postgres adapter mapping camelCase models to snake_case tables | **extend** | §10 row 3: `src/lib/data/*` => Extend for units, blocks, holds, events, customers, notifications | 2 | todo | No RPC helper yet; §6.4 search_availability, create_hold, create_reservation must be added. |
 | Lib — server actions | `src/lib/actions/admin.js` | — | Admin server actions: vehicles, content, prices, settings, revalidate | **rebuild** | §10 row 8 (Admin shell + pages) => Rebuild IA to section 7; keep server actions pattern, forms, revalidate/IndexNow tools | 4 | todo | Admin IA changes wholesale in §7; the zod server-action pattern is reused. |
 | Lib — server actions | `src/lib/actions/auth.js` | — | Admin login and logout actions, Supabase or demo password | **keep** | §10 row 2 (Auth Supabase + demo token, admin base) => Keep; add role claim hook | 4 | done | Keep the flow; add the role claim so agents cannot reach prices/settings. |

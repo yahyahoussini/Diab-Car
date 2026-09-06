@@ -72,7 +72,9 @@ export async function FeaturedFleet({ vehicles }) {
         <Stagger className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {featured.map((v, i) => (
             <StaggerItem key={v.id}>
-              <VehicleCard vehicle={v} priority={i < 3} className="h-full" />
+              {/* Below the fold on every viewport: eager-loading these competed with
+                  the hero for bandwidth and showed up as three extra image preloads. */}
+              <VehicleCard vehicle={v} priority={false} className="h-full" />
             </StaggerItem>
           ))}
         </Stagger>
