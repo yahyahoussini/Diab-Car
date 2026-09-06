@@ -1,0 +1,9 @@
+slug,kind,name_fr,name_en,name_ar,name_es,address,lat,lng,delivery_fee_mad,hours,is_24h,notes
+agence-zerktouni,agency,Agence Diab Car — Bd Zerktouni,Diab Car agency — Bd Zerktouni,وكالة دياب كار — شارع الزرقطوني,Agencia Diab Car — Bd Zerktouni,"356 boulevard Zerktouni, Casablanca 20000",33.5883,-7.6314,0,08:00-20:00,no,"confirm hours and exact coordinates"
+aeroport-mohammed-v,airport,Aéroport Mohammed V (CMN),Mohammed V Airport (CMN),مطار محمد الخامس,Aeropuerto Mohammed V (CMN),"Aéroport Mohammed V, Nouaceur",33.3675,-7.5898,TODO,00:00-23:59,TODO,"meeting point? terminal 1/2? fee? 24/7?"
+maarif,district,Maârif,Maarif,المعاريف,Maarif,"Casablanca",33.5820,-7.6360,TODO,08:00-20:00,no,"delivery fee and delay"
+anfa,district,Anfa,Anfa,أنفا,Anfa,"Casablanca",33.5900,-7.6600,TODO,08:00-20:00,no,
+ain-diab,district,Aïn Diab / Corniche,Ain Diab / Corniche,عين الذئاب / الكورنيش,Ain Diab / Corniche,"Casablanca",33.5960,-7.6780,TODO,08:00-20:00,no,
+centre-ville,district,Centre-ville,City centre,وسط المدينة,Centro,"Casablanca",33.5950,-7.6180,TODO,08:00-20:00,no,
+casa-voyageurs,district,Gare Casa-Voyageurs,Casa-Voyageurs station,محطة الدار البيضاء المسافرين,Estación Casa-Voyageurs,"Casablanca",33.5895,-7.5990,TODO,08:00-20:00,no,
+sidi-maarouf,district,Sidi Maârouf / Casanearshore,Sidi Maarouf / Casanearshore,سيدي معروف,Sidi Maarouf,"Casablanca",33.5330,-7.6470,TODO,08:00-20:00,no,

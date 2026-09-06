@@ -30,12 +30,26 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files — secrets never leave the machine. .env.example IS tracked (it is the
+# contract for what a new environment needs) so it is re-included below.
+.env
+.env.*
+!.env.example
 
-# vercel
+# vercel / cloudflare
 .vercel
+.wrangler
+.open-next
 
-# typescript
+# typescript (the project is JavaScript only; these guard against strays)
 *.tsbuildinfo
 next-env.d.ts
+
+# playwright
+/playwright-report/
+/test-results/
+/blob-report/
+/playwright/.cache/
+
+# lighthouse (raw LHR JSON written by scripts/lh.mjs)
+/.lighthouse/

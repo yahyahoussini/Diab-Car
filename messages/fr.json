@@ -1,0 +1,766 @@
+{
+  "common": {
+    "brand": "Diab Car",
+    "brandTagline": "Location de voitures · Casablanca",
+    "skipToContent": "Aller au contenu",
+    "perDay": "/ jour",
+    "fromPrice": "à partir de",
+    "day": "{count, plural, one {# jour} other {# jours}}",
+    "total": "Total",
+    "deposit": "Caution",
+    "seats": "{count} places",
+    "doors": "{count} portes",
+    "luggage": "{count} bagages",
+    "unlimitedKm": "Kilométrage illimité",
+    "kmPerDay": "{km} km / jour",
+    "or": "ou",
+    "and": "et",
+    "learnMore": "En savoir plus",
+    "viewAll": "Voir tout",
+    "book": "Réserver",
+    "bookNow": "Réserver maintenant",
+    "whatsapp": "WhatsApp",
+    "call": "Appeler",
+    "details": "Détails",
+    "back": "Retour",
+    "close": "Fermer",
+    "menu": "Menu",
+    "loading": "Chargement…",
+    "new": "Nouveau",
+    "featured": "Coup de cœur",
+    "sample": "Exemple",
+    "madEur": "≈ {eur}",
+    "currency": "Devise",
+    "theme": "Thème",
+    "themeLight": "Mode clair",
+    "themeDark": "Mode sombre",
+    "themeSystem": "Système",
+    "language": "Langue",
+    "readMore": "Lire l’article",
+    "updated": "Mis à jour le {date}",
+    "published": "Publié le {date}",
+    "verifiedBusiness": "Agence agréée depuis {year}",
+    "categories": {
+      "economy": "Citadine",
+      "compact": "Compacte",
+      "sedan": "Berline",
+      "suv": "SUV & 4x4",
+      "premium": "Premium",
+      "luxury": "Luxe",
+      "van": "Van & minibus"
+    },
+    "transmission": {
+      "manual": "Manuelle",
+      "automatic": "Automatique"
+    },
+    "fuel": {
+      "petrol": "Essence",
+      "diesel": "Diesel",
+      "hybrid": "Hybride",
+      "electric": "Électrique"
+    },
+    "features": {
+      "ac": "Climatisation",
+      "bluetooth": "Bluetooth",
+      "apple_carplay": "Apple CarPlay / Android Auto",
+      "usb": "Ports USB",
+      "camera": "Caméra de recul",
+      "cruise": "Régulateur de vitesse",
+      "led": "Phares LED",
+      "parking_sensors": "Capteurs de stationnement",
+      "isofix": "Fixations ISOFIX",
+      "leather": "Sellerie cuir",
+      "sunroof": "Toit panoramique",
+      "4wd": "Transmission intégrale",
+      "hybrid": "Motorisation hybride",
+      "massage": "Sièges massants",
+      "sport": "Châssis sport",
+      "gps": "GPS intégré"
+    },
+    "locations": {
+      "agency": "Agence",
+      "airport": "Aéroport Mohammed V",
+      "station": "Gare Casa-Voyageurs",
+      "address": "Hôtel / domicile"
+    }
+  },
+  "nav": {
+    "home": "Accueil",
+    "fleet": "Notre flotte",
+    "airport": "Aéroport",
+    "longTerm": "Longue durée",
+    "chauffeur": "Avec chauffeur",
+    "blog": "Guide",
+    "faq": "FAQ",
+    "about": "À propos",
+    "contact": "Contact",
+    "book": "Réserver",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu"
+  },
+  "footer": {
+    "about": "Agence de location de voitures sans chauffeur à Casablanca depuis {year}. Livraison à l’aéroport Mohammed V 24h/24, prix tout inclus en dirhams, caution transparente.",
+    "navigation": "Navigation",
+    "services": "Services",
+    "info": "Informations",
+    "contact": "Contact",
+    "hours": "Horaires",
+    "hoursAirport": "Livraison aéroport 24h/24, 7j/7",
+    "legal": "Mentions légales",
+    "privacy": "Confidentialité",
+    "terms": "Conditions de location",
+    "rights": "© {year} {name}. Tous droits réservés.",
+    "legalLine": "{legalName} · RC Casablanca {rc} · ICE {ice} · Capital {capital}",
+    "madeBy": "Site conçu par BrandHub.ma",
+    "days": {
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mer",
+      "thu": "Jeu",
+      "fri": "Ven",
+      "sat": "Sam",
+      "sun": "Dim"
+    }
+  },
+  "widget": {
+    "title": "Trouvez votre voiture",
+    "tabs": {
+      "short": "Location",
+      "long": "Longue durée",
+      "chauffeur": "Avec chauffeur"
+    },
+    "pickup": "Lieu de prise en charge",
+    "dropoff": "Lieu de restitution",
+    "differentDropoff": "Restituer à un autre endroit",
+    "from": "Départ",
+    "to": "Retour",
+    "time": "Heure",
+    "driverAge": "Conducteur de 25 ans et plus",
+    "promo": "Code promo",
+    "addPromo": "+ Ajouter un code promo",
+    "submit": "Voir les véhicules disponibles",
+    "submitLong": "Demander un devis mensuel",
+    "submitChauffeur": "Demander un chauffeur",
+    "manage": "Gérer ma réservation",
+    "trust": {
+      "noFees": "Sans frais cachés",
+      "cancel": "Annulation gratuite 24 h",
+      "airport": "Livraison aéroport 24/7"
+    },
+    "errors": {
+      "dates": "La date de retour doit être après la date de départ."
+    }
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "Location de voitures · Casablanca & Aéroport Mohammed V",
+      "title1": "Casablanca,",
+      "title2": "à votre rythme.",
+      "subtitle": "Voitures récentes livrées à l’aéroport ou à votre porte. Prix tout inclus en dirhams, caution transparente, réponse WhatsApp en moins de 10 minutes.",
+      "cta": "Voir la flotte",
+      "ctaSecondary": "Nous écrire sur WhatsApp",
+      "stats": {
+        "fleet": "véhicules récents",
+        "since": "ans d’expérience",
+        "airport": "livraison aéroport",
+        "languages": "langues parlées"
+      }
+    },
+    "categories": {
+      "eyebrow": "Catégories",
+      "title": "Une voiture pour chaque séjour",
+      "subtitle": "De la citadine économique au SUV de luxe : toutes nos voitures ont moins de trois ans et sont révisées avant chaque location.",
+      "count": "{count, plural, one {# véhicule} other {# véhicules}}"
+    },
+    "fleet": {
+      "eyebrow": "Notre flotte",
+      "title": "Les plus demandées cette saison",
+      "cta": "Toute la flotte"
+    },
+    "why": {
+      "eyebrow": "Pourquoi Diab Car",
+      "title": "Le luxe, c’est l’absence de mauvaises surprises",
+      "items": {
+        "price": {
+          "title": "Prix tout inclus, en dirhams",
+          "text": "Le tarif affiché est le tarif payé : assurance, kilométrage et livraison inclus. Aucun frais découvert au comptoir."
+        },
+        "deposit": {
+          "title": "Caution transparente",
+          "text": "Montant annoncé sur chaque fiche, pré-autorisation par carte jamais débitée, libération sous 7 jours ouvrés."
+        },
+        "airport": {
+          "title": "Livraison aéroport 24h/24",
+          "text": "Nous suivons votre vol et vous attendons à la sortie des arrivées de Mohammed V, de jour comme de nuit, sans supplément."
+        },
+        "support": {
+          "title": "Un interlocuteur, quatre langues",
+          "text": "Réponse WhatsApp en moins de 10 minutes en français, arabe, anglais et espagnol. Assistance routière 24h/24 partout au Maroc."
+        }
+      }
+    },
+    "pricing": {
+      "eyebrow": "Transparence",
+      "title": "Ce que vous payez, et ce que vous ne payez pas",
+      "subtitle": "Les conditions qui font la différence entre une location sereine et une facture surprise.",
+      "rows": {
+        "category": "Catégorie",
+        "from": "À partir de",
+        "deposit": "Caution",
+        "mileage": "Kilométrage",
+        "insurance": "Assurance incluse",
+        "fuel": "Carburant",
+        "cancel": "Annulation"
+      },
+      "included": "Responsabilité civile, vol, dommages",
+      "fuelPolicy": "Plein / plein",
+      "cancelPolicy": "Gratuite jusqu’à 24 h avant",
+      "note": "Option tous risques sans franchise : 80 MAD / jour. Conducteur additionnel : 150 MAD. Siège enfant : 30 MAD / jour."
+    },
+    "airport": {
+      "eyebrow": "Aéroport Mohammed V (CMN)",
+      "title": "Atterrissez, votre voiture vous attend",
+      "text": "31 km d’autoroute vous séparent du centre de Casablanca. Indiquez votre numéro de vol : nous suivons l’atterrissage et vous accueillons à la sortie des arrivées avec le contrat prêt. Dix minutes, et vous êtes en route.",
+      "cta": "Location à l’aéroport",
+      "points": {
+        "tracking": "Suivi de vol en temps réel",
+        "night": "Vols de nuit sans supplément",
+        "meet": "Accueil à la sortie des arrivées"
+      }
+    },
+    "steps": {
+      "eyebrow": "Comment ça marche",
+      "title": "Trois étapes, zéro paperasse",
+      "items": {
+        "1": {
+          "title": "Choisissez",
+          "text": "Sélectionnez votre voiture, vos dates et votre lieu de prise en charge. Le prix total s’affiche immédiatement."
+        },
+        "2": {
+          "title": "Confirmez",
+          "text": "Nous validons la disponibilité sur WhatsApp en moins de 10 minutes et vous envoyons le récapitulatif."
+        },
+        "3": {
+          "title": "Roulez",
+          "text": "Contrat signé sur place, photos d’état des lieux partagées, clés en main. Restitution aussi simple."
+        }
+      }
+    },
+    "reviews": {
+      "eyebrow": "Avis clients",
+      "title": "Ils ont roulé avec nous",
+      "google": "Avis Google",
+      "leave": "Laisser un avis",
+      "sampleNote": "Avis d’exemple — remplacés automatiquement par vos avis Google publiés depuis l’administration."
+    },
+    "faq": {
+      "eyebrow": "Questions fréquentes",
+      "title": "Tout ce qu’il faut savoir avant de réserver",
+      "cta": "Toutes les questions"
+    },
+    "blog": {
+      "eyebrow": "Guide du voyageur",
+      "title": "Conduire au Maroc, sans stress",
+      "cta": "Tous les articles"
+    },
+    "cta": {
+      "title": "Votre voiture à Casablanca, confirmée en 10 minutes",
+      "text": "Écrivez-nous sur WhatsApp ou réservez en ligne. Livraison gratuite à l’aéroport Mohammed V et dans tout Casablanca.",
+      "primary": "Réserver en ligne",
+      "secondary": "WhatsApp"
+    }
+  },
+  "fleet": {
+    "title": "Location de voiture à Casablanca",
+    "intro": "Voitures d’occasion récente, révisées, livrées où vous voulez. Prix par jour en dirhams, tout inclus.",
+    "answer": "Diab Car loue des voitures à Casablanca à partir de {price} par jour, kilométrage illimité sur les citadines et SUV, assurance et livraison à l’aéroport Mohammed V incluses. Toutes les voitures ont moins de trois ans.",
+    "filters": "Filtres",
+    "category": "Catégorie",
+    "all": "Toutes",
+    "transmission": "Boîte",
+    "fuel": "Carburant",
+    "seats": "Places",
+    "seatsMin": "{count}+ places",
+    "price": "Prix par jour",
+    "sort": "Trier",
+    "sortOptions": {
+      "recommended": "Recommandé",
+      "price_asc": "Prix croissant",
+      "price_desc": "Prix décroissant",
+      "newest": "Plus récentes"
+    },
+    "results": "{count, plural, =0 {Aucun véhicule} one {# véhicule} other {# véhicules}}",
+    "reset": "Réinitialiser",
+    "empty": "Aucun véhicule ne correspond à ces filtres. Élargissez votre recherche ou contactez-nous : nous trouvons toujours une solution.",
+    "apply": "Appliquer"
+  },
+  "vehicle": {
+    "breadcrumbFleet": "Flotte",
+    "orSimilar": "ou similaire",
+    "specs": "Caractéristiques",
+    "features": "Équipements",
+    "conditions": "Conditions de location",
+    "included": "Inclus dans le prix",
+    "notIncluded": "Non inclus",
+    "includedItems": {
+      "insurance": "Assurance responsabilité civile, vol et dommages",
+      "mileage": "{mileage} inclus",
+      "delivery": "Livraison aéroport Mohammed V et Casablanca",
+      "assistance": "Assistance routière 24h/24",
+      "driver": "Un conducteur principal",
+      "taxes": "Toutes taxes comprises"
+    },
+    "notIncludedItems": {
+      "fuel": "Carburant (politique plein / plein)",
+      "tolls": "Péages autoroutiers",
+      "extras": "Options : tous risques sans franchise, siège enfant, GPS, conducteur additionnel",
+      "oneWay": "Frais de restitution hors Casablanca (300 à 800 MAD)"
+    },
+    "minAge": "Âge minimum : {age} ans",
+    "license": "Permis depuis plus de {years} an(s)",
+    "depositNote": "Pré-autorisation par carte bancaire, libérée sous {days} jours ouvrés",
+    "priceFrom": "à partir de",
+    "selectDates": "Choisissez vos dates pour voir le prix total",
+    "book": "Réserver ce véhicule",
+    "ask": "Question sur ce véhicule",
+    "similar": "Vous aimerez aussi",
+    "year": "Année",
+    "gearbox": "Boîte",
+    "fuelType": "Carburant",
+    "seatsLabel": "Places",
+    "doorsLabel": "Portes",
+    "luggageLabel": "Bagages",
+    "category": "Catégorie",
+    "quote": {
+      "days": "{count, plural, one {# jour} other {# jours}} × {price}",
+      "season": "Ajustement saisonnier",
+      "discount": "Remise longue durée −{pct} %",
+      "extras": "Options",
+      "delivery": "Livraison",
+      "total": "Total",
+      "perDay": "soit {price} / jour",
+      "deposit": "Caution (pré-autorisation)"
+    },
+    "minAgeLabel": "Âge minimum",
+    "minAgeValue": "{age} ans"
+  },
+  "booking": {
+    "title": "Réservation",
+    "subtitle": "Sans paiement en ligne : vous ne payez rien aujourd’hui. Nous confirmons la disponibilité sur WhatsApp, puis vous réglez à la prise en charge.",
+    "steps": {
+      "1": "Véhicule & dates",
+      "2": "Options",
+      "3": "Vos coordonnées",
+      "4": "Confirmation"
+    },
+    "vehicle": "Véhicule",
+    "changeVehicle": "Changer de véhicule",
+    "chooseVehicle": "Choisissez un véhicule",
+    "pickup": "Prise en charge",
+    "dropoff": "Restitution",
+    "pickupAddress": "Adresse ou hôtel à Casablanca",
+    "flight": "Numéro de vol (livraison aéroport)",
+    "flightHint": "Ex. AT 785 — nous suivons l’atterrissage.",
+    "extras": "Options",
+    "driver": "Conducteur principal",
+    "name": "Nom complet",
+    "phone": "Téléphone (WhatsApp)",
+    "email": "E-mail",
+    "country": "Pays de résidence",
+    "age": "Âge du conducteur",
+    "notes": "Message (optionnel)",
+    "notesHint": "Heure d’arrivée, siège enfant, restitution dans une autre ville…",
+    "consent": "J’accepte les conditions de location et la politique de confidentialité.",
+    "summary": "Récapitulatif",
+    "submit": "Envoyer la demande de réservation",
+    "submitting": "Envoi…",
+    "next": "Continuer",
+    "prev": "Retour",
+    "free": "Gratuit",
+    "errors": {
+      "vehicle": "Sélectionnez un véhicule.",
+      "dates": "Vérifiez vos dates : la restitution doit être après la prise en charge.",
+      "past": "La date de départ doit être dans le futur.",
+      "name": "Indiquez votre nom complet.",
+      "phone": "Indiquez un numéro de téléphone valide avec l’indicatif (ex. +212 6…).",
+      "email": "Indiquez une adresse e-mail valide.",
+      "age": "L’âge minimum pour ce véhicule est de {age} ans.",
+      "consent": "Merci d’accepter les conditions de location.",
+      "generic": "Une erreur est survenue. Écrivez-nous sur WhatsApp, nous confirmons manuellement."
+    },
+    "confirmation": {
+      "title": "Demande envoyée",
+      "reference": "Référence",
+      "text": "Merci {name}. Nous vérifions la disponibilité et vous confirmons sur WhatsApp au {phone} en moins de 10 minutes (08h–23h). Vous recevrez le récapitulatif par e-mail.",
+      "whatsapp": "Accélérer sur WhatsApp",
+      "home": "Retour à l’accueil",
+      "details": "Détails de la demande",
+      "notFound": "Référence introuvable."
+    }
+  },
+  "airport": {
+    "title": "Location de voiture à l’aéroport Mohammed V de Casablanca",
+    "answer": "Diab Car livre votre voiture de location à l’aéroport Mohammed V (CMN) 24h/24, sans frais. Vous indiquez votre numéro de vol, nous suivons l’atterrissage et vous attendons à la sortie des arrivées avec le contrat prêt. À partir de {price} par jour, assurance et kilométrage inclus.",
+    "eyebrow": "Aéroport Mohammed V · Nouaceur",
+    "how": {
+      "title": "Comment se passe la livraison à l’aéroport ?",
+      "steps": {
+        "1": {
+          "title": "Vous réservez avec votre numéro de vol",
+          "text": "En ligne ou sur WhatsApp. Nous confirmons la disponibilité et le lieu exact de rendez-vous."
+        },
+        "2": {
+          "title": "Nous suivons votre vol",
+          "text": "Retard ou avance : votre chauffeur-livreur s’adapte à l’heure réelle d’atterrissage, de jour comme de nuit."
+        },
+        "3": {
+          "title": "Accueil à la sortie des arrivées",
+          "text": "Pancarte à votre nom, contrat signé en 10 minutes, photos d’état des lieux partagées sur WhatsApp."
+        },
+        "4": {
+          "title": "Restitution au dépose-minute",
+          "text": "Rendez-vous aux départs 15 minutes avant l’heure convenue. Nous contrôlons le véhicule avec vous."
+        }
+      }
+    },
+    "facts": {
+      "title": "L’aéroport en chiffres",
+      "distance": {
+        "value": "31 km",
+        "label": "du centre de Casablanca (A7 / A3)"
+      },
+      "time": {
+        "value": "35–45 min",
+        "label": "hors heures de pointe"
+      },
+      "toll": {
+        "value": "15–20 MAD",
+        "label": "de péage autoroutier"
+      },
+      "hours": {
+        "value": "24h/24",
+        "label": "livraison sans supplément"
+      }
+    },
+    "faqTitle": "Questions sur la location à l’aéroport",
+    "cta": "Réserver avec livraison aéroport"
+  },
+  "longTerm": {
+    "title": "Location de voiture longue durée à Casablanca",
+    "answer": "La location longue durée Diab Car commence à {price} par mois pour une citadine, entretien, assurance et assistance inclus. Formules de 1 à 24 mois pour particuliers, MRE et entreprises, avec facture et véhicule de remplacement.",
+    "eyebrow": "Mensuel · Entreprises · MRE",
+    "tiers": {
+      "title": "Tarifs mensuels indicatifs",
+      "economy": "Citadine",
+      "suv": "SUV",
+      "premium": "Premium",
+      "perMonth": "/ mois",
+      "note": "Prix dégressifs dès 3 mois. Devis personnalisé sous 24 h."
+    },
+    "benefits": {
+      "title": "Pourquoi louer au mois ?",
+      "items": {
+        "1": {
+          "title": "Tout compris",
+          "text": "Assurance, entretien, contrôle technique, vignette et assistance : un seul montant mensuel."
+        },
+        "2": {
+          "title": "Flexible",
+          "text": "Changez de véhicule ou arrêtez avec un préavis de 15 jours. Sans engagement long, sans frais de sortie."
+        },
+        "3": {
+          "title": "Facturé",
+          "text": "Facture mensuelle au nom de votre société, TVA récupérable, livraison à Sidi Maarouf, CFC ou Bouskoura."
+        },
+        "4": {
+          "title": "Remplacé",
+          "text": "Véhicule de remplacement en cas de panne ou d’entretien, livré sous 24 h à Casablanca."
+        }
+      }
+    },
+    "cta": "Demander un devis mensuel",
+    "form": {
+      "title": "Devis en 24 h",
+      "company": "Société (optionnel)",
+      "duration": "Durée souhaitée",
+      "months": "{count, plural, one {# mois} other {# mois}}",
+      "category": "Catégorie souhaitée"
+    }
+  },
+  "chauffeur": {
+    "title": "Location de voiture avec chauffeur à Casablanca",
+    "answer": "Diab Car propose des voitures avec chauffeur professionnel à Casablanca à partir de {price} par jour (8 heures), ainsi que des transferts aéroport, mises à disposition pour mariages, événements et déplacements d’affaires. Berlines premium, SUV et vans jusqu’à 9 places.",
+    "eyebrow": "Chauffeur privé · Transferts · Événements",
+    "uses": {
+      "title": "Pour quels besoins ?",
+      "items": {
+        "transfer": {
+          "title": "Transferts aéroport",
+          "text": "Accueil personnalisé à Mohammed V, trajet direct vers votre hôtel ou vos bureaux. Prix fixe annoncé à l’avance."
+        },
+        "business": {
+          "title": "Déplacements d’affaires",
+          "text": "Mise à disposition à la journée ou à la demi-journée. Chauffeurs discrets, ponctuels, francophones et anglophones."
+        },
+        "wedding": {
+          "title": "Mariages & événements",
+          "text": "Berline ou SUV premium décoré, chauffeur en tenue, coordination avec le cortège."
+        },
+        "tours": {
+          "title": "Excursions",
+          "text": "Marrakech, Rabat, El Jadida ou Chefchaouen à la journée, avec un chauffeur qui connaît la route."
+        }
+      }
+    },
+    "cta": "Demander un chauffeur",
+    "pricing": {
+      "title": "Tarifs indicatifs",
+      "day": "Journée (8 h)",
+      "halfDay": "Demi-journée (4 h)",
+      "transfer": "Transfert aéroport",
+      "note": "Carburant et péages inclus dans Casablanca. Hors Casablanca : devis."
+    }
+  },
+  "about": {
+    "title": "Diab Car, agence de location de voitures à Casablanca",
+    "eyebrow": "À propos",
+    "intro": "Diab Car est une agence de location de voitures sans chauffeur fondée à Casablanca en {year}. Installée boulevard Zerktouni, l’agence livre ses véhicules dans toute la ville et à l’aéroport Mohammed V.",
+    "story": {
+      "title": "Une agence de quartier, des standards internationaux",
+      "p1": "Nous avons construit Diab Car autour d’une conviction simple : au Maroc, la location de voiture souffre moins d’un manque de véhicules que d’un manque de clarté. Prix annoncés hors assurance, cautions en espèces, franchises découvertes le jour du sinistre.",
+      "p2": "Notre réponse : une flotte récente et régulièrement renouvelée, des prix tout inclus en dirhams, une caution par pré-autorisation bancaire et un interlocuteur joignable sur WhatsApp en quatre langues. Le luxe, pour nous, c’est l’absence de mauvaises surprises.",
+      "p3": "Aujourd’hui, nous accompagnons les familles marocaines de retour au pays l’été, les voyageurs d’affaires de Casablanca Finance City, les touristes venus d’Espagne et du Golfe, et les entreprises qui préfèrent louer au mois plutôt qu’immobiliser un capital."
+    },
+    "values": {
+      "title": "Nos engagements",
+      "items": {
+        "1": {
+          "title": "Véhicules de moins de 3 ans",
+          "text": "Révisés avant chaque location, nettoyés, avec le plein."
+        },
+        "2": {
+          "title": "Prix tout inclus",
+          "text": "Assurance, kilométrage, livraison. Ce qui est affiché est ce qui est payé."
+        },
+        "3": {
+          "title": "Caution transparente",
+          "text": "Pré-autorisation par carte, montant connu à l’avance, libération sous 7 jours."
+        },
+        "4": {
+          "title": "Réponse en 10 minutes",
+          "text": "WhatsApp de 08h à 23h, assistance routière 24h/24."
+        }
+      }
+    },
+    "legalTitle": "Informations légales",
+    "legalText": "{legalName}, société à responsabilité limitée au capital de {capital}, immatriculée au registre du commerce de Casablanca sous le n° {rc}, ICE {ice}. Activité : location de voitures sans chauffeur."
+  },
+  "contact": {
+    "title": "Contactez Diab Car",
+    "eyebrow": "Contact",
+    "intro": "Une question, un devis, une réservation de dernière minute ? Le plus rapide reste WhatsApp : réponse en moins de 10 minutes de 08h à 23h.",
+    "agency": "Notre agence",
+    "phone": "Téléphone",
+    "whatsapp": "WhatsApp",
+    "email": "E-mail",
+    "hours": "Horaires",
+    "map": "Ouvrir dans Google Maps",
+    "directions": "Itinéraire",
+    "form": {
+      "title": "Écrivez-nous",
+      "name": "Nom",
+      "phone": "Téléphone",
+      "email": "E-mail",
+      "message": "Message",
+      "submit": "Envoyer",
+      "sent": "Message envoyé. Nous vous répondons rapidement.",
+      "viaWhatsapp": "Ou envoyez ce message sur WhatsApp",
+      "error": "Envoi impossible pour le moment. Utilisez WhatsApp ci-dessous."
+    }
+  },
+  "faqPage": {
+    "title": "Questions fréquentes sur la location de voiture à Casablanca",
+    "eyebrow": "FAQ",
+    "intro": "Documents, âge minimum, caution, assurance, aéroport, frontières : les réponses claires que vous cherchez avant de réserver.",
+    "categories": {
+      "conditions": "Conditions",
+      "payment": "Paiement & caution",
+      "delivery": "Livraison & restitution",
+      "insurance": "Assurance",
+      "longterm": "Longue durée",
+      "general": "Général"
+    },
+    "stillQuestions": "Une autre question ?",
+    "askWhatsapp": "Posez-la sur WhatsApp"
+  },
+  "blog": {
+    "title": "Guide : louer et conduire une voiture au Maroc",
+    "eyebrow": "Guide du voyageur",
+    "intro": "Conseils pratiques, chiffres vérifiés et réponses directes pour rouler sereinement à Casablanca et au-delà.",
+    "readingTime": "{minutes} min de lecture",
+    "related": "À lire aussi",
+    "backToBlog": "Tous les articles",
+    "ctaTitle": "Prêt à prendre la route ?",
+    "ctaText": "Voitures récentes livrées à l’aéroport Mohammed V, prix tout inclus en dirhams."
+  },
+  "legal": {
+    "terms": {
+      "title": "Conditions générales de location",
+      "updated": "Dernière mise à jour : septembre 2026",
+      "sections": {
+        "1": {
+          "title": "1. Objet",
+          "text": "Les présentes conditions régissent la location de véhicules sans chauffeur par {legalName} (« Diab Car ») au locataire désigné au contrat. La réservation en ligne vaut demande ; la location est conclue à la signature du contrat et à la remise des clés."
+        },
+        "2": {
+          "title": "2. Conditions du conducteur",
+          "text": "Le conducteur doit être âgé de 21 ans minimum (25 ans pour la catégorie premium, 28 ans pour la catégorie luxe), titulaire d’un permis de conduire valide depuis plus d’un an et présenter une pièce d’identité. Les permis rédigés dans un alphabet non latin doivent être accompagnés d’un permis international. Tout conducteur additionnel doit être déclaré au contrat."
+        },
+        "3": {
+          "title": "3. Prix et paiement",
+          "text": "Les prix sont exprimés en dirhams marocains, toutes taxes comprises, et incluent l’assurance responsabilité civile, vol et dommages, le kilométrage indiqué sur la fiche du véhicule et la livraison à Casablanca et à l’aéroport Mohammed V. Le paiement s’effectue à la prise en charge par carte bancaire, espèces ou virement (longue durée)."
+        },
+        "4": {
+          "title": "4. Caution",
+          "text": "Une caution, dont le montant figure sur la fiche du véhicule et le contrat, est constituée par pré-autorisation sur la carte bancaire du conducteur principal. Elle n’est pas débitée et est libérée dans un délai de 7 jours ouvrés après la restitution du véhicule sans dommage, amende ni manquant de carburant."
+        },
+        "5": {
+          "title": "5. Assurance et franchise",
+          "text": "En cas de dommage responsable ou sans tiers identifié, la responsabilité du locataire est limitée au montant de la franchise, égal à la caution, sauf souscription de l’option tous risques sans franchise. Restent à la charge du locataire dans tous les cas : pneus, vitrage, dessous de caisse, clés, carburant, intérieur, et tout dommage résultant d’une conduite en état d’ivresse, d’une utilisation hors route ou d’un conducteur non déclaré."
+        },
+        "6": {
+          "title": "6. Utilisation du véhicule",
+          "text": "Le véhicule ne peut quitter le territoire marocain. Sont interdits : la sous-location, le transport payant de personnes ou de marchandises, les compétitions, le remorquage et la conduite sur pistes non carrossables. Les amendes et infractions constatées pendant la location sont à la charge du locataire, majorées de frais de gestion de 150 MAD."
+        },
+        "7": {
+          "title": "7. Carburant et kilométrage",
+          "text": "Le véhicule est remis avec le plein et doit être restitué avec le plein ; le carburant manquant est facturé au prix du jour majoré de 100 MAD de service. Les kilomètres au-delà du forfait indiqué sont facturés de 2 à 4 MAD selon la catégorie."
+        },
+        "8": {
+          "title": "8. Annulation et modification",
+          "text": "Annulation gratuite jusqu’à 24 heures avant l’heure de prise en charge. En deçà, ou en cas de non-présentation, une journée de location peut être facturée. Les modifications de dates ou de véhicule sont soumises à disponibilité."
+        },
+        "9": {
+          "title": "9. Restitution",
+          "text": "Le véhicule doit être restitué au lieu, à la date et à l’heure convenus. Un retard supérieur à une heure entraîne la facturation d’une journée supplémentaire. Un état des lieux contradictoire, appuyé de photos, est réalisé au départ et au retour."
+        },
+        "10": {
+          "title": "10. Données personnelles et litiges",
+          "text": "Les données collectées sont traitées conformément à la loi 09-08 et à notre politique de confidentialité. Les présentes conditions sont soumises au droit marocain ; tout litige relève des tribunaux compétents de Casablanca."
+        }
+      }
+    },
+    "notice": {
+      "title": "Mentions légales",
+      "editor": "Éditeur du site",
+      "editorText": "{legalName}, société à responsabilité limitée au capital de {capital}, immatriculée au registre du commerce de Casablanca sous le numéro {rc}, identifiant commun de l’entreprise (ICE) {ice}. Siège : {address}, {city}, Maroc. Téléphone : {phone}. E-mail : {email}.",
+      "activity": "Activité",
+      "activityText": "Location de voitures sans chauffeur, soumise au décret n° 2-69-351 et au cahier des charges du ministère du Transport et de la Logistique.",
+      "hosting": "Hébergement",
+      "hostingText": "Le site est hébergé par Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis. Les données sont stockées par Supabase Inc. dans l’Union européenne.",
+      "ip": "Propriété intellectuelle",
+      "ipText": "L’ensemble des contenus (textes, visuels, marques, code) est la propriété de {legalName} ou de ses partenaires. Toute reproduction sans autorisation est interdite. Les marques automobiles citées appartiennent à leurs propriétaires respectifs.",
+      "credits": "Conception & réalisation",
+      "creditsText": "BrandHub.ma — digitalisation, business intelligence et acquisition pour les entreprises marocaines."
+    },
+    "privacy": {
+      "title": "Politique de confidentialité",
+      "intro": "Diab Car collecte le minimum de données nécessaires pour traiter votre réservation et respecte la loi marocaine 09-08 relative à la protection des personnes physiques à l’égard du traitement des données à caractère personnel.",
+      "sections": {
+        "1": {
+          "title": "Données collectées",
+          "text": "Nom, téléphone, e-mail, pays de résidence, âge du conducteur, numéro de vol et détails de la réservation. Lors de la location : copie du permis et de la pièce d’identité, exigées par la réglementation."
+        },
+        "2": {
+          "title": "Finalités",
+          "text": "Traiter et confirmer votre demande, établir le contrat de location, vous contacter en cas de besoin pendant la location, répondre à nos obligations légales et comptables, améliorer notre service."
+        },
+        "3": {
+          "title": "Base légale et durée",
+          "text": "Exécution du contrat et obligations légales. Les données de réservation sont conservées 5 ans conformément aux obligations comptables, puis supprimées ou anonymisées."
+        },
+        "4": {
+          "title": "Destinataires",
+          "text": "Diab Car uniquement, ainsi que ses sous-traitants techniques (hébergement Vercel, base de données Supabase, e-mails Resend) et, en cas de sinistre, notre compagnie d’assurance."
+        },
+        "5": {
+          "title": "Cookies",
+          "text": "Le site utilise un cookie de langue (NEXT_LOCALE), un cookie de thème et, si vous l’acceptez, Google Analytics 4 pour mesurer l’audience de façon agrégée. Aucune publicité ciblée."
+        },
+        "6": {
+          "title": "Vos droits",
+          "text": "Vous disposez d’un droit d’accès, de rectification, d’opposition et de suppression. Écrivez-nous à {email}. Vous pouvez également saisir la CNDP (Commission nationale de contrôle de la protection des données à caractère personnel)."
+        }
+      }
+    }
+  },
+  "seo": {
+    "home": {
+      "title": "Location de voiture à Casablanca & Aéroport Mohammed V | Diab Car",
+      "description": "Location de voitures à Casablanca dès 250 MAD/jour : livraison aéroport Mohammed V 24h/24, prix tout inclus, caution transparente, réponse WhatsApp en 10 min. Citadines, SUV, premium, vans."
+    },
+    "fleet": {
+      "title": "Notre flotte — Location voiture Casablanca pas cher à luxe | Diab Car",
+      "description": "Toutes nos voitures de location à Casablanca avec prix par jour en dirhams : Dacia, Renault, Hyundai, Toyota hybride, Mercedes, Range Rover, Audi, Porsche, vans 7 à 9 places. Kilométrage illimité."
+    },
+    "airport": {
+      "title": "Location voiture aéroport Mohammed V Casablanca 24h/24 | Diab Car",
+      "description": "Livraison gratuite de votre voiture de location à l’aéroport Mohammed V (CMN) : suivi de vol, accueil aux arrivées, contrat en 10 min, vols de nuit sans supplément. Dès 250 MAD/jour."
+    },
+    "longTerm": {
+      "title": "Location voiture longue durée Casablanca dès 6 500 MAD/mois | Diab Car",
+      "description": "Location de voiture au mois à Casablanca pour particuliers, MRE et entreprises : entretien, assurance et assistance inclus, facture, véhicule de remplacement. Devis en 24 h."
+    },
+    "chauffeur": {
+      "title": "Location voiture avec chauffeur Casablanca — Transferts & événements | Diab Car",
+      "description": "Voiture avec chauffeur professionnel à Casablanca : transferts aéroport Mohammed V, déplacements d’affaires, mariages, excursions. Berlines premium, SUV, vans 9 places. Prix fixes."
+    },
+    "booking": {
+      "title": "Réserver une voiture à Casablanca | Diab Car",
+      "description": "Réservez votre voiture de location à Casablanca en 2 minutes, sans paiement en ligne. Confirmation WhatsApp en moins de 10 minutes."
+    },
+    "confirmation": {
+      "title": "Demande de réservation envoyée | Diab Car"
+    },
+    "about": {
+      "title": "À propos de Diab Car — Agence de location à Casablanca depuis 2013",
+      "description": "Diab Car, agence de location de voitures sans chauffeur installée boulevard Zerktouni à Casablanca : flotte récente, prix tout inclus, caution transparente, service en 4 langues."
+    },
+    "contact": {
+      "title": "Contact — Diab Car Casablanca, Bd Zerktouni",
+      "description": "Contactez Diab Car : WhatsApp, téléphone, e-mail et adresse de l’agence boulevard Zerktouni à Casablanca. Réponse en moins de 10 minutes."
+    },
+    "faq": {
+      "title": "FAQ location de voiture au Maroc : documents, caution, assurance | Diab Car",
+      "description": "Toutes les réponses pour louer une voiture à Casablanca : documents, âge minimum, caution et franchise, assurance, livraison aéroport, frontières, aller simple, paiement."
+    },
+    "blog": {
+      "title": "Guide du voyageur — Louer et conduire au Maroc | Diab Car",
+      "description": "Conseils pratiques pour louer une voiture au Maroc : documents, aéroport Mohammed V, péages Casablanca–Marrakech, assurance, caution."
+    },
+    "terms": {
+      "title": "Conditions générales de location | Diab Car"
+    },
+    "notice": {
+      "title": "Mentions légales | Diab Car"
+    },
+    "privacy": {
+      "title": "Politique de confidentialité | Diab Car"
+    },
+    "vehicle": {
+      "title": "Location {name} à Casablanca — {price}/jour | Diab Car",
+      "description": "Louez une {name} à Casablanca à partir de {price} par jour, {transmission}, {seats} places, livraison aéroport Mohammed V incluse. Caution {deposit}, {mileage}."
+    }
+  },
+  "notFound": {
+    "title": "Page introuvable",
+    "text": "Cette page n’existe pas ou a été déplacée. Notre flotte, elle, est bien là.",
+    "cta": "Voir la flotte",
+    "home": "Accueil"
+  },
+  "cookie": {
+    "text": "Nous utilisons un cookie de mesure d’audience (Google Analytics) pour améliorer le site. Aucune publicité.",
+    "accept": "Accepter",
+    "decline": "Refuser"
+  }
+}

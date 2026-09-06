@@ -1,0 +1,11 @@
+id,category,city_slug,vehicle_slug,question_fr,short_answer_fr,long_answer_fr
+Q001,documents,,,"Quels documents faut-il pour louer une voiture ?","TODO — réponse factuelle en 1–2 phrases","TODO — réponse complète"
+Q002,prix,casablanca,,"Combien coûte une location de voiture à Casablanca ?","TODO","TODO"
+Q003,aeroport,casablanca,,"Livrez-vous la voiture à l'aéroport Mohammed V ?","TODO","TODO"
+Q004,caution,,,"Quel est le montant de la caution et quand est-elle restituée ?","TODO","TODO"
+Q005,carburant,,,"Quelle est votre politique de carburant ?","TODO","TODO"
+Q006,kilometrage,,,"Le kilométrage est-il illimité ?","TODO","TODO"
+Q007,assurance,,,"L'assurance est-elle incluse ?","TODO","TODO"
+Q008,conducteur,,,"Quel est l'âge minimum et l'ancienneté de permis exigée ?","TODO","TODO"
+Q009,paiement,,,"Comment payer ma location ?","TODO","TODO"
+Q010,annulation,,,"Puis-je annuler ou modifier ma réservation ?","TODO","TODO"

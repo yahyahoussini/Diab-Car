@@ -1,0 +1,766 @@
+{
+  "common": {
+    "brand": "Diab Car",
+    "brandTagline": "Car rental · Casablanca",
+    "skipToContent": "Skip to content",
+    "perDay": "/ day",
+    "fromPrice": "from",
+    "day": "{count, plural, one {# day} other {# days}}",
+    "total": "Total",
+    "deposit": "Deposit",
+    "seats": "{count} seats",
+    "doors": "{count} doors",
+    "luggage": "{count} bags",
+    "unlimitedKm": "Unlimited mileage",
+    "kmPerDay": "{km} km / day",
+    "or": "or",
+    "and": "and",
+    "learnMore": "Learn more",
+    "viewAll": "View all",
+    "book": "Book",
+    "bookNow": "Book now",
+    "whatsapp": "WhatsApp",
+    "call": "Call",
+    "details": "Details",
+    "back": "Back",
+    "close": "Close",
+    "menu": "Menu",
+    "loading": "Loading…",
+    "new": "New",
+    "featured": "Popular",
+    "sample": "Sample",
+    "madEur": "≈ {eur}",
+    "currency": "Currency",
+    "theme": "Theme",
+    "themeLight": "Light mode",
+    "themeDark": "Dark mode",
+    "themeSystem": "System",
+    "language": "Language",
+    "readMore": "Read the article",
+    "updated": "Updated {date}",
+    "published": "Published {date}",
+    "verifiedBusiness": "Licensed agency since {year}",
+    "categories": {
+      "economy": "City car",
+      "compact": "Compact",
+      "sedan": "Sedan",
+      "suv": "SUV & 4x4",
+      "premium": "Premium",
+      "luxury": "Luxury",
+      "van": "Van & minibus"
+    },
+    "transmission": {
+      "manual": "Manual",
+      "automatic": "Automatic"
+    },
+    "fuel": {
+      "petrol": "Petrol",
+      "diesel": "Diesel",
+      "hybrid": "Hybrid",
+      "electric": "Electric"
+    },
+    "features": {
+      "ac": "Air conditioning",
+      "bluetooth": "Bluetooth",
+      "apple_carplay": "Apple CarPlay / Android Auto",
+      "usb": "USB ports",
+      "camera": "Reversing camera",
+      "cruise": "Cruise control",
+      "led": "LED headlights",
+      "parking_sensors": "Parking sensors",
+      "isofix": "ISOFIX anchors",
+      "leather": "Leather seats",
+      "sunroof": "Panoramic roof",
+      "4wd": "All-wheel drive",
+      "hybrid": "Hybrid powertrain",
+      "massage": "Massage seats",
+      "sport": "Sport chassis",
+      "gps": "Built-in GPS"
+    },
+    "locations": {
+      "agency": "Agency",
+      "airport": "Mohammed V Airport",
+      "station": "Casa-Voyageurs station",
+      "address": "Hotel / home"
+    }
+  },
+  "nav": {
+    "home": "Home",
+    "fleet": "Our fleet",
+    "airport": "Airport",
+    "longTerm": "Long term",
+    "chauffeur": "With driver",
+    "blog": "Guide",
+    "faq": "FAQ",
+    "about": "About",
+    "contact": "Contact",
+    "book": "Book",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+  "footer": {
+    "about": "Self-drive car rental agency in Casablanca since {year}. 24/7 delivery at Mohammed V Airport, all-inclusive prices in dirhams, transparent deposit.",
+    "navigation": "Navigation",
+    "services": "Services",
+    "info": "Information",
+    "contact": "Contact",
+    "hours": "Opening hours",
+    "hoursAirport": "Airport delivery 24/7",
+    "legal": "Legal notice",
+    "privacy": "Privacy",
+    "terms": "Rental terms",
+    "rights": "© {year} {name}. All rights reserved.",
+    "legalLine": "{legalName} · RC Casablanca {rc} · ICE {ice} · Capital {capital}",
+    "madeBy": "Website by BrandHub.ma",
+    "days": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    }
+  },
+  "widget": {
+    "title": "Find your car",
+    "tabs": {
+      "short": "Rental",
+      "long": "Long term",
+      "chauffeur": "With driver"
+    },
+    "pickup": "Pick-up location",
+    "dropoff": "Return location",
+    "differentDropoff": "Return to a different location",
+    "from": "Pick-up",
+    "to": "Return",
+    "time": "Time",
+    "driverAge": "Driver aged 25 or over",
+    "promo": "Promo code",
+    "addPromo": "+ Add a promo code",
+    "submit": "See available cars",
+    "submitLong": "Request a monthly quote",
+    "submitChauffeur": "Request a driver",
+    "manage": "Manage my booking",
+    "trust": {
+      "noFees": "No hidden fees",
+      "cancel": "Free cancellation 24 h",
+      "airport": "Airport delivery 24/7"
+    },
+    "errors": {
+      "dates": "The return date must be after the pick-up date."
+    }
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "Car rental · Casablanca & Mohammed V Airport",
+      "title1": "Casablanca,",
+      "title2": "at your own pace.",
+      "subtitle": "Recent cars delivered to the airport or to your door. All-inclusive prices in dirhams, a transparent deposit and a WhatsApp reply in under 10 minutes.",
+      "cta": "View the fleet",
+      "ctaSecondary": "Message us on WhatsApp",
+      "stats": {
+        "fleet": "recent vehicles",
+        "since": "years of experience",
+        "airport": "airport delivery",
+        "languages": "languages spoken"
+      }
+    },
+    "categories": {
+      "eyebrow": "Categories",
+      "title": "A car for every stay",
+      "subtitle": "From the economical city car to the luxury SUV: every car is under three years old and serviced before each rental.",
+      "count": "{count, plural, one {# vehicle} other {# vehicles}}"
+    },
+    "fleet": {
+      "eyebrow": "Our fleet",
+      "title": "Most requested this season",
+      "cta": "Full fleet"
+    },
+    "why": {
+      "eyebrow": "Why Diab Car",
+      "title": "Luxury is the absence of bad surprises",
+      "items": {
+        "price": {
+          "title": "All-inclusive prices, in dirhams",
+          "text": "The price shown is the price paid: insurance, mileage and delivery included. No fees discovered at the counter."
+        },
+        "deposit": {
+          "title": "Transparent deposit",
+          "text": "Amount stated on every vehicle page, card pre-authorisation never charged, released within 7 working days."
+        },
+        "airport": {
+          "title": "Airport delivery 24/7",
+          "text": "We track your flight and wait for you at the Mohammed V arrivals exit, day or night, at no extra cost."
+        },
+        "support": {
+          "title": "One contact, four languages",
+          "text": "WhatsApp reply in under 10 minutes in French, Arabic, English and Spanish. 24/7 roadside assistance across Morocco."
+        }
+      }
+    },
+    "pricing": {
+      "eyebrow": "Transparency",
+      "title": "What you pay — and what you don’t",
+      "subtitle": "The terms that separate a relaxed rental from a surprise invoice.",
+      "rows": {
+        "category": "Category",
+        "from": "From",
+        "deposit": "Deposit",
+        "mileage": "Mileage",
+        "insurance": "Insurance included",
+        "fuel": "Fuel",
+        "cancel": "Cancellation"
+      },
+      "included": "Third-party liability, theft, damage",
+      "fuelPolicy": "Full to full",
+      "cancelPolicy": "Free up to 24 h before",
+      "note": "Zero-excess full insurance option: MAD 80 / day. Additional driver: MAD 150. Child seat: MAD 30 / day."
+    },
+    "airport": {
+      "eyebrow": "Mohammed V Airport (CMN)",
+      "title": "Land — your car is waiting",
+      "text": "31 km of motorway separate you from central Casablanca. Give us your flight number: we track the landing and greet you at the arrivals exit with the contract ready. Ten minutes, and you are on your way.",
+      "cta": "Airport car rental",
+      "points": {
+        "tracking": "Real-time flight tracking",
+        "night": "Night flights at no extra cost",
+        "meet": "Meet & greet at arrivals"
+      }
+    },
+    "steps": {
+      "eyebrow": "How it works",
+      "title": "Three steps, zero paperwork",
+      "items": {
+        "1": {
+          "title": "Choose",
+          "text": "Pick your car, dates and pick-up location. The total price appears instantly."
+        },
+        "2": {
+          "title": "Confirm",
+          "text": "We confirm availability on WhatsApp in under 10 minutes and send you the summary."
+        },
+        "3": {
+          "title": "Drive",
+          "text": "Contract signed on the spot, condition photos shared, keys in hand. Returning is just as simple."
+        }
+      }
+    },
+    "reviews": {
+      "eyebrow": "Customer reviews",
+      "title": "They drove with us",
+      "google": "Google reviews",
+      "leave": "Leave a review",
+      "sampleNote": "Sample reviews — automatically replaced by your published Google reviews from the admin."
+    },
+    "faq": {
+      "eyebrow": "Frequently asked questions",
+      "title": "Everything to know before you book",
+      "cta": "All questions"
+    },
+    "blog": {
+      "eyebrow": "Traveller’s guide",
+      "title": "Driving in Morocco, stress-free",
+      "cta": "All articles"
+    },
+    "cta": {
+      "title": "Your car in Casablanca, confirmed in 10 minutes",
+      "text": "Message us on WhatsApp or book online. Free delivery at Mohammed V Airport and across Casablanca.",
+      "primary": "Book online",
+      "secondary": "WhatsApp"
+    }
+  },
+  "fleet": {
+    "title": "Car rental in Casablanca",
+    "intro": "Recent, serviced cars delivered wherever you want. Daily prices in dirhams, all inclusive.",
+    "answer": "Diab Car rents cars in Casablanca from {price} per day, with unlimited mileage on city cars and SUVs, insurance and Mohammed V Airport delivery included. Every car is under three years old.",
+    "filters": "Filters",
+    "category": "Category",
+    "all": "All",
+    "transmission": "Gearbox",
+    "fuel": "Fuel",
+    "seats": "Seats",
+    "seatsMin": "{count}+ seats",
+    "price": "Price per day",
+    "sort": "Sort",
+    "sortOptions": {
+      "recommended": "Recommended",
+      "price_asc": "Price: low to high",
+      "price_desc": "Price: high to low",
+      "newest": "Newest"
+    },
+    "results": "{count, plural, =0 {No vehicles} one {# vehicle} other {# vehicles}}",
+    "reset": "Reset",
+    "empty": "No vehicle matches these filters. Widen your search or contact us — we always find a solution.",
+    "apply": "Apply"
+  },
+  "vehicle": {
+    "breadcrumbFleet": "Fleet",
+    "orSimilar": "or similar",
+    "specs": "Specifications",
+    "features": "Equipment",
+    "conditions": "Rental conditions",
+    "included": "Included in the price",
+    "notIncluded": "Not included",
+    "includedItems": {
+      "insurance": "Third-party liability, theft and damage insurance",
+      "mileage": "{mileage} included",
+      "delivery": "Delivery at Mohammed V Airport and in Casablanca",
+      "assistance": "24/7 roadside assistance",
+      "driver": "One main driver",
+      "taxes": "All taxes included"
+    },
+    "notIncludedItems": {
+      "fuel": "Fuel (full-to-full policy)",
+      "tolls": "Motorway tolls",
+      "extras": "Options: zero-excess insurance, child seat, GPS, additional driver",
+      "oneWay": "Return outside Casablanca (MAD 300–800)"
+    },
+    "minAge": "Minimum age: {age}",
+    "license": "Licence held for over {years} year(s)",
+    "depositNote": "Card pre-authorisation, released within {days} working days",
+    "priceFrom": "from",
+    "selectDates": "Choose your dates to see the total price",
+    "book": "Book this vehicle",
+    "ask": "Ask about this vehicle",
+    "similar": "You may also like",
+    "year": "Year",
+    "gearbox": "Gearbox",
+    "fuelType": "Fuel",
+    "seatsLabel": "Seats",
+    "doorsLabel": "Doors",
+    "luggageLabel": "Luggage",
+    "category": "Category",
+    "quote": {
+      "days": "{count, plural, one {# day} other {# days}} × {price}",
+      "season": "Seasonal adjustment",
+      "discount": "Long-rental discount −{pct}%",
+      "extras": "Options",
+      "delivery": "Delivery",
+      "total": "Total",
+      "perDay": "i.e. {price} / day",
+      "deposit": "Deposit (pre-authorisation)"
+    },
+    "minAgeLabel": "Minimum age",
+    "minAgeValue": "{age} years"
+  },
+  "booking": {
+    "title": "Booking",
+    "subtitle": "No online payment: you pay nothing today. We confirm availability on WhatsApp, then you pay at pick-up.",
+    "steps": {
+      "1": "Vehicle & dates",
+      "2": "Options",
+      "3": "Your details",
+      "4": "Confirmation"
+    },
+    "vehicle": "Vehicle",
+    "changeVehicle": "Change vehicle",
+    "chooseVehicle": "Choose a vehicle",
+    "pickup": "Pick-up",
+    "dropoff": "Return",
+    "pickupAddress": "Address or hotel in Casablanca",
+    "flight": "Flight number (airport delivery)",
+    "flightHint": "e.g. AT 785 — we track the landing.",
+    "extras": "Options",
+    "driver": "Main driver",
+    "name": "Full name",
+    "phone": "Phone (WhatsApp)",
+    "email": "Email",
+    "country": "Country of residence",
+    "age": "Driver’s age",
+    "notes": "Message (optional)",
+    "notesHint": "Arrival time, child seat, return in another city…",
+    "consent": "I accept the rental terms and the privacy policy.",
+    "summary": "Summary",
+    "submit": "Send booking request",
+    "submitting": "Sending…",
+    "next": "Continue",
+    "prev": "Back",
+    "free": "Free",
+    "errors": {
+      "vehicle": "Select a vehicle.",
+      "dates": "Check your dates: the return must be after the pick-up.",
+      "past": "The pick-up date must be in the future.",
+      "name": "Enter your full name.",
+      "phone": "Enter a valid phone number with country code (e.g. +44 7…).",
+      "email": "Enter a valid email address.",
+      "age": "The minimum age for this vehicle is {age}.",
+      "consent": "Please accept the rental terms.",
+      "generic": "Something went wrong. Message us on WhatsApp and we will confirm manually."
+    },
+    "confirmation": {
+      "title": "Request sent",
+      "reference": "Reference",
+      "text": "Thank you {name}. We are checking availability and will confirm on WhatsApp at {phone} within 10 minutes (8am–11pm). A summary is on its way to your inbox.",
+      "whatsapp": "Speed things up on WhatsApp",
+      "home": "Back to home",
+      "details": "Request details",
+      "notFound": "Reference not found."
+    }
+  },
+  "airport": {
+    "title": "Car rental at Casablanca Mohammed V Airport",
+    "answer": "Diab Car delivers your rental car to Mohammed V Airport (CMN) 24/7, free of charge. You give us your flight number, we track the landing and wait for you at the arrivals exit with the contract ready. From {price} per day, insurance and mileage included.",
+    "eyebrow": "Mohammed V Airport · Nouaceur",
+    "how": {
+      "title": "How does airport delivery work?",
+      "steps": {
+        "1": {
+          "title": "You book with your flight number",
+          "text": "Online or on WhatsApp. We confirm availability and the exact meeting point."
+        },
+        "2": {
+          "title": "We track your flight",
+          "text": "Early or delayed: your delivery driver adapts to the real landing time, day or night."
+        },
+        "3": {
+          "title": "Meet & greet at arrivals",
+          "text": "A sign with your name, contract signed in 10 minutes, condition photos shared on WhatsApp."
+        },
+        "4": {
+          "title": "Return at the departures drop-off",
+          "text": "Meet us at departures 15 minutes before the agreed time. We check the car together."
+        }
+      }
+    },
+    "facts": {
+      "title": "The airport in numbers",
+      "distance": {
+        "value": "31 km",
+        "label": "from central Casablanca (A7 / A3)"
+      },
+      "time": {
+        "value": "35–45 min",
+        "label": "outside rush hour"
+      },
+      "toll": {
+        "value": "MAD 15–20",
+        "label": "motorway toll"
+      },
+      "hours": {
+        "value": "24/7",
+        "label": "delivery, no surcharge"
+      }
+    },
+    "faqTitle": "Airport rental questions",
+    "cta": "Book with airport delivery"
+  },
+  "longTerm": {
+    "title": "Long-term car rental in Casablanca",
+    "answer": "Diab Car long-term rental starts at {price} per month for a city car, with maintenance, insurance and assistance included. Plans from 1 to 24 months for individuals, Moroccans living abroad and companies, with invoicing and a replacement vehicle.",
+    "eyebrow": "Monthly · Companies · Expats",
+    "tiers": {
+      "title": "Indicative monthly rates",
+      "economy": "City car",
+      "suv": "SUV",
+      "premium": "Premium",
+      "perMonth": "/ month",
+      "note": "Decreasing rates from 3 months. Custom quote within 24 h."
+    },
+    "benefits": {
+      "title": "Why rent monthly?",
+      "items": {
+        "1": {
+          "title": "All inclusive",
+          "text": "Insurance, servicing, roadworthiness test, road tax and assistance: one monthly amount."
+        },
+        "2": {
+          "title": "Flexible",
+          "text": "Switch vehicles or stop with 15 days’ notice. No long commitment, no exit fees."
+        },
+        "3": {
+          "title": "Invoiced",
+          "text": "Monthly invoice in your company’s name, recoverable VAT, delivery to Sidi Maarouf, CFC or Bouskoura."
+        },
+        "4": {
+          "title": "Replaced",
+          "text": "Replacement vehicle in case of breakdown or servicing, delivered within 24 h in Casablanca."
+        }
+      }
+    },
+    "cta": "Request a monthly quote",
+    "form": {
+      "title": "Quote within 24 h",
+      "company": "Company (optional)",
+      "duration": "Desired duration",
+      "months": "{count, plural, one {# month} other {# months}}",
+      "category": "Desired category"
+    }
+  },
+  "chauffeur": {
+    "title": "Car rental with driver in Casablanca",
+    "answer": "Diab Car offers cars with a professional driver in Casablanca from {price} per day (8 hours), plus airport transfers and hire for weddings, events and business travel. Premium sedans, SUVs and vans up to 9 seats.",
+    "eyebrow": "Private driver · Transfers · Events",
+    "uses": {
+      "title": "What is it for?",
+      "items": {
+        "transfer": {
+          "title": "Airport transfers",
+          "text": "Personal welcome at Mohammed V, direct ride to your hotel or office. Fixed price announced in advance."
+        },
+        "business": {
+          "title": "Business travel",
+          "text": "Full-day or half-day hire. Discreet, punctual drivers who speak French and English."
+        },
+        "wedding": {
+          "title": "Weddings & events",
+          "text": "Decorated premium sedan or SUV, uniformed driver, coordination with the procession."
+        },
+        "tours": {
+          "title": "Excursions",
+          "text": "Marrakech, Rabat, El Jadida or Chefchaouen for the day, with a driver who knows the road."
+        }
+      }
+    },
+    "cta": "Request a driver",
+    "pricing": {
+      "title": "Indicative prices",
+      "day": "Full day (8 h)",
+      "halfDay": "Half day (4 h)",
+      "transfer": "Airport transfer",
+      "note": "Fuel and tolls included within Casablanca. Outside Casablanca: quote."
+    }
+  },
+  "about": {
+    "title": "Diab Car, car rental agency in Casablanca",
+    "eyebrow": "About",
+    "intro": "Diab Car is a self-drive car rental agency founded in Casablanca in {year}. Based on Boulevard Zerktouni, the agency delivers its vehicles across the city and at Mohammed V Airport.",
+    "story": {
+      "title": "A neighbourhood agency with international standards",
+      "p1": "We built Diab Car around a simple conviction: in Morocco, car rental suffers less from a lack of cars than from a lack of clarity. Prices quoted without insurance, cash deposits, excesses discovered on the day of a claim.",
+      "p2": "Our answer: a recent, regularly renewed fleet, all-inclusive prices in dirhams, a deposit by bank pre-authorisation and one contact reachable on WhatsApp in four languages. For us, luxury is the absence of bad surprises.",
+      "p3": "Today we serve Moroccan families returning home for the summer, business travellers from Casablanca Finance City, tourists from Spain and the Gulf, and companies that would rather rent monthly than tie up capital."
+    },
+    "values": {
+      "title": "Our commitments",
+      "items": {
+        "1": {
+          "title": "Vehicles under 3 years old",
+          "text": "Serviced before each rental, cleaned, with a full tank."
+        },
+        "2": {
+          "title": "All-inclusive prices",
+          "text": "Insurance, mileage, delivery. What is shown is what is paid."
+        },
+        "3": {
+          "title": "Transparent deposit",
+          "text": "Card pre-authorisation, amount known in advance, released within 7 days."
+        },
+        "4": {
+          "title": "Reply within 10 minutes",
+          "text": "WhatsApp from 8am to 11pm, roadside assistance 24/7."
+        }
+      }
+    },
+    "legalTitle": "Legal information",
+    "legalText": "{legalName}, a limited liability company with a capital of {capital}, registered with the Casablanca trade register under no. {rc}, ICE {ice}. Activity: self-drive car rental."
+  },
+  "contact": {
+    "title": "Contact Diab Car",
+    "eyebrow": "Contact",
+    "intro": "A question, a quote, a last-minute booking? WhatsApp is fastest: reply within 10 minutes from 8am to 11pm.",
+    "agency": "Our agency",
+    "phone": "Phone",
+    "whatsapp": "WhatsApp",
+    "email": "Email",
+    "hours": "Opening hours",
+    "map": "Open in Google Maps",
+    "directions": "Directions",
+    "form": {
+      "title": "Write to us",
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
+      "message": "Message",
+      "submit": "Send",
+      "sent": "Message sent. We will reply shortly.",
+      "viaWhatsapp": "Or send this message on WhatsApp",
+      "error": "Could not send right now. Use WhatsApp below."
+    }
+  },
+  "faqPage": {
+    "title": "Frequently asked questions about car rental in Casablanca",
+    "eyebrow": "FAQ",
+    "intro": "Documents, minimum age, deposit, insurance, airport, borders: the clear answers you need before booking.",
+    "categories": {
+      "conditions": "Conditions",
+      "payment": "Payment & deposit",
+      "delivery": "Delivery & return",
+      "insurance": "Insurance",
+      "longterm": "Long term",
+      "general": "General"
+    },
+    "stillQuestions": "Another question?",
+    "askWhatsapp": "Ask on WhatsApp"
+  },
+  "blog": {
+    "title": "Guide: renting and driving a car in Morocco",
+    "eyebrow": "Traveller’s guide",
+    "intro": "Practical advice, verified figures and direct answers for driving with peace of mind in Casablanca and beyond.",
+    "readingTime": "{minutes} min read",
+    "related": "Also worth reading",
+    "backToBlog": "All articles",
+    "ctaTitle": "Ready to hit the road?",
+    "ctaText": "Recent cars delivered at Mohammed V Airport, all-inclusive prices in dirhams."
+  },
+  "legal": {
+    "terms": {
+      "title": "General rental terms",
+      "updated": "Last updated: September 2026",
+      "sections": {
+        "1": {
+          "title": "1. Purpose",
+          "text": "These terms govern the self-drive rental of vehicles by {legalName} (“Diab Car”) to the renter named in the contract. An online booking is a request; the rental is concluded when the contract is signed and the keys handed over."
+        },
+        "2": {
+          "title": "2. Driver requirements",
+          "text": "The driver must be at least 21 years old (25 for the premium category, 28 for the luxury category), hold a driving licence valid for more than one year and present an ID document. Licences in a non-Latin script must be accompanied by an International Driving Permit. Any additional driver must be declared in the contract."
+        },
+        "3": {
+          "title": "3. Prices and payment",
+          "text": "Prices are in Moroccan dirhams, all taxes included, and cover third-party liability, theft and damage insurance, the mileage indicated on the vehicle page and delivery in Casablanca and at Mohammed V Airport. Payment is made at pick-up by bank card, cash or bank transfer (long term)."
+        },
+        "4": {
+          "title": "4. Deposit",
+          "text": "A deposit, whose amount appears on the vehicle page and in the contract, is taken as a pre-authorisation on the main driver’s bank card. It is not charged and is released within 7 working days after the vehicle is returned without damage, fines or missing fuel."
+        },
+        "5": {
+          "title": "5. Insurance and excess",
+          "text": "In the event of at-fault damage or damage without an identified third party, the renter’s liability is limited to the excess, equal to the deposit, unless the zero-excess option was taken. In all cases the renter remains liable for: tyres, glass, underbody, keys, fuel, interior, and any damage resulting from drunk driving, off-road use or an undeclared driver."
+        },
+        "6": {
+          "title": "6. Use of the vehicle",
+          "text": "The vehicle may not leave Moroccan territory. Prohibited: subletting, paid transport of people or goods, competitions, towing and driving on unpaved tracks. Fines and offences recorded during the rental are borne by the renter, plus a MAD 150 handling fee."
+        },
+        "7": {
+          "title": "7. Fuel and mileage",
+          "text": "The vehicle is handed over with a full tank and must be returned full; missing fuel is charged at the day’s price plus a MAD 100 service fee. Kilometres beyond the stated allowance are charged at MAD 2–4 depending on the category."
+        },
+        "8": {
+          "title": "8. Cancellation and changes",
+          "text": "Free cancellation up to 24 hours before the pick-up time. Later, or in case of no-show, one rental day may be charged. Changes of dates or vehicle are subject to availability."
+        },
+        "9": {
+          "title": "9. Return",
+          "text": "The vehicle must be returned at the agreed place, date and time. A delay of more than one hour results in an additional day being charged. A joint inspection, supported by photos, is carried out at departure and return."
+        },
+        "10": {
+          "title": "10. Personal data and disputes",
+          "text": "Data collected is processed in accordance with Law 09-08 and our privacy policy. These terms are governed by Moroccan law; any dispute falls under the jurisdiction of the competent courts of Casablanca."
+        }
+      }
+    },
+    "notice": {
+      "title": "Legal notice",
+      "editor": "Website publisher",
+      "editorText": "{legalName}, a limited liability company with a capital of {capital}, registered with the Casablanca trade register under number {rc}, common business identifier (ICE) {ice}. Registered office: {address}, {city}, Morocco. Phone: {phone}. Email: {email}.",
+      "activity": "Activity",
+      "activityText": "Self-drive car rental, governed by Decree No. 2-69-351 and the specifications of the Ministry of Transport and Logistics.",
+      "hosting": "Hosting",
+      "hostingText": "The website is hosted by Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, USA. Data is stored by Supabase Inc. in the European Union.",
+      "ip": "Intellectual property",
+      "ipText": "All content (text, visuals, trademarks, code) is the property of {legalName} or its partners. Any reproduction without permission is prohibited. Car brands mentioned belong to their respective owners.",
+      "credits": "Design & development",
+      "creditsText": "BrandHub.ma — digitalisation, business intelligence and customer acquisition for Moroccan companies."
+    },
+    "privacy": {
+      "title": "Privacy policy",
+      "intro": "Diab Car collects the minimum data needed to process your booking and complies with Moroccan Law 09-08 on the protection of individuals with regard to the processing of personal data.",
+      "sections": {
+        "1": {
+          "title": "Data collected",
+          "text": "Name, phone, email, country of residence, driver’s age, flight number and booking details. At rental: a copy of the licence and ID document, as required by regulation."
+        },
+        "2": {
+          "title": "Purposes",
+          "text": "Process and confirm your request, draw up the rental contract, contact you if needed during the rental, meet our legal and accounting obligations, improve our service."
+        },
+        "3": {
+          "title": "Legal basis and retention",
+          "text": "Performance of the contract and legal obligations. Booking data is kept for 5 years in line with accounting obligations, then deleted or anonymised."
+        },
+        "4": {
+          "title": "Recipients",
+          "text": "Diab Car only, plus its technical processors (Vercel hosting, Supabase database, Resend emails) and, in the event of a claim, our insurance company."
+        },
+        "5": {
+          "title": "Cookies",
+          "text": "The site uses a language cookie (NEXT_LOCALE), a theme cookie and, if you accept, Google Analytics 4 to measure audience in aggregate. No targeted advertising."
+        },
+        "6": {
+          "title": "Your rights",
+          "text": "You have the right to access, rectify, object to and delete your data. Write to us at {email}. You may also contact the CNDP (Morocco’s national data protection authority)."
+        }
+      }
+    }
+  },
+  "seo": {
+    "home": {
+      "title": "Car Rental in Casablanca & Mohammed V Airport | Diab Car",
+      "description": "Car rental in Casablanca from MAD 250/day: 24/7 Mohammed V Airport delivery, all-inclusive prices, transparent deposit, WhatsApp reply in 10 min. City cars, SUVs, premium, vans."
+    },
+    "fleet": {
+      "title": "Our fleet — Cheap to luxury car rental in Casablanca | Diab Car",
+      "description": "All our rental cars in Casablanca with daily prices in dirhams: Dacia, Renault, Hyundai, Toyota hybrid, Mercedes, Range Rover, Audi, Porsche, 7–9 seat vans. Unlimited mileage."
+    },
+    "airport": {
+      "title": "Car Rental Casablanca Airport Mohammed V 24/7 | Diab Car",
+      "description": "Free delivery of your rental car at Mohammed V Airport (CMN): flight tracking, meet & greet at arrivals, 10-minute contract, night flights at no extra cost. From MAD 250/day."
+    },
+    "longTerm": {
+      "title": "Long-Term Car Rental Casablanca from MAD 6,500/month | Diab Car",
+      "description": "Monthly car rental in Casablanca for individuals, expats and companies: maintenance, insurance and assistance included, invoicing, replacement vehicle. Quote within 24 h."
+    },
+    "chauffeur": {
+      "title": "Car Rental with Driver Casablanca — Transfers & events | Diab Car",
+      "description": "Car with professional driver in Casablanca: Mohammed V Airport transfers, business travel, weddings, excursions. Premium sedans, SUVs, 9-seat vans. Fixed prices."
+    },
+    "booking": {
+      "title": "Book a car in Casablanca | Diab Car",
+      "description": "Book your rental car in Casablanca in 2 minutes, no online payment. WhatsApp confirmation within 10 minutes."
+    },
+    "confirmation": {
+      "title": "Booking request sent | Diab Car"
+    },
+    "about": {
+      "title": "About Diab Car — Casablanca rental agency since 2013",
+      "description": "Diab Car, self-drive car rental agency on Boulevard Zerktouni in Casablanca: recent fleet, all-inclusive prices, transparent deposit, service in 4 languages."
+    },
+    "contact": {
+      "title": "Contact — Diab Car Casablanca, Bd Zerktouni",
+      "description": "Contact Diab Car: WhatsApp, phone, email and the agency address on Boulevard Zerktouni in Casablanca. Reply within 10 minutes."
+    },
+    "faq": {
+      "title": "Car rental in Morocco FAQ: documents, deposit, insurance | Diab Car",
+      "description": "All the answers for renting a car in Casablanca: documents, minimum age, deposit and excess, insurance, airport delivery, borders, one-way, payment."
+    },
+    "blog": {
+      "title": "Traveller’s Guide — Renting and driving in Morocco | Diab Car",
+      "description": "Practical advice for renting a car in Morocco: documents, Mohammed V Airport, Casablanca–Marrakech tolls, insurance, deposit."
+    },
+    "terms": {
+      "title": "General rental terms | Diab Car"
+    },
+    "notice": {
+      "title": "Legal notice | Diab Car"
+    },
+    "privacy": {
+      "title": "Privacy policy | Diab Car"
+    },
+    "vehicle": {
+      "title": "Rent a {name} in Casablanca — {price}/day | Diab Car",
+      "description": "Rent a {name} in Casablanca from {price} per day, {transmission}, {seats} seats, Mohammed V Airport delivery included. Deposit {deposit}, {mileage}."
+    }
+  },
+  "notFound": {
+    "title": "Page not found",
+    "text": "This page does not exist or has moved. Our fleet, however, is right here.",
+    "cta": "View the fleet",
+    "home": "Home"
+  },
+  "cookie": {
+    "text": "We use an audience-measurement cookie (Google Analytics) to improve the site. No advertising.",
+    "accept": "Accept",
+    "decline": "Decline"
+  }
+}

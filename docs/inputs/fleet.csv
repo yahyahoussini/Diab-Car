@@ -1,0 +1,3 @@
+slug,brand,model,year,category,transmission,fuel,seats,doors,luggage,ac,units_count,plates,price_low_season_mad,price_high_season_mad,deposit_mad,km_per_day,min_days,prep_buffer_minutes,purpose_tags,photo_folder,notes
+dacia-logan,Dacia,Logan,2024,economy,manual,diesel,5,4,2,yes,2,"12345-A-6;12346-A-6",250,300,3000,unlimited,1,120,city,dacia-logan,"EXAMPLE ROW — replace every value with the real fleet"
+peugeot-208-automatique,Peugeot,208,2024,compact,automatic,petrol,5,5,2,yes,1,"",390,450,5000,unlimited,1,120,city;business,peugeot-208,"EXAMPLE ROW"
