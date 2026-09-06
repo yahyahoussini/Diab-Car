@@ -27,12 +27,12 @@ export async function sendBookingEmails({ booking, vehicle, settings }) {
       ['Langue', locale],
     ];
     const table = `<table style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px">${rows
-      .map(([k, v]) => `<tr><td style="padding:6px 12px 6px 0;color:#6f6a5a">${k}</td><td style="padding:6px 0;font-weight:600">${escapeHtml(String(v))}</td></tr>`)
+      .map(([k, v]) => `<tr><td style="padding:6px 12px 6px 0;color:#5c5c5c">${k}</td><td style="padding:6px 0;font-weight:600">${escapeHtml(String(v))}</td></tr>`)
       .join('')}</table>`;
 
     const jobs = [];
     if (notify) {
-      jobs.push(resend.emails.send({ from, to: notify, subject: `Nouvelle demande ${booking.reference} — ${name}`, html: `<h2 style="font-family:Georgia,serif">Nouvelle demande de réservation</h2>${table}` }));
+      jobs.push(resend.emails.send({ from, to: notify, subject: `Nouvelle demande ${booking.reference} — ${name}`, html: `<h2 style="font-family:Archivo,Helvetica Neue,Arial,sans-serif">Nouvelle demande de réservation</h2>${table}` }));
     }
     if (booking.customerEmail) {
       const subject = { fr: `Votre demande ${booking.reference} — Diab Car`, en: `Your request ${booking.reference} — Diab Car`, ar: `طلبكم ${booking.reference} — Diab Car`, es: `Su solicitud ${booking.reference} — Diab Car` }[locale];
@@ -47,7 +47,7 @@ export async function sendBookingEmails({ booking, vehicle, settings }) {
           from,
           to: booking.customerEmail,
           subject,
-          html: `<div dir="${locale === 'ar' ? 'rtl' : 'ltr'}"><h2 style="font-family:Georgia,serif">Diab Car</h2><p>${intro}</p>${table}<p style="color:#6f6a5a;font-size:12px">${settings?.legalName || 'DIAB CAR SARL'} · ${settings?.addressLine || ''}, ${settings?.city || 'Casablanca'}</p></div>`,
+          html: `<div dir="${locale === 'ar' ? 'rtl' : 'ltr'}"><h2 style="font-family:Archivo,Helvetica Neue,Arial,sans-serif">Diab Car</h2><p>${intro}</p>${table}<p style="color:#5c5c5c;font-size:12px">${settings?.legalName || 'DIAB CAR SARL'} · ${settings?.addressLine || ''}, ${settings?.city || 'Casablanca'}</p></div>`,
         }),
       );
     }

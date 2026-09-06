@@ -7,7 +7,7 @@ export default function HeroTitle({ lines = [], className }) {
     <h1 className={className}>
       {lines.map((line, i) => (
         <span key={i} className="line-mask">
-          <span className={`hero-line ${i === lines.length - 1 ? 'text-gradient-gold italic' : ''}`} style={{ animationDelay: `${0.1 + i * 0.12}s` }}>
+          <span className={`hero-line ${i === lines.length - 1 ? 'text-text' : ''}`} style={{ animationDelay: `${0.1 + i * 0.12}s` }}>
             {line}
           </span>
         </span>

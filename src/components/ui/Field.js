@@ -16,9 +16,28 @@ export function Input({ className, ...props }) {
   return <input className={cn(inputBase, className)} {...props} />;
 }
 
+/**
+ * The chevron is a background-image, so it cannot read a CSS variable and it
+ * cannot inherit currentColor. It is drawn twice instead — once per theme —
+ * with the BLACKLINE --text-muted of that theme, because no single grey clears
+ * the 3:1 non-text bar on both #ececec and #151515. A hex inside an inline SVG
+ * asset is the same category as a hex inside a .svg file (CLAUDE.md rule 2).
+ * The UI kit rebuild (prompt 02) should replace this with a real icon slot.
+ */
+const CHEVRON = (stroke) =>
+  `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23${stroke}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>")`;
+
 export function Select({ className, children, ...props }) {
   return (
-    <select className={cn(inputBase, 'appearance-none bg-[length:16px] bg-[position:right_0.85rem_center] bg-no-repeat pe-9 rtl:bg-[position:left_0.85rem_center]', className)} style={{ backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238b8173' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>\")" }} {...props}>
+    <select
+      className={cn(
+        inputBase,
+        'appearance-none bg-[length:16px] bg-[position:right_0.85rem_center] bg-no-repeat pe-9 rtl:bg-[position:left_0.85rem_center]',
+        className,
+      )}
+      style={{ '--chevron-light': CHEVRON('6a6a6a'), '--chevron-dark': CHEVRON('8a8a8a'), backgroundImage: 'var(--chevron)' }}
+      {...props}
+    >
       {children}
     </select>
   );

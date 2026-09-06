@@ -8,13 +8,18 @@ const fontDir = path.join(process.cwd(), 'src/assets/fonts/og');
 const carDir = path.join(process.cwd(), 'public/images/cars');
 let cache;
 
+/**
+ * satori (behind next/og) reads WOFF / TTF / OTF but NOT WOFF2, which is why a
+ * static Archivo .woff is vendored here rather than reusing the variable
+ * woff2 that the site itself loads.
+ */
 async function assets() {
   if (!cache) {
     cache = Promise.all([
-      readFile(path.join(fontDir, 'fraunces-600.woff')),
+      readFile(path.join(fontDir, 'archivo-700.woff')),
       readFile(path.join(fontDir, 'manrope-500.woff')),
       readFile(path.join(fontDir, 'plex-arabic-600.woff')),
-    ]).then(([fraunces, manrope, plex]) => ({ fraunces, manrope, plex }));
+    ]).then(([archivo, manrope, plex]) => ({ archivo, manrope, plex }));
   }
   return cache;
 }
@@ -28,15 +33,37 @@ async function carDataUrl(name) {
   }
 }
 
+/* BLACKLINE palette, spelled out because satori runs outside the browser and
+   cannot read a CSS custom property. Values are plan section 2.2, dark mode. */
+const BG = '#080808';
+const TEXT = '#ffffff';
+const TEXT_2 = '#a5a5a5';
+const RED = '#b71920'; /* fill only — white on it is 6.62:1 */
+const RED_SIGNAL = '#f0383f'; /* thin lines and red text on #080808: 5.10:1 */
+
+/** The badge, inline: satori supports SVG elements but has no <use> and no external refs. */
+function Badge({ size = 44 }) {
+  return (
+    <svg width={size} height={size * 1.25} viewBox="0 0 64 80" style={{ display: 'flex' }}>
+      <path d="M32 2 60 12v30c0 18-12 30-28 36C16 72 4 60 4 42V12z" fill={RED} />
+      <path d="M18 40h28l-4-8H22z" fill={TEXT} />
+      <circle cx="24" cy="44" r="4" fill={TEXT} />
+      <circle cx="40" cy="44" r="4" fill={TEXT} />
+      <rect x="14" y="52" width="36" height="12" rx="3" fill="#0a0a0a" />
+    </svg>
+  );
+}
+
 /**
- * Branded 1200×630 Open Graph card (dark, gold, zellige) shared by every page.
- * Arabic text uses IBM Plex Sans Arabic; Latin uses Fraunces + Manrope.
+ * Branded 1200×630 Open Graph card, BLACKLINE: black ground, white Archivo
+ * title, one red line, Manrope subtitle, badge in the corner. Arabic cards
+ * keep IBM Plex Sans Arabic and are never uppercased or letter-spaced.
  */
 export async function renderOg({ title, subtitle, kicker = 'diabcar.ma', locale = 'fr', car = 'suv-premium', price }) {
-  const { fraunces, manrope, plex } = await assets();
+  const { archivo, manrope, plex } = await assets();
   const rtl = locale === 'ar';
   const carSrc = await carDataUrl(car);
-  const displayFont = rtl ? 'Plex Arabic' : 'Fraunces';
+  const displayFont = rtl ? 'Plex Arabic' : 'Archivo';
 
   return new ImageResponse(
     (
@@ -46,43 +73,85 @@ export async function renderOg({ title, subtitle, kicker = 'diabcar.ma', locale 
           height: '100%',
           display: 'flex',
           flexDirection: rtl ? 'row-reverse' : 'row',
-          background: 'linear-gradient(135deg, #0c0b09 0%, #1c1915 60%, #2a2419 100%)',
-          color: '#f4efe6',
+          background: BG,
+          color: TEXT,
           fontFamily: rtl ? 'Plex Arabic' : 'Manrope',
           position: 'relative',
         }}
       >
-        <div style={{ position: 'absolute', top: -120, right: -80, width: 460, height: 460, borderRadius: 999, background: 'rgba(212,178,106,0.18)', filter: 'blur(60px)' }} />
-        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '56px 64px', width: 700, direction: rtl ? 'rtl' : 'ltr' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <svg width="40" height="40" viewBox="0 0 32 32">
-              <path d="M16 2l3.2 7.3 7.8-1.1-4.6 6.5 4.6 6.5-7.8-1.1L16 30l-3.2-7.9-7.8 1.1 4.6-6.5-4.6-6.5 7.8 1.1z" fill="#d4b26a" />
-              <circle cx="16" cy="16" r="4.2" fill="#0c0b09" />
-            </svg>
-            <div style={{ display: 'flex', fontFamily: 'Fraunces', fontSize: 30, letterSpacing: 1 }}>
-              <span>DIAB </span>
-              <span style={{ color: '#d4b26a', marginLeft: 8 }}>CAR</span>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            padding: '56px 64px',
+            width: 700,
+            direction: rtl ? 'rtl' : 'ltr',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <Badge />
+            <div
+              style={{
+                display: 'flex',
+                fontFamily: 'Archivo',
+                fontSize: 30,
+                fontWeight: 700,
+                letterSpacing: 1.4,
+                color: TEXT,
+              }}
+            >
+              DIAB CAR
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-            <div style={{ fontSize: 18, color: '#d4b26a', letterSpacing: rtl ? 0 : 3, textTransform: rtl ? 'none' : 'uppercase' }}>{kicker}</div>
-            <div style={{ fontFamily: displayFont, fontSize: title.length > 40 ? 46 : 58, lineHeight: 1.1, textWrap: 'balance' }}>{title}</div>
-            {subtitle ? <div style={{ fontSize: 22, color: '#b9ae9c', lineHeight: 1.4 }}>{subtitle}</div> : null}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {/* The Red Line (plan 2.4) — the one brand motif, 2px, deliberate. */}
+            <div style={{ display: 'flex', width: 120, height: 2, background: RED_SIGNAL }} />
+            <div
+              style={{
+                display: 'flex',
+                fontSize: 17,
+                color: TEXT_2,
+                letterSpacing: rtl ? 0 : 3,
+                textTransform: rtl ? 'none' : 'uppercase',
+              }}
+            >
+              {kicker}
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                fontFamily: displayFont,
+                fontWeight: rtl ? 600 : 700,
+                fontSize: title.length > 40 ? 50 : 62,
+                lineHeight: 1.05,
+                letterSpacing: rtl ? 0 : -0.6,
+                textTransform: rtl ? 'none' : 'uppercase',
+              }}
+            >
+              {title}
+            </div>
+            {subtitle ? <div style={{ display: 'flex', fontSize: 22, color: TEXT_2, lineHeight: 1.4 }}>{subtitle}</div> : null}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 18, color: '#b9ae9c' }}>
-            {price ? <div style={{ display: 'flex', padding: '8px 16px', borderRadius: 999, background: '#d4b26a', color: '#14120f', fontWeight: 700 }}>{price}</div> : null}
-            <div>Casablanca · Aéroport Mohammed V</div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 18, color: TEXT_2 }}>
+            {price ? (
+              <div style={{ display: 'flex', padding: '8px 16px', borderRadius: 999, background: RED, color: TEXT, fontWeight: 700 }}>{price}</div>
+            ) : null}
+            <div style={{ display: 'flex' }}>Casablanca · Aéroport Mohammed V</div>
           </div>
         </div>
+
         <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 }}>
-          {carSrc ? <img src={carSrc} width={480} height={228} style={{ filter: 'drop-shadow(0 30px 40px rgba(0,0,0,0.6))' }} /> : null}
+          {carSrc ? <img src={carSrc} width={480} height={228} /> : null}
         </div>
       </div>
     ),
     {
       ...OG_SIZE,
       fonts: [
-        { name: 'Fraunces', data: fraunces, weight: 600, style: 'normal' },
+        { name: 'Archivo', data: archivo, weight: 700, style: 'normal' },
         { name: 'Manrope', data: manrope, weight: 500, style: 'normal' },
         { name: 'Plex Arabic', data: plex, weight: 600, style: 'normal' },
       ],

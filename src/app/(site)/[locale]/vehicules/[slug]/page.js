@@ -70,7 +70,7 @@ export default async function VehiclePage({ params, searchParams }) {
           <div className="lg:col-span-8">
             <Reveal>
               <div className="flex flex-wrap items-center gap-2">
-                <Badge tone="gold">{tc(`categories.${v.category}`)}</Badge>
+                <Badge tone="brand">{tc(`categories.${v.category}`)}</Badge>
                 {v.featured ? <Badge>{tc('featured')}</Badge> : null}
               </div>
               <h1 className="mt-3 text-display-2 text-text">
@@ -79,8 +79,7 @@ export default async function VehiclePage({ params, searchParams }) {
               <p className="mt-1 text-sm text-text-muted">{t('orSimilar')}</p>
             </Reveal>
 
-            <Reveal className="plate relative mt-6 aspect-[16/10] overflow-hidden rounded-[var(--radius-card)] border border-border" delay={0.1}>
-              <div className="absolute inset-0 zellige opacity-[0.1]" aria-hidden="true" />
+            <Reveal className="bg-surface-1 relative mt-6 aspect-[16/10] overflow-hidden rounded-[var(--radius-card)] border border-border" delay={0.1}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={vehicleImage(v)} alt={`${name} ${v.year}`} width={800} height={380} fetchPriority="high" decoding="async" className="absolute inset-x-10 bottom-8 top-12 h-[calc(100%-5rem)] w-[calc(100%-5rem)] object-contain drop-shadow-[0_40px_50px_rgba(0,0,0,0.4)]" />
             </Reveal>

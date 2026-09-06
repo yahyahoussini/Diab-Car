@@ -19,7 +19,7 @@ export default async function VehiclesPage() {
           <tr key={v.id} className="hover:bg-surface-2/50">
             <td className="w-24 px-3 py-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={vehicleImage(v)} alt="" width={96} height={46} className="plate rounded-lg p-1" />
+              <img src={vehicleImage(v)} alt="" width={96} height={46} className="bg-surface-1 rounded-lg p-1" />
             </td>
             <td className="px-4 py-3">
               <div className="font-medium text-text">

@@ -9,7 +9,6 @@ export default function LoginForm({ next = '', mode = 'demo' }) {
   const [state, action, pending] = useActionState(login, null);
   return (
     <div className="flex min-h-dvh items-center justify-center bg-bg p-6">
-      <div className="absolute inset-0 zellige" aria-hidden="true" />
       <form action={action} className="card relative w-full max-w-sm p-7">
         <div className="flex items-center gap-3">
           <LogoMark className="h-9 w-9" />
@@ -27,7 +26,7 @@ export default function LoginForm({ next = '', mode = 'demo' }) {
             <Input id="password" name="password" type="password" required autoComplete="current-password" className="font-latin-sans" />
           </Field>
         </div>
-        <button type="submit" disabled={pending} className="btn-gold mt-6 h-11 w-full rounded-full text-sm font-semibold disabled:opacity-60">
+        <button type="submit" disabled={pending} className="bg-red text-on-red transition-colors duration-[var(--dur-micro)] hover:bg-red-hover mt-6 h-11 w-full rounded-full text-sm font-semibold disabled:opacity-60">
           {pending ? 'Connexion…' : 'Se connecter'}
         </button>
         {mode === 'demo' ? <p className="mt-4 text-center text-xs text-text-muted">Mode démo — mot de passe : diabcar-demo (variable ADMIN_DEMO_PASSWORD)</p> : null}

@@ -317,7 +317,7 @@ export default function BookingForm({ vehicles, locations, extras, seasons, sett
           {vehicle ? (
             <div className="mt-4 flex items-center gap-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={vehicle.imageUrl} alt="" width={120} height={57} className="plate w-24 rounded-lg p-1" />
+              <img src={vehicle.imageUrl} alt="" width={120} height={57} className="bg-surface-1 w-24 rounded-lg p-1" />
               <div>
                 <div className="font-semibold text-text">
                   {vehicle.brand} {vehicle.model}

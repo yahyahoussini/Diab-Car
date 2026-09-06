@@ -52,8 +52,7 @@ export default async function PostPage({ params }) {
             <span>{settings?.name || 'Diab Car'}</span>
           </div>
         </header>
-        <div className="plate relative mt-8 aspect-[16/8] overflow-hidden rounded-[var(--radius-card)] border border-border">
-          <div className="absolute inset-0 zellige opacity-[0.1]" aria-hidden="true" />
+        <div className="bg-surface-1 relative mt-8 aspect-[16/8] overflow-hidden rounded-[var(--radius-card)] border border-border">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={`/images/cars/${post.cover || 'berline'}.svg`} alt="" width={800} height={380} className="absolute inset-x-10 bottom-4 top-8 h-[calc(100%-3rem)] w-[calc(100%-5rem)] object-contain drop-shadow-[0_30px_40px_rgba(0,0,0,0.4)]" />
         </div>

@@ -14,7 +14,7 @@
       <stop offset="0" stop-color="#000" stop-opacity=".55"/><stop offset="1" stop-color="#000" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="rim" cx=".5" cy=".5" r=".5">
-      <stop offset="0" stop-color="#e6e2d8"/><stop offset=".55" stop-color="#9b968b"/><stop offset=".75" stop-color="#3b3a37"/><stop offset="1" stop-color="#101010"/>
+      <stop offset="0" stop-color="#ececec"/><stop offset=".55" stop-color="#8a8a8a"/><stop offset=".75" stop-color="#2e2e34"/><stop offset="1" stop-color="#101010"/>
     </radialGradient>
   </defs>
   <ellipse cx="400" cy="330" rx="330" ry="26" fill="url(#shadow)"/>
@@ -22,14 +22,14 @@
   <path d="M62 268 L54 226 Q56 196 96 188 L228 178 L262 122 Q280 98 330 92 L560 92 Q612 96 640 130 L672 170 L738 176 Q768 184 768 214 L768 256 Q764 284 736 286 L676 286 A64 64 0 0 0 548 286 L290 286 A64 64 0 0 0 162 286 L96 286 Q66 286 62 268 Z" fill="url(#shine)" opacity=".18"/>
   <path d="M272 172 L296 118 Q310 106 340 104 L420 104 L420 172 Z" fill="url(#glass)"/><path d="M438 104 L560 104 Q596 108 618 138 L648 172 L438 172 Z" fill="url(#glass)"/>
   <path d="M100 190 L232 180" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="2"/>
-  <path d="M112 246 L730 246" fill="none" stroke="#d4b26a" stroke-width="3" stroke-linecap="round" opacity=".9"/>
+  <path d="M112 246 L730 246" fill="none" stroke="#c9ccd1" stroke-width="3" stroke-linecap="round" opacity=".9"/>
   
     <circle cx="226" cy="286" r="60" fill="#0f0f10"/>
     <circle cx="226" cy="286" r="39.6" fill="url(#rim)"/>
     <line x1="226" y1="286" x2="259.0" y2="286.0" stroke="#0f0f10" stroke-width="9.6" stroke-linecap="round"/><line x1="226" y1="286" x2="236.2" y2="317.4" stroke="#0f0f10" stroke-width="9.6" stroke-linecap="round"/><line x1="226" y1="286" x2="199.3" y2="305.4" stroke="#0f0f10" stroke-width="9.6" stroke-linecap="round"/><line x1="226" y1="286" x2="199.3" y2="266.6" stroke="#0f0f10" stroke-width="9.6" stroke-linecap="round"/><line x1="226" y1="286" x2="236.2" y2="254.6" stroke="#0f0f10" stroke-width="9.6" stroke-linecap="round"/>
-    <circle cx="226" cy="286" r="8.4" fill="#d4b26a"/>
+    <circle cx="226" cy="286" r="8.4" fill="#c9ccd1"/>
     <circle cx="612" cy="286" r="60" fill="#0f0f10"/>
     <circle cx="612" cy="286" r="39.6" fill="url(#rim)"/>
     <line x1="612" y1="286" x2="645.0" y2="286.0" stroke="#0f0f10" stroke-width="9.6" stroke-linecap="round"/><line x1="612" y1="286" x2="622.2" y2="317.4" stroke="#0f0f10" stroke-width="9.6" stroke-linecap="round"/><line x1="612" y1="286" x2="585.3" y2="305.4" stroke="#0f0f10" stroke-width="9.6" stroke-linecap="round"/><line x1="612" y1="286" x2="585.3" y2="266.6" stroke="#0f0f10" stroke-width="9.6" stroke-linecap="round"/><line x1="612" y1="286" x2="622.2" y2="254.6" stroke="#0f0f10" stroke-width="9.6" stroke-linecap="round"/>
-    <circle cx="612" cy="286" r="8.4" fill="#d4b26a"/>
+    <circle cx="612" cy="286" r="8.4" fill="#c9ccd1"/>
 </svg>

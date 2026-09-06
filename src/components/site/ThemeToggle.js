@@ -17,7 +17,7 @@ export default function ThemeToggle({ className }) {
   function toggle() {
     const next = isDark ? 'light' : 'dark';
     const meta = document.querySelector('meta[name="theme-color"]:not([media])');
-    if (meta) meta.setAttribute('content', next === 'dark' ? '#0c0b09' : '#f7f3ec');
+    if (meta) meta.setAttribute('content', next === 'dark' ? '#080808' : '#ffffff');
     if (document.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       document.startViewTransition(() => setTheme(next));
     } else {

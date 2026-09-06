@@ -2,7 +2,7 @@ import { cn } from '@/lib/cn';
 
 const tones = {
   neutral: 'bg-surface-2 text-text-2 border-border',
-  gold: 'bg-accent-soft text-accent border-transparent',
+  brand: 'bg-red-soft text-text border-transparent',
   success: 'bg-success-soft text-success border-transparent',
   warning: 'bg-warning-soft text-warning border-transparent',
   danger: 'bg-danger-soft text-danger border-transparent',

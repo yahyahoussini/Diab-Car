@@ -27,7 +27,6 @@ export default async function Footer({ settings }) {
 
   return (
     <footer className="relative mt-auto border-t border-border bg-surface-1">
-      <div className="pointer-events-none absolute inset-0 zellige" aria-hidden="true" />
       <div className="container-x relative">
         <div className="grid gap-10 py-14 md:grid-cols-2 lg:grid-cols-12">
           <div className="lg:col-span-4">

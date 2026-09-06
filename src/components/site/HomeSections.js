@@ -32,7 +32,7 @@ export async function Categories({ vehicles }) {
           {groups.map((g) => (
             <StaggerItem key={g.key}>
               <Link href={{ pathname: '/vehicules', query: { category: g.key } }} className="card group flex h-full flex-col justify-between overflow-hidden p-4 transition-[transform,border-color] duration-300 hover:-translate-y-1 hover:border-accent/60">
-                <div className="plate -mx-4 -mt-4 aspect-[5/3] overflow-hidden">
+                <div className="bg-surface-1 -mx-4 -mt-4 aspect-[5/3] overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={`/images/cars/${CATEGORY_IMAGE[g.key]}.svg`} alt="" width={800} height={380} loading="lazy" decoding="async" className="h-full w-full object-contain p-3 transition-transform duration-500 group-hover:scale-105" />
                 </div>
@@ -198,7 +198,6 @@ export async function AirportBanner() {
     <section className="section-y">
       <div className="container-x">
         <Reveal className="relative overflow-hidden rounded-[calc(var(--radius-card)+8px)] border border-border bg-text px-6 py-12 text-bg md:px-12 md:py-16 dark:bg-surface-1 dark:text-text">
-          <div className="absolute inset-0 zellige opacity-[0.12]" aria-hidden="true" />
           <div className="absolute -end-20 -top-24 h-72 w-72 rounded-full bg-accent-fill/25 blur-3xl" aria-hidden="true" />
           <div className="relative grid items-center gap-8 lg:grid-cols-12">
             <div className="lg:col-span-7">
@@ -357,7 +356,7 @@ export async function BlogTeasers({ posts = [] }) {
           {list.map((p) => (
             <StaggerItem key={p.id} className="h-full">
               <article className="card group relative flex h-full flex-col overflow-hidden">
-                <div className="plate aspect-[16/9] overflow-hidden">
+                <div className="bg-surface-1 aspect-[16/9] overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={`/images/cars/${p.cover || 'berline'}.svg`} alt="" width={800} height={380} loading="lazy" decoding="async" className="h-full w-full object-contain p-6 transition-transform duration-500 group-hover:scale-105" />
                 </div>
@@ -393,7 +392,6 @@ export async function CtaBand({ settings }) {
     <section className="section-y">
       <div className="container-x">
         <Reveal className="relative overflow-hidden rounded-[calc(var(--radius-card)+8px)] border border-accent/30 bg-gradient-to-br from-accent-soft via-surface-1 to-surface-1 p-8 text-center md:p-14">
-          <div className="absolute inset-0 zellige" aria-hidden="true" />
           <div className="relative mx-auto max-w-2xl">
             <h2 className="text-display-2 text-text">{t('title')}</h2>
             <p className="mt-4 text-lg text-text-2">{t('text')}</p>

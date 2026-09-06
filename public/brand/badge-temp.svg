@@ -1,0 +1,17 @@
+<!-- TEMP PLACEHOLDER - not the Diab Car brand mark. -->
+<!-- Replace when docs/inputs/logo/ receives the vector badge (plan 2.1, section 12 input #1). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 80" width="64" height="80" role="img" aria-label="Diab Car">
+  <clipPath id="dc-shield">
+    <path d="M32 2 60 12v30c0 18-12 30-28 36C16 72 4 60 4 42V12z"/>
+  </clipPath>
+  <g clip-path="url(#dc-shield)">
+    <path d="M32 2 60 12v30c0 18-12 30-28 36C16 72 4 60 4 42V12z" fill="#B71920"/>
+    <path d="M13 41c0-1.2.9-2.2 2.1-2.4l4.6-.8 4.1-5.6c.6-.8 1.5-1.3 2.5-1.3h11.4c1 0 1.9.5 2.5 1.3l4.1 5.6 4.6.8c1.2.2 2.1 1.2 2.1 2.4v3.4c0 .9-.7 1.6-1.6 1.6H14.6c-.9 0-1.6-.7-1.6-1.6z" fill="#FFFFFF"/>
+    <circle cx="22" cy="46" r="4.6" fill="#FFFFFF"/>
+    <circle cx="42" cy="46" r="4.6" fill="#FFFFFF"/>
+    <circle cx="22" cy="46" r="1.9" fill="#B71920"/>
+    <circle cx="42" cy="46" r="1.9" fill="#B71920"/>
+    <rect x="0" y="54" width="64" height="13" fill="#0A0A0A"/>
+    <text x="32" y="63.1" text-anchor="middle" font-family="Archivo, Helvetica Neue, Arial, sans-serif" font-size="7.4" font-weight="700" letter-spacing="0.3" fill="#FFFFFF">DIAB CAR</text>
+  </g>
+</svg>

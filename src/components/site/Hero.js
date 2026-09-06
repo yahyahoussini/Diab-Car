@@ -15,9 +15,8 @@ export default async function Hero({ settings, locations, fleetCount = 12 }) {
 
   return (
     <section className="relative overflow-hidden pt-[calc(var(--header-h)+2.5rem)]">
-      {/* Backdrop: warm gradient + zellige lattice + gold glow */}
+      {/* Backdrop: a faint red wash top-end, fading into the page ground */}
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_60%_at_70%_20%,var(--accent-soft),transparent_60%)]" aria-hidden="true" />
-      <div className="absolute inset-0 -z-10 zellige" aria-hidden="true" />
       <div className="absolute inset-x-0 bottom-0 -z-10 h-40 bg-gradient-to-t from-bg to-transparent" aria-hidden="true" />
 
       <div className="container-x">
@@ -54,8 +53,7 @@ export default async function Hero({ settings, locations, fleetCount = 12 }) {
 
           <div className="relative lg:col-span-6">
             <div className="relative mx-auto max-w-xl">
-              <div className="plate arch relative aspect-[4/3] overflow-hidden rounded-b-[var(--radius-card)] border border-border/60">
-                <div className="absolute inset-0 zellige opacity-[0.12]" aria-hidden="true" />
+              <div className="bg-surface-1 chamfer relative aspect-[4/3] overflow-hidden rounded-b-[var(--radius-card)] border border-border/60">
                 <div className="absolute inset-x-8 bottom-6 top-10 parallax-view">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src="/images/cars/suv-premium.svg" alt={tc('categories.premium')} width={800} height={380} className="h-full w-full object-contain drop-shadow-[0_30px_40px_rgba(0,0,0,0.35)]" fetchPriority="high" decoding="async" />

@@ -55,7 +55,7 @@ export function Table({ head = [], children, className }) {
 }
 
 export function AdminLink({ href, children, className, variant = 'primary' }) {
-  const styles = variant === 'primary' ? 'btn-gold' : variant === 'danger' ? 'border border-danger/40 text-danger hover:bg-danger-soft' : 'border border-border text-text-2 hover:text-text hover:border-border-strong';
+  const styles = variant === 'primary' ? 'bg-red text-on-red hover:bg-red-hover' : variant === 'danger' ? 'border border-danger/40 text-danger hover:bg-danger-soft' : 'border border-border text-text-2 hover:text-text hover:border-border-strong';
   return (
     <Link href={href} className={cn('inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold transition-colors', styles, className)}>
       {children}
@@ -64,7 +64,7 @@ export function AdminLink({ href, children, className, variant = 'primary' }) {
 }
 
 export function SubmitButton({ children, variant = 'primary', className, ...props }) {
-  const styles = variant === 'primary' ? 'btn-gold' : variant === 'danger' ? 'border border-danger/40 text-danger hover:bg-danger-soft' : 'border border-border text-text-2 hover:text-text';
+  const styles = variant === 'primary' ? 'bg-red text-on-red hover:bg-red-hover' : variant === 'danger' ? 'border border-danger/40 text-danger hover:bg-danger-soft' : 'border border-border text-text-2 hover:text-text';
   return (
     <button type="submit" className={cn('inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold transition-colors disabled:opacity-50', styles, className)} {...props}>
       {children}

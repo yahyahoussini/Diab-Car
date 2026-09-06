@@ -9,7 +9,6 @@ export default function PageHero({ crumbs, eyebrow, title, answer, children, ima
   return (
     <section className="relative overflow-hidden pt-[calc(var(--header-h)+1.5rem)]">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_70%_50%_at_80%_0%,var(--accent-soft),transparent_60%)]" aria-hidden="true" />
-      <div className="absolute inset-0 -z-10 zellige" aria-hidden="true" />
       <div className="container-x">
         <Breadcrumbs items={crumbs} />
         <div className="mt-8 grid items-end gap-10 pb-12 lg:grid-cols-12">
@@ -31,8 +30,7 @@ export default function PageHero({ crumbs, eyebrow, title, answer, children, ima
           </div>
           {image ? (
             <FadeIn delay={0.2} className="lg:col-span-5">
-              <div className="plate arch relative aspect-[4/3] overflow-hidden rounded-b-[var(--radius-card)] border border-border/60">
-                <div className="absolute inset-0 zellige opacity-[0.12]" aria-hidden="true" />
+              <div className="bg-surface-1 chamfer relative aspect-[4/3] overflow-hidden rounded-b-[var(--radius-card)] border border-border/60">
                 <div className="absolute inset-x-8 bottom-6 top-12 parallax-view">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={`/images/cars/${image}.svg`} alt="" width={800} height={380} fetchPriority="high" decoding="async" className="h-full w-full object-contain drop-shadow-[0_30px_40px_rgba(0,0,0,0.35)]" />

@@ -35,7 +35,7 @@ export default async function BlogPage({ params }) {
             {posts.map((p) => (
               <StaggerItem key={p.id} className="h-full">
                 <article className="card group relative flex h-full flex-col overflow-hidden">
-                  <div className="plate aspect-[16/9] overflow-hidden">
+                  <div className="bg-surface-1 aspect-[16/9] overflow-hidden">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={`/images/cars/${p.cover || 'berline'}.svg`} alt="" width={800} height={380} loading="lazy" decoding="async" className="h-full w-full object-contain p-6 transition-transform duration-500 group-hover:scale-105" />
                   </div>

@@ -14,9 +14,8 @@ export default async function VehicleCard({ vehicle, query, priority = false, cl
   const name = `${v.brand} ${v.model}`;
 
   return (
-    <article className={cn('card group relative flex flex-col overflow-hidden transition-[transform,border-color,box-shadow] duration-300 ease-out-expo hover:-translate-y-1 hover:border-border-strong hover:shadow-float', className)}>
-      <Link href={href} className="plate relative block aspect-[4/3] overflow-hidden" aria-label={name}>
-        <div className="absolute inset-0 zellige opacity-[0.08]" aria-hidden="true" />
+    <article className={cn('card group relative flex flex-col overflow-hidden transition-[transform,border-color,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:border-border-strong hover:shadow-float', className)}>
+      <Link href={href} className="bg-surface-1 relative block aspect-[4/3] overflow-hidden" aria-label={name}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={vehicleImage(v)}
@@ -25,13 +24,13 @@ export default async function VehicleCard({ vehicle, query, priority = false, cl
           height={380}
           loading={priority ? 'eager' : 'lazy'}
           decoding="async"
-          className="absolute inset-x-6 bottom-4 top-8 h-[calc(100%-3rem)] w-[calc(100%-3rem)] object-contain drop-shadow-[0_24px_30px_rgba(0,0,0,0.35)] transition-transform duration-500 ease-out-expo group-hover:scale-[1.04]"
+          className="absolute inset-x-6 bottom-4 top-8 h-[calc(100%-3rem)] w-[calc(100%-3rem)] object-contain drop-shadow-[0_24px_30px_rgba(0,0,0,0.35)] transition-transform duration-500 ease-out group-hover:scale-[1.04]"
         />
         <div className="absolute start-3 top-3 flex gap-1.5">
           <Badge tone="neutral" className="bg-surface-1/90 backdrop-blur">
             {t(`categories.${v.category}`)}
           </Badge>
-          {v.featured ? <Badge tone="gold">{t('featured')}</Badge> : null}
+          {v.featured ? <Badge tone="brand">{t('featured')}</Badge> : null}
         </div>
       </Link>
 

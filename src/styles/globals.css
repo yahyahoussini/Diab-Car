@@ -1,101 +1,170 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
+/* next-themes runs with attribute="class", so it stamps .dark on <html>.
+   [data-theme="dark"] is honoured too, so switching the provider to
+   attribute="data-theme" later needs no change here. */
+@custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
 @custom-variant rtl (&:where([dir="rtl"], [dir="rtl"] *));
 @custom-variant ltr (&:where([dir="ltr"], [dir="ltr"] *));
 @custom-variant hocus (&:hover, &:focus-visible);
 
-/* ------------------------------------------------------------------ */
-/* Design tokens — light (default) and dark. Contrast-checked WCAG AA. */
-/* ------------------------------------------------------------------ */
+/* ================================================================== */
+/* BLACKLINE — design tokens (plan section 2.2)                        */
+/* Light and dark are designed separately, not derived from each other.*/
+/* Every text/background pair is checked by `npm run check:contrast`.   */
+/* ================================================================== */
+
+/* ---------- Light: "white space" ---------------------------------- */
 :root {
   color-scheme: light;
-  --bg: #f7f3ec;
-  --surface-1: #ffffff;
-  --surface-2: #f0eae0;
-  --surface-3: #e8e0d2;
-  --border: #e3dccf;
-  --border-strong: #cfc6b5;
-  --border-input: #857d6c;
-  --text: #17140f;
-  --text-2: #57503f;
-  --text-muted: #6f6a5a;
-  --accent: #7f6120;
-  --accent-hover: #6f5418;
-  --accent-fill: #c9a85c;
-  --accent-fill-hover: #bd9a4b;
-  --accent-soft: rgba(201, 168, 92, 0.16);
-  --on-accent: #17140f;
-  --success: #1f7a4a;
-  --success-soft: rgba(31, 122, 74, 0.12);
+
+  --bg: #ffffff;
+  --surface-1: #f5f5f5;
+  --surface-2: #ececec;
+  --surface-3: #e3e3e3;
+  --border: #e4e4e4;
+  --border-strong: #d2d2d2;
+
+  --text: #0a0a0a;
+  --text-2: #5c5c5c;
+  /* Plan 2.2 prints #757575 (4.61:1 on white). That value drops to 4.23:1 on
+     --surface-1 and 3.90:1 on --surface-2, so meta text on a card would fail
+     AA. Darkened to #6a6a6a: 5.41 / 4.96 / 4.58 — AA on all three grounds. */
+  --text-muted: #6a6a6a;
+
+  --red: #b71920;
+  --red-hover: #9a1419;
+  --red-soft: rgba(183, 25, 32, 0.08);
+  /* In light mode the fill red is also the text red (6.62:1 on white). */
+  --red-signal: var(--red);
+  --red-glow: rgba(183, 25, 32, 0.22);
+  --on-red: #ffffff;
+
+  --silver: #c9ccd1;
+
+  /* Admin-only semantics (plan 2.2: amber = attention, green = ready).
+     Darkened from the printed #d98e04 / #1f8a4c so they clear AA on
+     --surface-2 as light-mode text: 5.02:1 and 5.19:1. */
+  --success: #19703d;
+  --success-soft: rgba(25, 112, 61, 0.1);
   --warning: #8a5a00;
-  --warning-soft: rgba(138, 90, 0, 0.12);
-  --danger: #b3261e;
-  --danger-soft: rgba(179, 38, 30, 0.1);
-  --info: #1f5f8b;
+  --warning-soft: rgba(138, 90, 0, 0.1);
+  --danger: var(--red);
+  --danger-soft: var(--red-soft);
+
   --whatsapp: #25d366;
-  --on-whatsapp: #0b2e1a;
-  --shadow-card: 0 1px 2px rgba(23, 20, 15, 0.06), 0 12px 32px -12px rgba(23, 20, 15, 0.14);
-  --shadow-float: 0 24px 64px -24px rgba(23, 20, 15, 0.35);
-  --scrim: linear-gradient(to top, rgba(23, 20, 15, 0.72), rgba(23, 20, 15, 0));
-  --plate: radial-gradient(ellipse at 50% 88%, #ded5c3 0%, #f0eae0 55%, #f7f3ec 100%);
-  --pattern-opacity: 0.045;
+  --on-whatsapp: #052e16;
 
-  --font-display: var(--font-display-latin), Georgia, serif;
-  --font-sans: var(--font-sans-latin), system-ui, sans-serif;
+  /* Light = "objects on paper": 1px border + a whisper of shadow (2.4). */
+  --shadow-card: 0 1px 0 rgba(10, 10, 10, 0.03), 0 2px 8px rgba(10, 10, 10, 0.04);
+  --shadow-float: 0 24px 64px -24px rgba(10, 10, 10, 0.28);
+  --scrim: linear-gradient(to top, rgba(10, 10, 10, 0.72), rgba(10, 10, 10, 0));
 
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --dur-fast: 150ms;
-  --dur-base: 300ms;
-  --dur-slow: 600ms;
+  /* ---- Motion tokens (plan 5.1) ---------------------------------- */
+  --dur-micro: 160ms;
+  --dur-hover: 280ms;
+  --dur-panel: 380ms;
+  --dur-section: 600ms;
+  --dur-hero: 900ms;
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-snap: cubic-bezier(0.3, 1.2, 0.4, 1);
+
+  /* ---- Shape and rhythm (plan 2.4) ------------------------------- */
   --radius-card: 18px;
-  --radius-input: 12px;
+  --radius-button: 12px;
+  --radius-input: 14px;
   --radius-chip: 999px;
+  --chamfer: 18px;
+  --redline-rest: 40px;
   --header-h: 72px;
+
+  /* ---- Font families --------------------------------------------- */
+  /* next/font hands us --font-display (Archivo), --font-sans (Manrope),
+     --font-arabic-display (Noto Kufi) and --font-arabic-sans (IBM Plex
+     Sans Arabic). Alias them once, then resolve a heading/body pair that
+     :lang(ar) swaps wholesale — so no rule ever has to know which script
+     is on screen. */
+  --font-archivo: var(--font-display), "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-manrope: var(--font-sans), system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-kufi: var(--font-arabic-display), Tahoma, Arial, sans-serif;
+  --font-plex-arabic: var(--font-arabic-sans), Tahoma, Arial, sans-serif;
+
+  --font-heading: var(--font-archivo);
+  --font-body: var(--font-manrope);
+
+  /* ---- Compatibility aliases ------------------------------------- */
+  /* The previous palette's --accent* names are still referenced by pages that
+     prompts 03-13 rebuild. They resolve onto BLACKLINE here so nothing
+     breaks in the meantime; delete each one as its last caller goes. */
+  --accent: var(--text);
+  --accent-hover: var(--text);
+  --accent-fill: var(--red);
+  --accent-fill-hover: var(--red-hover);
+  --accent-soft: var(--red-soft);
+  --on-accent: var(--on-red);
+  --border-input: var(--border-strong);
 }
 
-.dark {
+/* ---------- Dark: "black road" ------------------------------------ */
+.dark,
+[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0c0b09;
-  --surface-1: #14120f;
-  --surface-2: #1c1915;
-  --surface-3: #252119;
-  --border: #2c2720;
-  --border-strong: #3a342b;
-  --border-input: #6b6254;
-  --text: #f4efe6;
-  --text-2: #b9ae9c;
-  --text-muted: #8b8173;
-  --accent: #d4b26a;
-  --accent-hover: #e2c57f;
-  --accent-fill: #d4b26a;
-  --accent-fill-hover: #e2c57f;
-  --accent-soft: rgba(212, 178, 106, 0.14);
-  --on-accent: #14120f;
-  --success: #6fbf8e;
-  --success-soft: rgba(111, 191, 142, 0.14);
-  --warning: #e0a94b;
-  --warning-soft: rgba(224, 169, 75, 0.14);
-  --danger: #e2716a;
-  --danger-soft: rgba(226, 113, 106, 0.14);
-  --info: #7fb3d9;
-  --on-whatsapp: #0b2e1a;
+
+  --bg: #080808;
+  --surface-1: #0f0f0f;
+  --surface-2: #151515;
+  --surface-3: #1b1b1b;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  --text: #ffffff;
+  --text-2: #a5a5a5;
+  --text-muted: #8a8a8a;
+
+  /* --red stays the FILL red (white on it = 6.62:1). As text on #080808 it
+     is only 3.03:1, so red text, thin lines, dots and focus rings in dark
+     mode use --red-signal (5.10:1). Plan 2.2. */
+  --red: #b71920;
+  --red-hover: #c81d25;
+  --red-soft: rgba(240, 56, 63, 0.1);
+  --red-signal: #f0383f;
+  --red-glow: rgba(240, 56, 63, 0.35);
+  --on-red: #ffffff;
+
+  --silver: #c9ccd1;
+
+  --success: #3fbf77;
+  --success-soft: rgba(63, 191, 119, 0.12);
+  --warning: #d98e04;
+  --warning-soft: rgba(217, 142, 4, 0.12);
+  --danger: var(--red-signal);
+  --danger-soft: var(--red-soft);
+
+  --on-whatsapp: #052e16;
+
+  /* Dark = layered surfaces, no shadows, 1px white-alpha borders (2.4). */
   --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   --shadow-float: 0 32px 80px -32px rgba(0, 0, 0, 0.8);
-  --scrim: linear-gradient(to top, rgba(12, 11, 9, 0.85), rgba(12, 11, 9, 0));
-  --plate: radial-gradient(ellipse at 50% 88%, #2a251d 0%, #17140f 55%, #0c0b09 100%);
-  --pattern-opacity: 0.07;
+  --scrim: linear-gradient(to top, rgba(8, 8, 8, 0.85), rgba(8, 8, 8, 0));
+
+  --accent: var(--text);
+  --accent-hover: var(--text);
+  --accent-fill: var(--red);
+  --accent-fill-hover: var(--red-hover);
+  --accent-soft: var(--red-soft);
+  --on-accent: var(--on-red);
 }
 
+/* Arabic swaps the whole heading/body pair; nothing else changes. */
 :lang(ar) {
-  --font-display: var(--font-display-arabic), Tahoma, sans-serif;
-  --font-sans: var(--font-sans-arabic), Tahoma, sans-serif;
+  --font-heading: var(--font-kufi);
+  --font-body: var(--font-plex-arabic);
 }
 
-/* ------------------------------------------------------------------ */
-/* Tailwind theme mapping (inline = utilities reference the live vars) */
-/* ------------------------------------------------------------------ */
+/* ================================================================== */
+/* Tailwind theme mapping (inline = utilities read the live variable)   */
+/* ================================================================== */
 @theme inline {
   --color-bg: var(--bg);
   --color-surface-1: var(--surface-1);
@@ -104,51 +173,57 @@
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-border-input: var(--border-input);
+
   --color-text: var(--text);
   --color-text-2: var(--text-2);
   --color-text-muted: var(--text-muted);
-  --color-accent: var(--accent);
-  --color-accent-hover: var(--accent-hover);
-  --color-accent-fill: var(--accent-fill);
-  --color-accent-fill-hover: var(--accent-fill-hover);
-  --color-accent-soft: var(--accent-soft);
-  --color-on-accent: var(--on-accent);
+
+  --color-red: var(--red);
+  --color-red-hover: var(--red-hover);
+  --color-red-soft: var(--red-soft);
+  --color-red-signal: var(--red-signal);
+  --color-red-glow: var(--red-glow);
+  --color-on-red: var(--on-red);
+  --color-silver: var(--silver);
+
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
   --color-warning-soft: var(--warning-soft);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
-  --color-info: var(--info);
   --color-whatsapp: var(--whatsapp);
   --color-on-whatsapp: var(--on-whatsapp);
 
-  --font-display: var(--font-display);
-  --font-sans: var(--font-sans);
-  --font-latin-display: var(--font-display-latin), Georgia, serif;
-  --font-latin-sans: var(--font-sans-latin), system-ui, sans-serif;
+  /* compatibility — removed with their last caller */
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fill: var(--accent-fill);
+  --color-accent-fill-hover: var(--accent-fill-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+
+  --font-display: var(--font-heading);
+  --font-sans: var(--font-body);
+  --font-latin-display: var(--font-archivo);
+  --font-latin-sans: var(--font-manrope);
 
   --radius-card: var(--radius-card);
+  --radius-button: var(--radius-button);
   --radius-input: var(--radius-input);
   --shadow-card: var(--shadow-card);
   --shadow-float: var(--shadow-float);
 
-  --ease-out-expo: var(--ease-out);
-  --ease-in-out-quart: var(--ease-in-out);
-
-  --text-display-1: clamp(2.75rem, 1.8rem + 4.5vw, 5.75rem);
-  --text-display-1--line-height: 1.02;
-  --text-display-2: clamp(2rem, 1.4rem + 2.6vw, 3.5rem);
-  --text-display-2--line-height: 1.08;
-  --text-display-3: clamp(1.5rem, 1.2rem + 1.4vw, 2.25rem);
-  --text-display-3--line-height: 1.15;
+  --ease-out: var(--ease-out);
+  --ease-inout: var(--ease-inout);
+  --ease-snap: var(--ease-snap);
 
   --container-content: 80rem;
 }
 
-/* ------------------------------------------------------------------ */
+/* ================================================================== */
 /* Base                                                                */
-/* ------------------------------------------------------------------ */
+/* ================================================================== */
 @layer base {
   * {
     border-color: var(--border);
@@ -161,11 +236,10 @@
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: var(--font-sans);
+    font-family: var(--font-body);
     font-size: 1rem;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
-    font-feature-settings: "ss01", "cv11";
     min-height: 100dvh;
   }
   :lang(ar) body {
@@ -173,55 +247,127 @@
     line-height: 1.75;
     letter-spacing: 0 !important;
     font-synthesis: none;
-    font-feature-settings: normal;
   }
   h1, h2, h3, .font-display {
-    font-family: var(--font-display);
-    font-weight: 500;
-    letter-spacing: -0.02em;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: -0.01em;
     text-wrap: balance;
   }
   :lang(ar) :is(h1, h2, h3, .font-display) {
     letter-spacing: 0;
-    line-height: 1.35;
+    line-height: 1.3;
     font-weight: 600;
   }
   p { text-wrap: pretty; }
-  ::selection { background: var(--accent-fill); color: var(--on-accent); }
-  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+  ::selection { background: var(--red); color: var(--on-red); }
+  :focus-visible { outline: 2px solid var(--red-signal); outline-offset: 3px; border-radius: 6px; }
   button, [role="button"] { cursor: pointer; }
   input, select, textarea { font: inherit; color: inherit; }
   img, video { max-width: 100%; height: auto; }
   /* Latin digits, tabular, in every locale */
-  .tnum { font-variant-numeric: tabular-nums; }
+  .tnum { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1, "lnum" 1; }
   bdi, .ltr-isolate { unicode-bidi: isolate; direction: ltr; display: inline-block; }
 }
 
-/* ------------------------------------------------------------------ */
-/* Components / utilities                                              */
-/* ------------------------------------------------------------------ */
+/* ================================================================== */
+/* Type scale (plan 2.3)                                               */
+/* Unlayered on purpose: the [dir="rtl"] size overrides have to beat    */
+/* the Tailwind utilities layer, and layer order outranks specificity.  */
+/* Archivo is a wdth+wght variable face — display sizes run wide (112), */
+/* the wordmark and meta labels run widest (125).                       */
+/* ================================================================== */
+.text-display-1 {
+  font-family: var(--font-heading);
+  font-size: clamp(3.5rem, 8vw, 8.5rem);
+  line-height: 0.92;
+  letter-spacing: -0.01em;
+  font-weight: 700;
+  font-variation-settings: "wdth" 112;
+  text-wrap: balance;
+}
+.text-display-2 {
+  font-family: var(--font-heading);
+  font-size: clamp(3rem, 5.5vw, 5rem);
+  line-height: 0.98;
+  letter-spacing: -0.01em;
+  font-weight: 700;
+  font-variation-settings: "wdth" 112;
+  text-wrap: balance;
+}
+.text-h2 {
+  font-family: var(--font-heading);
+  font-size: clamp(2.25rem, 3.6vw, 3.5rem);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  font-weight: 700;
+  font-variation-settings: "wdth" 112;
+}
+.text-h3,
+.text-display-3 {
+  font-family: var(--font-heading);
+  font-size: clamp(1.5rem, 2vw, 2rem);
+  line-height: 1.15;
+  letter-spacing: -0.005em;
+  font-weight: 700;
+  font-variation-settings: "wdth" 112;
+}
+.text-meta {
+  font-family: var(--font-heading);
+  font-size: clamp(0.6875rem, 0.35vw + 0.62rem, 0.8125rem);
+  line-height: 1.2;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-variation-settings: "wdth" 125;
+}
+
+/* Arabic: never uppercased, never letter-spaced, 6% smaller, taller lines. */
+[dir="rtl"] :is(.text-display-1, .text-display-2, .text-h2, .text-h3, .text-display-3, .text-meta),
+:lang(ar) :is(.text-display-1, .text-display-2, .text-h2, .text-h3, .text-display-3, .text-meta) {
+  font-family: var(--font-heading);
+  letter-spacing: 0;
+  text-transform: none;
+  font-variation-settings: normal;
+}
+[dir="rtl"] .text-display-1, :lang(ar) .text-display-1 { font-size: clamp(3.29rem, 7.52vw, 7.99rem); line-height: 1.3; }
+[dir="rtl"] .text-display-2, :lang(ar) .text-display-2 { font-size: clamp(2.82rem, 5.17vw, 4.7rem); line-height: 1.3; }
+[dir="rtl"] .text-h2, :lang(ar) .text-h2 { font-size: clamp(2.12rem, 3.38vw, 3.29rem); line-height: 1.3; }
+[dir="rtl"] :is(.text-h3, .text-display-3), :lang(ar) :is(.text-h3, .text-display-3) { font-size: clamp(1.41rem, 1.88vw, 1.88rem); line-height: 1.3; }
+[dir="rtl"] .text-meta, :lang(ar) .text-meta { font-size: clamp(0.75rem, 0.33vw + 0.68rem, 0.85rem); line-height: 1.7; }
+
+/* ================================================================== */
+/* Utilities                                                           */
+/* ================================================================== */
 @utility container-x {
   width: 100%;
   max-width: var(--container-content);
   margin-inline: auto;
-  padding-inline: 1.25rem;
-  @media (width >= 40rem) { padding-inline: 1.5rem; }
-  @media (width >= 64rem) { padding-inline: 2rem; }
+  padding-inline: 1.5rem;
+  @media (width >= 64rem) { padding-inline: 2.5rem; }
 }
 
 @utility section-y {
-  padding-block: clamp(4rem, 8vw, 7.5rem);
+  padding-block: clamp(4rem, 8vw, 8rem);
 }
 
+/* Meta / "instrument" label (plan 2.3). */
 @utility eyebrow {
-  font-family: var(--font-sans);
-  font-size: 0.75rem;
+  font-family: var(--font-heading);
+  font-size: clamp(0.6875rem, 0.35vw + 0.62rem, 0.8125rem);
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--accent);
+  font-variation-settings: "wdth" 125;
+  color: var(--text-muted);
 }
-:lang(ar) .eyebrow { letter-spacing: 0; text-transform: none; font-size: 0.85rem; }
+[dir="rtl"] .eyebrow,
+:lang(ar) .eyebrow {
+  letter-spacing: 0;
+  text-transform: none;
+  font-variation-settings: normal;
+  font-size: 0.85rem;
+}
 
 @utility card {
   background: var(--surface-1);
@@ -230,60 +376,90 @@
   box-shadow: var(--shadow-card);
 }
 
-@utility plate {
-  background: var(--plate);
+/* THE RED LINE (plan 2.4) — 2px tall, 40px at rest, full width when the
+   row is active or its group is hovered. Animated with clip-path, which
+   is compositor-only, so it never costs layout (CLAUDE.md rule 6). */
+@utility redline {
+  display: block;
+  block-size: 2px;
+  inline-size: 100%;
+  background: var(--red-signal);
+  clip-path: inset(0 calc(100% - var(--redline-rest)) 0 0);
+  transition: clip-path var(--dur-hover) var(--ease-out);
+}
+[dir="rtl"] .redline {
+  clip-path: inset(0 0 0 calc(100% - var(--redline-rest)));
+}
+.redline[data-active],
+.redline[aria-current="true"],
+:where(.group):hover .redline,
+:where(.group):focus-within .redline {
+  clip-path: inset(0 0 0 0);
+}
+
+/* The brand shape (plan 2.4): an 18px cut on the top-right, mirrored RTL. */
+@utility chamfer {
+  clip-path: polygon(0 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer), 100% 100%, 0 100%);
+}
+[dir="rtl"] .chamfer {
+  clip-path: polygon(var(--chamfer) 0, 100% 0, 100% 100%, 0 100%, 0 var(--chamfer));
+}
+
+/* Price as a composed object (plan 2.3): the number at H3/H2 weight, the
+   unit and period as meta labels. Always tabular, always Latin digits. */
+@utility price {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35em;
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  color: var(--text);
+}
+.price > .price-value {
+  font-family: var(--font-heading);
+  font-size: 1em;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-variation-settings: "wdth" 112;
+}
+.price > .price-unit,
+.price > .price-period {
+  font-family: var(--font-heading);
+  font-size: 0.42em;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-variation-settings: "wdth" 125;
+  color: var(--text-muted);
+}
+[dir="rtl"] .price > .price-unit,
+[dir="rtl"] .price > .price-period,
+:lang(ar) .price > .price-unit,
+:lang(ar) .price > .price-period {
+  letter-spacing: 0;
+  text-transform: none;
+  font-variation-settings: normal;
+  font-size: 0.5em;
+}
+
+@utility hairline {
+  display: block;
+  block-size: 1px;
+  inline-size: 100%;
+  background: var(--border);
+  border: 0;
 }
 
 @utility scrim {
   background: var(--scrim);
 }
 
-@utility hairline {
-  position: relative;
-  &::before, &::after {
-    content: "";
-    position: absolute;
-    inset-inline: 0;
-    height: 1px;
-    background: color-mix(in oklab, var(--accent) 45%, transparent);
-  }
-  &::before { top: 0; }
-  &::after { top: 4px; }
-}
-
-@utility zellige {
-  background-image: url("/images/zellige.svg");
-  background-size: 96px 96px;
-  opacity: var(--pattern-opacity);
-}
-
-@utility arch {
-  border-start-start-radius: 999px;
-  border-start-end-radius: 999px;
-}
-
-@utility text-gradient-gold {
-  background: linear-gradient(135deg, #a8843a 0%, #7f6120 55%, #b8963f 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-.dark .text-gradient-gold {
-  background-image: linear-gradient(135deg, #e2c57f 0%, #b8963f 55%, #d4b26a 100%);
-}
-
-@utility btn-gold {
-  background: linear-gradient(135deg, var(--accent-fill-hover), var(--accent-fill) 60%);
-  color: var(--on-accent);
-}
-
-/* Marquee (brands) */
-@keyframes marquee {
-  to { transform: translateX(-50%); }
-}
-@keyframes marquee-rtl {
-  to { transform: translateX(50%); }
-}
+/* ================================================================== */
+/* Motion                                                              */
+/* ================================================================== */
+@keyframes marquee { to { transform: translateX(-50%); } }
+@keyframes marquee-rtl { to { transform: translateX(50%); } }
 .marquee-track {
   display: flex;
   width: max-content;
@@ -292,7 +468,7 @@
 [dir="rtl"] .marquee-track { animation-name: marquee-rtl; }
 .marquee:hover .marquee-track { animation-play-state: paused; }
 
-/* Scroll-driven parallax (zero JS) with graceful fallback */
+/* Scroll-driven reveals (zero JS) with a graceful no-op fallback. */
 @keyframes drift-up {
   from { transform: translateY(6%); }
   to { transform: translateY(-6%); }
@@ -320,7 +496,6 @@
   .stagger > .reveal-view:nth-child(n+7) { animation-range: entry 36% entry 71%; }
 }
 
-/* Scroll progress bar */
 @keyframes grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @supports (animation-timeline: scroll()) {
   .scroll-progress {
@@ -335,16 +510,15 @@
 .line-mask { display: block; overflow: hidden; padding-bottom: 0.08em; margin-bottom: -0.08em; }
 .line-mask > span { display: block; }
 @keyframes hero-line { from { transform: translateY(110%); } to { transform: translateY(0); } }
-.hero-line { animation: hero-line 0.9s var(--ease-out) both; }
+.hero-line { animation: hero-line var(--dur-hero) var(--ease-out) both; }
 @keyframes eager-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-.eager-rise { animation: eager-rise 0.8s var(--ease-out) both; }
+.eager-rise { animation: eager-rise var(--dur-section) var(--ease-out) both; }
 
 /* Currency toggle: EUR approximations are server-rendered, shown via a data attribute */
 .price-eur { display: none; }
 html[data-currency="EUR"] .price-eur { display: inline; }
 html[data-currency="EUR"] .price-eur.block { display: block; }
 
-/* Skeleton shimmer */
 @keyframes shimmer { to { background-position: -200% 0; } }
 .skeleton {
   background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 37%, var(--surface-2) 63%);
@@ -352,19 +526,21 @@ html[data-currency="EUR"] .price-eur.block { display: block; }
   animation: shimmer 1.4s ease infinite;
 }
 
-/* View transitions */
 ::view-transition { pointer-events: none; }
-::view-transition-old(root), ::view-transition-new(root) { animation-duration: 260ms; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: var(--dur-micro); }
 
-/* Scrollbar (subtle) */
 * { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
 
-/* Hide number input spinners */
 input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 input[type="date"], input[type="time"] { min-height: 2.75rem; }
+
+/* Select chevron: a background-image cannot read a token, so Field.js defines
+   one asset per theme inline and this picks the right one. */
+select { --chevron: var(--chevron-light); }
+:is(.dark, [data-theme="dark"]) select { --chevron: var(--chevron-dark); }
 [dir="rtl"] input[type="date"], [dir="rtl"] input[type="time"], [dir="rtl"] input[type="tel"], [dir="rtl"] input[type="email"] { direction: ltr; text-align: end; }
 
-/* Reduced motion */
+/* prefers-reduced-motion: durations to zero, end states visible (plan 5.1). */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -376,15 +552,18 @@ input[type="date"], input[type="time"] { min-height: 2.75rem; }
   .hero-line, .eager-rise, .reveal-view { animation: none !important; opacity: 1 !important; transform: none !important; }
 }
 
-/* Editorial prose (blog, legal) */
+/* ================================================================== */
+/* Editorial prose (blog, legal)                                       */
+/* ================================================================== */
 .prose-dc { color: var(--text-2); font-size: 1.0625rem; line-height: 1.75; }
 .prose-dc > * + * { margin-top: 1.1em; }
-.prose-dc h2 { font-family: var(--font-display); font-size: 1.75rem; line-height: 1.2; color: var(--text); margin-top: 2.2em; font-weight: 500; }
-.prose-dc h3 { font-family: var(--font-display); font-size: 1.35rem; line-height: 1.3; color: var(--text); margin-top: 1.8em; font-weight: 500; }
+.prose-dc h2 { font-family: var(--font-heading); font-size: 1.75rem; line-height: 1.2; color: var(--text); margin-top: 2.2em; font-weight: 700; letter-spacing: -0.01em; }
+.prose-dc h3 { font-family: var(--font-heading); font-size: 1.35rem; line-height: 1.3; color: var(--text); margin-top: 1.8em; font-weight: 700; letter-spacing: -0.01em; }
 .prose-dc ul, .prose-dc ol { padding-inline-start: 1.4em; }
 .prose-dc ul { list-style: disc; }
 .prose-dc ol { list-style: decimal; }
 .prose-dc li + li { margin-top: 0.4em; }
-.prose-dc li::marker { color: var(--accent); }
+.prose-dc li::marker { color: var(--red-signal); }
 .prose-dc strong { color: var(--text); font-weight: 600; }
-.prose-dc a { color: var(--accent); text-decoration: underline; text-underline-offset: 4px; }
+.prose-dc a { color: var(--text); text-decoration: underline; text-decoration-color: var(--red-signal); text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.prose-dc a:hover { color: var(--red-signal); }

@@ -16,8 +16,8 @@
 /*         1  at least one checked pair is below the threshold         */
 /*         2  usage error, or the stylesheet could not be parsed       */
 /*                                                                     */
-/* Missing tokens never fail the run: `--red` / `--red-signal` do not  */
-/* exist until the Sprint 0 token rebuild. They are reported instead.  */
+/* Missing tokens never fail the run - they are reported instead, so a  */
+/* palette can be checked before every token of section 2.2 is landed.  */
 /* ------------------------------------------------------------------ */
 
 import { readFileSync } from 'node:fs';
@@ -58,7 +58,7 @@ const TEXT_TOKENS = {
 
 /**
  * Extra text-role tokens checked in BOTH themes *when they exist*, so the
- * script is useful on the current (gold) palette, which has no --red /
+ * script is useful on a palette that has no --red /
  * --red-signal yet. Absent ones are simply not checked (not "missing").
  */
 const OPTIONAL_TEXT_TOKENS = ['--accent', '--danger', '--success', '--warning', '--info'];
