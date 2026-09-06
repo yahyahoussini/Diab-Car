@@ -41,17 +41,23 @@ const TEXT_2 = '#a5a5a5';
 const RED = '#b71920'; /* fill only — white on it is 6.62:1 */
 const RED_SIGNAL = '#f0383f'; /* thin lines and red text on #080808: 5.10:1 */
 
-/** The badge, inline: satori supports SVG elements but has no <use> and no external refs. */
-function Badge({ size = 44 }) {
-  return (
-    <svg width={size} height={size * 1.25} viewBox="0 0 64 80" style={{ display: 'flex' }}>
-      <path d="M32 2 60 12v30c0 18-12 30-28 36C16 72 4 60 4 42V12z" fill={RED} />
-      <path d="M18 40h28l-4-8H22z" fill={TEXT} />
-      <circle cx="24" cy="44" r="4" fill={TEXT} />
-      <circle cx="40" cy="44" r="4" fill={TEXT} />
-      <rect x="14" y="52" width="36" height="12" rx="3" fill="#0a0a0a" />
-    </svg>
-  );
+/* The real Diab Car mark (white cut, for the black card ground), read once and
+   inlined as a data URL — satori cannot fetch, but it renders <img> from data:. */
+let markCache;
+async function markDataUrl() {
+  if (!markCache) {
+    markCache = readFile(path.join(process.cwd(), 'public/brand/mark-white.png'))
+      .then((buf) => `data:image/png;base64,${buf.toString('base64')}`)
+      .catch(() => null);
+  }
+  return markCache;
+}
+
+/** The mark is 2.59:1; size by height so it never distorts. */
+function Badge({ src, height = 40 }) {
+  if (!src) return null;
+  // eslint-disable-next-line @next/next/no-img-element -- satori renders outside the browser; next/image does not apply
+  return <img src={src} alt="" height={height} width={Math.round(height * 2.59)} style={{ display: 'flex' }} />;
 }
 
 /**
@@ -62,7 +68,7 @@ function Badge({ size = 44 }) {
 export async function renderOg({ title, subtitle, kicker = 'diabcar.ma', locale = 'fr', car = 'suv-premium', price }) {
   const { archivo, manrope, plex } = await assets();
   const rtl = locale === 'ar';
-  const carSrc = await carDataUrl(car);
+  const [carSrc, markSrc] = await Promise.all([carDataUrl(car), markDataUrl()]);
   const displayFont = rtl ? 'Plex Arabic' : 'Archivo';
 
   return new ImageResponse(
@@ -90,7 +96,7 @@ export async function renderOg({ title, subtitle, kicker = 'diabcar.ma', locale 
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <Badge />
+            <Badge src={markSrc} />
             <div
               style={{
                 display: 'flex',
@@ -144,7 +150,8 @@ export async function renderOg({ title, subtitle, kicker = 'diabcar.ma', locale 
         </div>
 
         <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 }}>
-          {carSrc ? <img src={carSrc} width={480} height={228} /> : null}
+          {/* eslint-disable-next-line @next/next/no-img-element -- satori, not the browser */}
+          {carSrc ? <img src={carSrc} alt="" width={480} height={228} /> : null}
         </div>
       </div>
     ),

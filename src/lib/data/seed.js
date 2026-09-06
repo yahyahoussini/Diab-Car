@@ -588,51 +588,64 @@ export const seedExtras = [
  * The free-text option ("Autre adresse à Casablanca") is not a row here: it is
  * appended by the booking module, because it carries no fee, hours or pin.
  */
+/**
+ * Pickup / drop-off points, loaded from docs/inputs/locations.csv (plan 4.2).
+ *
+ *  kind          'airport' | 'agency' | 'district' | 'address'
+ *  deliveryFee   MAD, or null when the CSV still says TODO — the UI renders
+ *                null as "sur devis" rather than inventing a number
+ *                (CLAUDE.md rule 11: unverified is hidden, never guessed).
+ *  hours         { opens, closes } local Casablanca time, or null
+ *  is24h         true | false | null (null = not yet confirmed by Diab Car)
+ *
+ * The free-text option ("Autre adresse à Casablanca") is not a row here: it is
+ * appended by the booking module, because it carries no fee, hours or pin.
+ */
 export const seedLocations = [
   {
-    id: 'l-agence-zerktouni', key: 'agence-zerktouni', kind: 'agency', active: true,
+    id: 'l-agence-zerktouni', key: 'agence-zerktouni', kind: 'agency', city: 'Casablanca', active: true,
     name: d('Agence Diab Car — Bd Zerktouni', 'Diab Car agency — Bd Zerktouni', 'وكالة دياب كار — شارع الزرقطوني', 'Agencia Diab Car — Bd Zerktouni'),
     address: '356 boulevard Zerktouni, Casablanca 20000', lat: 33.5883, lng: -7.6314,
     deliveryFee: 0, hours: { opens: '08:00', closes: '20:00' }, is24h: false, // TODO: confirm hours and exact coordinates
   },
   {
-    id: 'l-aeroport-mohammed-v', key: 'aeroport-mohammed-v', kind: 'airport', active: true,
+    id: 'l-aeroport-mohammed-v', key: 'aeroport-mohammed-v', kind: 'airport', city: 'Nouaceur', active: true,
     name: d('Aéroport Mohammed V (CMN)', 'Mohammed V Airport (CMN)', 'مطار محمد الخامس', 'Aeropuerto Mohammed V (CMN)'),
     address: 'Aéroport Mohammed V, Nouaceur', lat: 33.3675, lng: -7.5898,
     deliveryFee: null, hours: { opens: '00:00', closes: '23:59' }, is24h: null, // TODO: meeting point? terminal 1/2? fee? 24/7?
   },
   {
-    id: 'l-maarif', key: 'maarif', kind: 'district', active: true,
+    id: 'l-maarif', key: 'maarif', kind: 'district', city: 'Casablanca', active: true,
     name: d('Maârif', 'Maarif', 'المعاريف', 'Maarif'),
     address: 'Casablanca', lat: 33.5820, lng: -7.6360,
     deliveryFee: null, hours: { opens: '08:00', closes: '20:00' }, is24h: false, // TODO: delivery fee and delay
   },
   {
-    id: 'l-anfa', key: 'anfa', kind: 'district', active: true,
+    id: 'l-anfa', key: 'anfa', kind: 'district', city: 'Casablanca', active: true,
     name: d('Anfa', 'Anfa', 'أنفا', 'Anfa'),
     address: 'Casablanca', lat: 33.5900, lng: -7.6600,
     deliveryFee: null, hours: { opens: '08:00', closes: '20:00' }, is24h: false,
   },
   {
-    id: 'l-ain-diab', key: 'ain-diab', kind: 'district', active: true,
+    id: 'l-ain-diab', key: 'ain-diab', kind: 'district', city: 'Casablanca', active: true,
     name: d('Aïn Diab / Corniche', 'Ain Diab / Corniche', 'عين الذئاب / الكورنيش', 'Ain Diab / Corniche'),
     address: 'Casablanca', lat: 33.5960, lng: -7.6780,
     deliveryFee: null, hours: { opens: '08:00', closes: '20:00' }, is24h: false,
   },
   {
-    id: 'l-centre-ville', key: 'centre-ville', kind: 'district', active: true,
+    id: 'l-centre-ville', key: 'centre-ville', kind: 'district', city: 'Casablanca', active: true,
     name: d('Centre-ville', 'City centre', 'وسط المدينة', 'Centro'),
     address: 'Casablanca', lat: 33.5950, lng: -7.6180,
     deliveryFee: null, hours: { opens: '08:00', closes: '20:00' }, is24h: false,
   },
   {
-    id: 'l-casa-voyageurs', key: 'casa-voyageurs', kind: 'district', active: true,
+    id: 'l-casa-voyageurs', key: 'casa-voyageurs', kind: 'district', city: 'Casablanca', active: true,
     name: d('Gare Casa-Voyageurs', 'Casa-Voyageurs station', 'محطة الدار البيضاء المسافرين', 'Estación Casa-Voyageurs'),
     address: 'Casablanca', lat: 33.5895, lng: -7.5990,
     deliveryFee: null, hours: { opens: '08:00', closes: '20:00' }, is24h: false,
   },
   {
-    id: 'l-sidi-maarouf', key: 'sidi-maarouf', kind: 'district', active: true,
+    id: 'l-sidi-maarouf', key: 'sidi-maarouf', kind: 'district', city: 'Casablanca', active: true,
     name: d('Sidi Maârouf / Casanearshore', 'Sidi Maarouf / Casanearshore', 'سيدي معروف', 'Sidi Maarouf'),
     address: 'Casablanca', lat: 33.5330, lng: -7.6470,
     deliveryFee: null, hours: { opens: '08:00', closes: '20:00' }, is24h: false,

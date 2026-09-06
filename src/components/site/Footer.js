@@ -1,6 +1,6 @@
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import Logo from '@/components/site/Logo';
+import { LogoLockup } from '@/components/site/Logo';
 import LanguageSwitcher from '@/components/site/LanguageSwitcher';
 import { formatPhone } from '@/lib/format';
 import { genericMessage, whatsappLink } from '@/lib/whatsapp';
@@ -160,7 +160,9 @@ export default async function Footer({ settings }) {
         <div className="grid gap-12 py-16 lg:grid-cols-12 lg:gap-10 lg:py-24">
           <div className="lg:col-span-4">
             <Link href="/" className="inline-block" data-testid="footer-wordmark">
-              <Logo className="[&>span]:text-[clamp(2.5rem,8vw,5.5rem)] [&>span]:leading-[0.9]" />
+              {/* The real lockup — emblem, DIAB CAR band and the Arabic tagline —
+                  is the footer identity (plan 2.1: badge = footer, OG, favicon). */}
+              <LogoLockup alt={s.name || 'Diab Car'} className="w-full max-w-[22rem]" />
             </Link>
             <span className="mt-6 block w-[120px]" aria-hidden="true">
               <span className="redline" data-active="true" />

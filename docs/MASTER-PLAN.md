@@ -311,6 +311,7 @@ Performance guardrails: home JS ≤ 160 kB gzipped (GSAP chunk lazy ≈ 30 kB on
 
 ```
 locations         id, slug, kind (agency|airport|district|custom), name_i18n jsonb, address, lat, lng, delivery_fee_mad, hours jsonb, is_24h, sort
+  ↳ owner's requirement (Sept 2026): places are managed entirely from the admin — add / edit / disable a place, its kind (airport · agency · district · **city** for other Moroccan cities such as Rabat, Marrakech, Tangier), its `city`, delivery fee, hours, is_24h. A place with kind `city` appears in the booking module under its own "Autres villes" group and its fee joins the subtotal like any delivery. Nothing is pre-filled beyond Casablanca and Mohammed V: cities are added by Diab Car, never guessed.
 vehicles          (exists) + prep_buffer_minutes int default 120, min_days int default 1, is_published, purpose_tags text[] (city|family|suv|business|premium), popularity_score
 units             id, vehicle_id, plate, vin, color, year, mileage_km, fuel_pct, status unit_status, current_location_id, notes, created_at
 reservations      (exists) + unit_id nullable, pickup_location_id, dropoff_location_id, period tstzrange GENERATED (start_at - prep, end_at + prep), status reservation_status, quote jsonb (snapshot), source (web|whatsapp|phone|walkin|admin), locale, hold_id, customer_id

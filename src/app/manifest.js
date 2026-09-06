@@ -8,8 +8,11 @@ export default function manifest() {
     background_color: '#ffffff',
     theme_color: '#080808',
     lang: 'fr',
+    // The real mark, white on brand red, generated from public/brand/badge-icon.png.
     icons: [
-      { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml' },
+      { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+      { src: '/icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
       { src: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
     ],
   };

@@ -1,34 +1,33 @@
 import { cn } from '@/lib/cn';
 
 /**
- * TEMP MARK — this is not the Diab Car brand badge.
- * docs/inputs/logo/ has no vector yet and its "Redraw approved" line is blank
- * (plan 2.1, section 12 input #1), so the shield below is a placeholder drawn
- * to the plan's description: red shield, white car, black band. Replace the
- * geometry here and in public/brand/badge-temp*.svg the day the vector lands.
+ * The real Diab Car mark (delivered Sept 2026 as public/brand/badge-icon.png,
+ * trimmed and re-encoded by the brand pipeline). Two files, not one: the mark
+ * is a single flat colour, so light mode uses the black cut and dark mode the
+ * white one — swapped with the `dark` class, the same mechanism the tokens use.
  *
- * Drawn inline rather than loaded from public/brand so it stays crisp at any
- * size and so the clip path id can be scoped per render.
+ * Raster, not SVG: only PNGs were supplied. The plan asked for an SVG badge;
+ * a true vector needs the original artwork or a tracer, neither available
+ * here. At the sizes the site uses (≤ 160 px wide) an 800 px WebP is
+ * indistinguishable and 16 kB. Swap to SVG the day a vector arrives.
  */
-export function Badge({ className, id = 'dc-shield' }) {
+const MARK = { light: '/brand/mark.webp', dark: '/brand/mark-white.webp', width: 800, height: 309 };
+const LOCKUP = { light: '/brand/logo.webp', dark: '/brand/logo-white.webp', width: 1600, height: 714 };
+
+/**
+ * The emblem alone — car silhouette over the band. Sizes by height: give it a
+ * height class and the width follows the mark's own 2.59:1 aspect.
+ * Decorative by default; pass `alt` when it is the only thing naming the brand.
+ * @param {{ className?: string, alt?: string }} props
+ */
+export function Badge({ className, alt = '' }) {
   return (
-    <svg viewBox="0 0 64 80" className={cn('h-8 w-8', className)} aria-hidden="true" focusable="false">
-      <clipPath id={id}>
-        <path d="M32 2 60 12v30c0 18-12 30-28 36C16 72 4 60 4 42V12z" />
-      </clipPath>
-      <g clipPath={`url(#${id})`}>
-        <path d="M32 2 60 12v30c0 18-12 30-28 36C16 72 4 60 4 42V12z" fill="var(--red)" />
-        <path
-          d="M13 41c0-1.2.9-2.2 2.1-2.4l4.6-.8 4.1-5.6c.6-.8 1.5-1.3 2.5-1.3h11.4c1 0 1.9.5 2.5 1.3l4.1 5.6 4.6.8c1.2.2 2.1 1.2 2.1 2.4v3.4c0 .9-.7 1.6-1.6 1.6H14.6c-.9 0-1.6-.7-1.6-1.6z"
-          fill="var(--on-red)"
-        />
-        <circle cx="22" cy="46" r="4.6" fill="var(--on-red)" />
-        <circle cx="42" cy="46" r="4.6" fill="var(--on-red)" />
-        <circle cx="22" cy="46" r="1.9" fill="var(--red)" />
-        <circle cx="42" cy="46" r="1.9" fill="var(--red)" />
-        <rect x="0" y="54" width="64" height="13" fill="#0a0a0a" />
-      </g>
-    </svg>
+    <span className={cn('inline-flex items-center justify-center', className)} aria-hidden={alt ? undefined : 'true'}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={MARK.light} alt={alt} width={MARK.width} height={MARK.height} decoding="async" className="block max-h-full max-w-full h-auto w-auto dark:hidden" />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={MARK.dark} alt="" width={MARK.width} height={MARK.height} decoding="async" className="hidden max-h-full max-w-full h-auto w-auto dark:block" />
+    </span>
   );
 }
 
@@ -36,18 +35,31 @@ export function Badge({ className, id = 'dc-shield' }) {
 export const LogoMark = Badge;
 
 /**
- * The wordmark (plan 2.1): "DIAB CAR" in Archivo, width axis 125, weight 700,
- * uppercase, tracking +0.02em. Neutral by design — red is a signal, never
- * decoration, so no letter is red.
- *
- * `withBadge` shows the mini badge from the lg breakpoint up, which is the
- * plan's ">= 1024 px shows badge + wordmark, mobile shows the wordmark only".
- * It is a CSS breakpoint, not a JS one, so it costs no hydration.
+ * The full lockup: emblem, "DIAB CAR" band and the Arabic tagline
+ * جودة تثق بها . خدمة تميزنا — for the footer and anywhere the brand stands alone.
+ * @param {{ className?: string, alt?: string }} props
+ */
+export function LogoLockup({ className, alt = 'Diab Car' }) {
+  return (
+    <span className={cn('inline-block', className)}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={LOCKUP.light} alt={alt} width={LOCKUP.width} height={LOCKUP.height} decoding="async" className="block h-auto w-full dark:hidden" />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={LOCKUP.dark} alt="" width={LOCKUP.width} height={LOCKUP.height} decoding="async" className="hidden h-auto w-full dark:block" />
+    </span>
+  );
+}
+
+/**
+ * Header identity (plan 2.1): the wordmark "DIAB CAR" in Archivo, width axis
+ * 125, weight 700, tracking +0.02em — with the real emblem beside it from the
+ * lg breakpoint up when `withBadge` is set. Neutral: red is a signal, so no
+ * letter is red. A CSS breakpoint, not JS, so it costs no hydration.
  */
 export default function Logo({ className, withBadge = false }) {
   return (
-    <span className={cn('inline-flex items-center gap-2.5', className)}>
-      {withBadge ? <Badge className="hidden h-7 w-7 lg:block" /> : null}
+    <span className={cn('inline-flex items-center gap-3', className)}>
+      {withBadge ? <Badge className="hidden h-6 lg:inline-flex" /> : null}
       <span
         className="font-latin-display text-[1.35rem] font-bold uppercase leading-none tracking-[0.02em] text-text"
         style={{ fontVariationSettings: '"wdth" 125' }}
