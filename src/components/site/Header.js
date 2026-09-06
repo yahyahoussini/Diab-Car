@@ -31,6 +31,9 @@ const NAV = [
     key: 'services',
     children: [
       { key: 'longTerm', href: '/longue-duree', ready: true },
+      // Confirmed by Diab Car's own announcement (Sept 2026): "professional
+      // driver on request". Plan 3 had this route as P1/cut pending confirmation.
+      { key: 'chauffeur', href: '/avec-chauffeur', ready: true },
       { key: 'delivery', href: '/livraison', ready: false },
       { key: 'automatic', href: '/automatique', ready: false },
     ],

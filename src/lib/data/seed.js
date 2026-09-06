@@ -32,6 +32,18 @@ export const seedSettings = {
     { days: ['sun'], opens: '09:00', closes: '18:00' },
   ],
   airportService24h: true,
+  /* What Diab Car actually offers — from the agency's own public announcement
+     (Sept 2026), so these are verified facts under CLAUDE.md rule 11, not
+     assumptions. Pages, nav and copy may claim exactly these and nothing more. */
+  services: {
+    daily: true, // "تأجير يومي"
+    weekly: true, // "أسبوعي"
+    monthly: true, // "وشهري" — the /longue-duree offer is real
+    delivery: true, // "توصيل السيارة إلى موقعك"
+    chauffeur: true, // "إمكانية توفير سائق محترف عند الحاجة" — /avec-chauffeur is real
+    onlinePayment: false, // decided: cash or TPE at pickup, never online
+  },
+  bookingChannels: ['whatsapp', 'website'], // "احجز الآن عبر واتساب او عبر موقعنا الألكتروني"
   rc: '285663', // Telecontact
   ice: '000032763000039', // Telecontact
   capitalMad: 1200000, // Charika/Telecontact

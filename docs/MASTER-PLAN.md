@@ -133,7 +133,7 @@ Existing routing (`src/i18n/routing.js`) already maps internal keys to localized
 | `/suv` | `/location-suv-casablanca` | `/suv-rental-casablanca` | same | `/alquiler-suv-casablanca` | category intent | P1 |
 | `/quartier/[q]` | `/location-voiture-casablanca-maarif`, `-anfa`, `-ain-diab`, `-centre-ville`, `-casa-voyageurs`, `-sidi-maarouf` | `/car-rental-casablanca-maarif` … | same | `/alquiler-coches-casablanca-maarif` … | neighbourhood delivery pages, each with unique local content (landmarks, hotels, parking, delivery time) | P1 |
 | `/livraison` | `/livraison-voiture-casablanca` | `/car-delivery-casablanca` | same | `/entrega-coche-casablanca` | delivery service | P1 |
-| `/avec-chauffeur` | existing | existing | existing | existing | only if Diab Car really offers it (confirm) | P1/cut |
+| `/avec-chauffeur` | existing | existing | existing | existing | **confirmed** — Diab Car's own announcement (Sept 2026) lists "professional driver on request" | P1 |
 | `/villes/[city]` | `/location-voiture-marrakech` … | … | … | … | only for cities with confirmed delivery/one-way | P2 |
 | `/guides/[slug]` | `/guides/conduire-au-maroc`, `/guides/casablanca-marrakech-en-voiture` … | … | … | … | tourist pre-intent content | P2 |
 | `/comparer` | `/comparer` | `/compare` | same | `/comparar` | comparison (noindex) | v1.1 |
@@ -359,7 +359,7 @@ Public shows only: available / dernière disponibilité / indisponible + next da
 | Dashboard: today (départs, retours, disponibles, en maintenance), **ACTION REQUISE** list, today's operations timeline | Comparison tool on the site, review import from Google, WhatsApp Cloud API templates | Driver mobile view (pickups/deliveries/transfers with GPS + signature) |
 | Réservations: list (filters, search), detail (customer · vehicle · money), state machine actions with reason, create by staff with conflict check + alternatives | Customer documents upload (licence/ID) with expiry reminders | Inter-branch transfers, multi-location map |
 | Calendrier: horizontal Gantt per unit (day/week/month), drag to move dates (conflict check before save), click = side panel | Finance: payments list, deposits, receipts PDF | Vehicle profitability (revenue vs costs), utilisation rate, condition score |
-| Flotte: models (content, prices, photos with variant generation, purpose tags, publish), units (plate, status, mileage, fuel), blocks (maintenance/cleaning with drag on the calendar) | Document vault per unit (registration, insurance, inspection) with 30/15/7/1-day alerts | Accountant role, invoices, exports |
+| Flotte: models (content, prices, purpose tags, publish), **per-car gallery managed entirely from the admin — add, replace, remove and reorder photos per angle (front, side, rear, interior, dash), variants generated on upload, first photo = card image, no code change ever needed (owner's requirement, Sept 2026)**, units (plate, status, mileage, fuel), blocks (maintenance/cleaning with drag on the calendar) | Document vault per unit (registration, insurance, inspection) with 30/15/7/1-day alerts | Accountant role, invoices, exports |
 | Opérations: **pickup checklist** (identity ✓, documents ✓, unit ✓, condition map, mileage, fuel, photos, signature) and **return checklist** (mileage, fuel, damage, photos, signature → auto `cleaning` → `ready` → public availability) | Damage cases with before/after photo compare | Cost tracking per unit |
 | Clients: profile, history, notes | | |
 | Contenu: FAQ database (categories, city, vehicle), blog, avis; Tarifs: saisons, extras, remises, caution, livraison | | |
@@ -513,7 +513,7 @@ Blocking for Sprint 0–1
 4. Photos of the real cars (or a date for a half-day shoot; shot list in 2.5).
 5. Legal facts to print: legal name, RC, ICE, capital (the seed has researched values — confirm), CNDP receipt number (or start the declaration), cancellation and modification policy, deposit release delay.
 6. Accounts (all free): Cloudflare, Supabase, Resend, GitHub, Google Search Console/GA4/GBP access, registrar access for `diabcar.ma` DNS.
-7. The WhatsApp number that receives bookings (`06 59 77 55 82`?) and the phone for calls (`05 22 26 03 05`?).
+7. ~~The WhatsApp number that receives bookings and the phone for calls~~ — **confirmed**: WhatsApp `06 59 77 55 82` (printed on Diab Car's own announcement), calls `05 22 26 03 05`, fax `05 22 26 03 61`, e-mail `diabcar@gmail.com`.
 
 Nice to have
 8. Any inspiration links for photography and motion you still want to add.
