@@ -1,10 +1,28 @@
 -- ============================================================================
 -- 0001 — extensions and enums (plan 6.2)
 --
--- Run order: 0001 … 0006, then `npm run db:seed`.
+-- Run order: supabase/schema.sql  →  0001 … 0006  →  `npm run db:seed`.
+--
+-- schema.sql FIRST. It creates the baseline tables (settings, vehicles,
+-- seasons, extras, locations, faqs, posts, reviews, bookings); 0002 and 0003
+-- widen those in place with ALTER. On a fresh project, skipping it makes the
+-- first ALTER fail with a bare `relation "settings" does not exist` that says
+-- nothing about the real cause — so the guard below fails first, with the
+-- instruction.
+--
 -- Every migration is idempotent: re-running it is a no-op, so a partially
 -- applied file can simply be run again.
 -- ============================================================================
+
+-- ---------------------------------------------------------------- baseline guard
+do $$
+begin
+  if to_regclass('public.settings') is null then
+    raise exception
+      'Baseline missing: run supabase/schema.sql before 0001..0006. It creates settings, vehicles, locations, faqs, posts and reviews, which 0002/0003 only ALTER.'
+      using errcode = 'undefined_table';
+  end if;
+end $$;
 
 create extension if not exists "pgcrypto";
 

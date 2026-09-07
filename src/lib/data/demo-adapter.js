@@ -29,11 +29,25 @@ function applyVehicleFilters(list, { published, category, transmission, seats, f
   return clone(out);
 }
 
+/**
+ * Fields the `public_settings` view withholds from anonymous readers
+ * (supabase/migrations/0005). Stripped here too, so a page that reads one
+ * behaves identically in demo and in production instead of working in `npm run
+ * dev` and returning undefined on the live site.
+ */
+const INTERNAL_SETTINGS = ['indexNowKey'];
+
 export const demoAdapter = {
   mode: 'demo',
 
   /* Settings */
   async getSettings() {
+    const s = clone(getStore().settings);
+    for (const k of INTERNAL_SETTINGS) delete s[k];
+    return s;
+  },
+  /** Full row, mirroring the staff-only read in the Supabase adapter. */
+  async getSettingsAdmin() {
     return clone(getStore().settings);
   },
   async updateSettings(patch) {

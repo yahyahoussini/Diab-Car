@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import { db, getSettings, listPosts, listVehicles } from '@/lib/data';
+import { db, getSettingsAdmin, listPosts, listVehicles } from '@/lib/data';
 import { CAR_IMAGES, CATEGORIES, FEATURES, FUELS, LOCALES, TRANSMISSIONS } from '@/lib/constants';
 import { getAdminBase, requireAdmin } from '@/lib/auth/server';
 import { pingIndexNow } from '@/lib/indexnow';
@@ -229,7 +229,7 @@ export async function revalidateAll() {
 
 export async function indexNowAll() {
   await requireAdmin();
-  const [settings, vehicles, posts] = await Promise.all([getSettings(), listVehicles({ published: true }), listPosts({ published: true })]);
+  const [settings, vehicles, posts] = await Promise.all([getSettingsAdmin(), listVehicles({ published: true }), listPosts({ published: true })]);
   const urls = [];
   for (const l of routing.locales) {
     ['/', '/vehicules', '/aeroport', '/longue-duree', '/avec-chauffeur', '/faq', '/blog', '/contact', '/a-propos'].forEach((h) => urls.push(absoluteUrl(l, h)));

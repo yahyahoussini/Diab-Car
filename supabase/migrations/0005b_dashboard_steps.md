@@ -1,7 +1,26 @@
 # The two things you must click in the Supabase dashboard
 
-Everything else in `supabase/migrations/` is SQL you paste into the SQL editor.
-These two cannot be done from SQL — they need the dashboard.
+Everything else in `supabase/migrations/` is SQL you paste into the SQL editor,
+**in this order**:
+
+```
+supabase/schema.sql          ← FIRST. Creates the baseline tables.
+0001_extensions_enums.sql
+0002_core_tables.sql
+0003_events_audit_content.sql
+0004_integrity.sql
+0005_roles_rls.sql
+0006_storage.sql
+                             ← then the two dashboard steps below
+npm run db:seed
+0007_verify.sql              ← paste its output into the report
+```
+
+`schema.sql` is not optional: 0002 and 0003 only `alter` the tables it creates
+(settings, vehicles, locations, faqs, posts, reviews). 0001 checks for it and
+stops with a readable message if it is missing.
+
+The two steps below cannot be done from SQL — they need the dashboard.
 
 Project: **vmodgrkxiitwwneqhtbo** · region should be **West EU (Paris)** (plan §9.2).
 

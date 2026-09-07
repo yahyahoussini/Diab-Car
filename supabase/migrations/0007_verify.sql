@@ -16,7 +16,13 @@ order by 1;
 -- ---------------------------------------------------------------- 2. RLS hides the private tables
 -- `anon` is the role the browser uses with the publishable key. It must see
 -- published vehicles and locations, and NOTHING of units or customers.
-set local role anon;
+--
+-- SET ROLE, not SET LOCAL ROLE: `set local` is only honoured inside an explicit
+-- transaction block, and the SQL editor does not always give you one. Outside
+-- a transaction it warns and does nothing — the selects below would then run as
+-- `postgres`, which bypasses RLS, and the units/customers counts would come back
+-- non-zero. That reads as "RLS is broken" when in fact the test never ran.
+set role anon;
 
 select 'anon sees vehicles'  as check, count(*) as rows from vehicles;   -- > 0, published only
 select 'anon sees locations' as check, count(*) as rows from locations;  -- > 0
@@ -25,9 +31,20 @@ select 'anon sees customers' as check, count(*) as rows from customers;  -- MUST
 select 'anon sees reservations' as check, count(*) as rows from reservations; -- MUST be 0
 select 'anon sees audit_log' as check, count(*) as rows from audit_log;  -- MUST be 0
 
+-- Reviews: published, non-sample only. A seeded example must never be servable
+-- as a testimonial, and the policy — not the component — is what guarantees it.
+select 'anon sees reviews' as check, count(*) as rows from reviews;      -- published, is_sample = false
+select 'anon sees SAMPLE reviews' as check, count(*) as rows
+  from reviews where coalesce(is_sample, false) = true;                  -- MUST be 0
+
 -- The public site reads settings through the view, never the table.
 select 'anon sees settings table' as check, count(*) as rows from settings;      -- MUST be 0
-select 'anon sees public_settings' as check, count(*) as rows from public_settings; -- 1
+select 'anon sees public_settings' as check, count(*) as rows from public_settings; -- MUST be 1
+
+-- And the view must not leak the internal token.
+select 'index_now_key exposed to anon' as check,
+       exists (select 1 from information_schema.columns
+                where table_name = 'public_settings' and column_name = 'index_now_key') as leaked; -- MUST be false
 
 reset role;
 

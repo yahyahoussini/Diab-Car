@@ -21,7 +21,7 @@ const CHECKS = [
 ];
 
 export default async function SeoPage() {
-  const s = await (await db()).getSettings();
+  const s = await (await db()).getSettingsAdmin();
   const links = [
     ['Sitemap (hreflang ×4)', `${SITE_URL}/sitemap.xml`],
     ['robots.txt (moteurs IA autorisés)', `${SITE_URL}/robots.txt`],

@@ -52,12 +52,32 @@ async function remove(table, id) {
 export const supabaseAdapter = {
   mode: 'supabase',
 
+  /**
+   * Public settings. Reads the `public_settings` VIEW, not the table.
+   *
+   * 0005 makes `settings` staff-only, so an anonymous visitor selecting the
+   * table gets zero rows — the site would lose its phone number, hours and
+   * trust facts while looking like it simply had no data. The view exposes a
+   * whitelisted column list and is granted to anon.
+   *
+   * Anything internal (index_now_key) is NOT here by design; the admin reads
+   * the full row through getSettingsAdmin() below.
+   */
   async getSettings() {
     const sb = await readClient();
+    const { data, error } = await sb.from('public_settings').select('*').eq('id', 1).maybeSingle();
+    if (error) fail(error);
+    return rowToModel(data);
+  },
+
+  /** Full settings row, staff only — goes through the session client so RLS sees the role. */
+  async getSettingsAdmin() {
+    const sb = await writeClient();
     const { data, error } = await sb.from('settings').select('*').eq('id', 1).maybeSingle();
     if (error) fail(error);
     return rowToModel(data);
   },
+
   async updateSettings(patch) {
     return upsert('settings', { ...patch, id: 1, updatedAt: new Date().toISOString() });
   },

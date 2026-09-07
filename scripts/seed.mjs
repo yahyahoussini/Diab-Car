@@ -32,7 +32,9 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const INPUTS = path.join(ROOT, 'docs', 'inputs');
 
 const argv = process.argv.slice(2);
-const DRY = argv.includes('--dry');
+/* `--dry-run` is the spelling most people reach for first; accepting both
+   avoids answering a typo with a confusing "set SUPABASE_SERVICE_ROLE_KEY". */
+const DRY = argv.includes('--dry') || argv.includes('--dry-run');
 const ONLY = (argv.find((a) => a.startsWith('--only=')) || '').slice(7).split(',').filter(Boolean);
 const wants = (name) => ONLY.length === 0 || ONLY.includes(name);
 
@@ -196,28 +198,30 @@ async function main() {
 
     /* Units: one physical car per plate, or `units_count` placeholders when no
        plate is known yet. Upserted on plate so re-running never duplicates;
-       placeholder plates are deterministic for the same reason. */
-    if (!DRY) {
-      const bySlug = Object.fromEntries(saved.map((v) => [v.slug, v.id]));
-      const units = [];
-      for (const r of rows) {
-        const vehicleId = bySlug[r.slug];
-        if (!vehicleId) continue;
-        const plates = (r.plates || '').split(';').map((p) => p.trim()).filter(Boolean);
-        const count = int(r.units_count, 1) || 1;
-        for (let i = 0; i < count; i += 1) {
-          units.push({
-            vehicleId,
-            /* No real plate yet -> a stable placeholder so the unit exists and
-               availability can be counted. The admin replaces it (prompt 12). */
-            plate: plates[i] || `TBD-${r.slug}-${i + 1}`,
-            year: int(r.year, null),
-            status: 'available',
-          });
-        }
+       placeholder plates are deterministic for the same reason.
+
+       Built in a dry run too, so the operator sees how many physical cars the
+       CSV expands to BEFORE anything touches the database — that count is the
+       one the fleet is actually measured by (plan 6.1: 27 vehicles, 36 units). */
+    const bySlug = Object.fromEntries(saved.map((v) => [v.slug, v.id]));
+    const units = [];
+    for (const r of rows) {
+      const vehicleId = bySlug[r.slug];
+      if (!DRY && !vehicleId) continue;
+      const plates = (r.plates || '').split(';').map((p) => p.trim()).filter(Boolean);
+      const count = int(r.units_count, 1) || 1;
+      for (let i = 0; i < count; i += 1) {
+        units.push({
+          vehicleId,
+          /* No real plate yet -> a stable placeholder so the unit exists and
+             availability can be counted. The admin replaces it (prompt 12). */
+          plate: plates[i] || `TBD-${r.slug}-${i + 1}`,
+          year: int(r.year, null),
+          status: 'available',
+        });
       }
-      await upsert('units', units, 'plate');
     }
+    await upsert('units', units, 'plate');
   }
 
   /* ---- faqs ------------------------------------------------------ */

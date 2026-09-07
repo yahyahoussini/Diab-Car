@@ -105,6 +105,20 @@
         "blur": "data:image/webp;base64,UklGRmgAAABXRUJQVlA4IFwAAACwAwCdASoYABAAPu1orU6ppiSiMAgBMB2JaQAAWpPv6O516R7uIAD+7Vl4a6ugwTNce7e2ufJna8ipyLZAhoqYBXjUyu9np0ZRAiD6TL8P4ZIoKd/WAqNsd1gAAA==",
         "src": "/images/cars/peugeot-3008-hybride/front"
       }
+    },
+    "scene-airport": {
+      "front": {
+        "width": 1672,
+        "height": 941,
+        "widths": [
+          480,
+          768,
+          1080,
+          1600
+        ],
+        "blur": "data:image/webp;base64,UklGRlYAAABXRUJQVlA4IEoAAADwAwCdASoYAA4APu1kqU2ppaQiMAgBMB2JQBOmUABMSKmzJ9ZGo+OAAP00aPsXO7twS42TVFz9J6hqoHDkjW8f4RMnupDbZlsoAA==",
+        "src": "/images/cars/scene-airport/front"
+      }
     }
   }
 }

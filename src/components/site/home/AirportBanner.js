@@ -1,5 +1,9 @@
 import { getTranslations } from 'next-intl/server';
 import Button from '@/components/ui/Button';
+import CarImage, { hasCarShot } from '@/components/site/CarImage';
+
+/** The airport scene lives in the image pipeline under its own slug. */
+const SCENE = { slug: 'scene-airport' };
 
 /**
  * The airport banner (plan 4.3 §4): ATTERRIR. RÉCUPÉRER. ROULER. over a runway
@@ -46,7 +50,25 @@ export default async function AirportBanner({ settings }) {
           />
         </div>
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-12">
+        {/* The scene sits BELOW the runway, not behind the headline. Plan 4.3
+            §4 makes this section a typographic statement; the photograph is a
+            dark blue-hour frame that would fight a light-mode page as a
+            full-bleed ground, and an overlaid headline would have to stay
+            legible while flipping to the opposite edge in Arabic. Rendered
+            only when the pipeline actually produced it — CarImage's fallback
+            is a car silhouette, which would be nonsense for a scene. */}
+        {hasCarShot(SCENE, 'front') ? (
+          <figure className="chamfer mt-10 overflow-hidden">
+            <CarImage
+              vehicle={SCENE}
+              alt={t('imageAlt')}
+              sizes="(min-width: 1280px) 1200px, 100vw"
+              className="aspect-video w-full"
+            />
+          </figure>
+        ) : null}
+
+        <div className="mt-10 grid gap-8 lg:grid-cols-12">
           <p className="text-text-2 lg:col-span-6">{t('text')}</p>
           {points.length > 0 ? (
             <ul className="text-meta flex flex-col gap-3 text-text-2 lg:col-span-4 lg:col-start-9">

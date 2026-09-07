@@ -78,8 +78,15 @@ language sql stable as $$ select has_role(array['owner']) $$;
 -- The settings row carries internal fields (keys, quotas, notify addresses).
 -- The public site reads this view instead of the table, so nothing internal
 -- can leak through a `select *`.
-create or replace view public_settings
-with (security_invoker = true) as
+-- NOT security_invoker. The whole point of this view is to let anon read a
+-- safe subset of a table anon may NOT read: `settings` is staff-only below,
+-- because it carries ga_id and index_now_key. With security_invoker = true the
+-- view would run under the caller's rights, hit that same RLS, and return zero
+-- rows to every visitor — the site would lose its phone number, hours and
+-- trust facts while looking like it simply had no data.
+-- Supabase's linter flags definer views by default; here it is the design, and
+-- it is safe precisely because the column list is a whitelist, not `select *`.
+create or replace view public_settings as
 select
   s.id, s.name, s.legal_name, s.tagline, s.phone_primary, s.phone_landline,
   s.fax, s.whatsapp, s.email, s.address_line, s.city, s.postal_code, s.country,
@@ -89,9 +96,15 @@ select
   s.fuel_policy, s.free_cancellation_hours, s.deposit_release_days,
   s.pricing_tiers, s.monthly_from, s.airport_delivery_fee, s.city_delivery_fee,
   s.one_way_fee, s.cndp_receipt, s.services, s.booking_channels,
-  s.google_rating, s.google_review_count, s.google_review_url, s.response_time
+  s.google_rating, s.google_review_count, s.google_review_url, s.response_time,
+  -- ga_id IS exposed: a GA4 measurement ID is public by construction — it ends
+  -- up in the HTML of every page that loads the tag — and the site's cookie
+  -- banner reads it from here. Hiding it would only break the banner.
+  s.ga_id
 from settings s;
--- Deliberately NOT exposed: ga_id, index_now_key, and any future key or quota.
+-- Deliberately NOT exposed: index_now_key (a verification token that proves
+-- ownership of the domain to Bing), and any future key, quota or notify
+-- address. Add columns to this list explicitly; never turn it into select *.
 
 grant select on public_settings to anon, authenticated;
 
@@ -193,5 +206,18 @@ drop policy if exists "admin write reviews" on reviews;
 drop policy if exists "admin write posts"   on posts;
 create policy "faqs public read" on faqs    for select using (coalesce(is_published, published) = true or is_staff());
 create policy "faqs manage"      on faqs    for all to authenticated using (is_staff()) with check (is_staff());
+
+-- Reviews MUST get their public read recreated: the drop above removes the
+-- starter's, and without a replacement anonymous visitors see zero reviews —
+-- the homepage section would silently render nothing in production.
+-- `is_sample` is excluded here rather than only in the component: a seeded
+-- example must never be servable as a testimonial (plan 4.10, CLAUDE.md
+-- rule 11), and the database is the one place that cannot be bypassed.
+drop policy if exists "reviews public read" on reviews;
+create policy "reviews public read" on reviews for select
+  using ((published = true and coalesce(is_sample, false) = false) or is_staff());
 create policy "reviews manage"   on reviews for all to authenticated using (is_staff()) with check (is_staff());
+
+-- posts keeps the starter's "public read posts" (published = true or is_admin());
+-- it is not dropped above, so blog articles stay publicly readable.
 create policy "posts manage"     on posts   for all to authenticated using (is_staff()) with check (is_staff());

@@ -23,6 +23,9 @@ export function dataMode() {
 
 /* Convenience wrappers used across the site */
 export const getSettings = async () => (await db()).getSettings();
+/** Full settings row including internal fields. Staff only — admin pages and
+    server routes, never a public page (see supabase/migrations/0005). */
+export const getSettingsAdmin = async () => (await db()).getSettingsAdmin();
 export const listVehicles = async (f) => (await db()).listVehicles(f);
 export const getVehicleBySlug = async (slug) => (await db()).getVehicleBySlug(slug);
 export const getVehicleById = async (id) => (await db()).getVehicleById(id);

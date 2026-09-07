@@ -1,6 +1,6 @@
 # Diab Car — build status
 
-**Updated:** 2026-09-07 · **Branch:** `build/v1` · **Last prompt:** PROMPT 04 — Homepage sections and vehicle card (Sprint 1b)
+**Updated:** 2026-09-07 · **Branch:** `build/v1` · **Last prompt:** PROMPT 05 re-audit — four apply-blocking defects fixed; airport scene wired (Sprint 2a)
 
 This file is the running state of the build. It is rewritten at the end of **every** prompt in `docs/PROMPTS.md`.
 Decisions in the *Plan §10* column come from `docs/MASTER-PLAN.md` §10 (keep / rebuild / extend / delete); where §10 is
@@ -23,7 +23,7 @@ not *never touched again*.
 | 02 | 0b | UI kit, motion primitives, dev kit page | todo |
 | 03 | 1a | Header, footer, hero, booking module | **done** |
 | 04 | 1b | Homepage sections, vehicle card, car images | **done** |
-| 05 | 2a | Supabase: schema, roles, storage, seed | **done (SQL written; not yet applied to the project)** |
+| 05 | 2a | Supabase: schema, roles, storage, seed | **done (SQL written and re-audited; not yet applied to the project)** |
 | 06 | 2b | Availability engine: RPCs, holds, realtime | todo |
 | 07 | 3a | Results / fleet page with live availability | todo |
 | 08 | 3b | Vehicle page | todo |
@@ -82,7 +82,9 @@ means shipping less homepage JavaScript, which is PROMPT 04 (HomeSections rebuil
 | 13 | Arabic OG cards | satori spaces Arabic words oddly in RTL (visible gap between title words) | cosmetic; revisit when §9.3 moves OG generation to build time |
 | 14 | `BookingWidget.js`, `Header.js` | 5 new React Compiler lint errors: `set-state-in-effect` (localStorage-after-mount, media-query sync, time-chip snap-back) and `refs` (a handler that focuses an input). Each is an idiomatic pattern the compiler cannot prove safe | fix with `useSyncExternalStore` in PROMPT 02's kit pass; 3 of the 8 the agents introduced are already fixed with derive-during-render |
 | 15 | homepage JS | LCP 2.91 s / TBT 882 ms vs a 2.0 s / 200 ms budget. All bytes land by 284 ms; bootup-time is ~3.5 s — it is JS execution, not transfer | PROMPT 04 (lighter HomeSections) then Sprint 6 performance CI |
-| 23 | homepage photography | 7 of 8 supplied and live (hero + 6 fleet cars, AI-generated from web reference). 20 cars still show category silhouettes, and the airport banner has no image | generate the rest from the shot list, or shoot the real fleet (plan §2.5) |
+| 23 | homepage photography | **8 of 8 supplied and live** — hero, 6 fleet cars and now the airport scene (`scene-airport`, 1672×941, four widths). 20 cars still show category silhouettes | generate the rest from the shot list, or shoot the real fleet (plan §2.5) |
+| 24 | PROMPT 05 defects found on re-audit | Four, all of which would have fired on first apply: (a) 0002/0003 only `alter` tables that `supabase/schema.sql` creates, and no run order said so — a fresh project died on `relation "settings" does not exist`; (b) 0005 dropped the starter's `public read reviews` and never recreated one, so anon would have seen **zero** reviews in production while demo mode looked fine; (c) `public_settings` was `security_invoker = true`, which makes the view obey the very RLS it exists to bypass — anon would have got 0 rows and the site would have lost its phone number, hours and trust facts; (d) the adapter read the `settings` **table**, now staff-only, instead of that view | **all four fixed**; run order documented + guarded in 0001, `reviews public read` recreated (and it now excludes `is_sample` at the database, not just in the component), view is definer, adapter split into `getSettings()` / `getSettingsAdmin()`, regression test in `src/lib/data/adapters.test.js` |
+| 25 | `0007_verify.sql` used `set local role anon` | `set local` is only honoured inside an explicit transaction block. In a SQL editor that does not give you one it warns and does nothing — the RLS proof would have run as `postgres`, returned non-zero units/customers, and read as "RLS is broken" when the test simply never ran | fixed: plain `set role anon` … `reset role`, plus new assertions for reviews, sample reviews and `index_now_key` non-exposure |
 | 16 | ~~`docs/inputs/photos/` empty~~ | partially resolved: `npm run images` is built and self-tested but has nothing to process, so every car is a silhouette and the card hover crossfade has no rear image | blocked on plan §12 input #4 (real fleet photography) |
 | 22 | PROMPT 05 not applied | the migrations are written and self-consistent but have **never run against the project**. Nothing in task 8 (counts, anon-RLS proof, overlap proof) can be reported as measured until they do | apply 0001-0006 in the SQL editor, do the two dashboard steps, `npm run db:seed`, then run 0007 |
 | 21 | `SUPABASE_SERVICE_ROLE_KEY` | never supplied, so `.env.local` still has the Supabase block commented out and the seed has only been dry-run | paste the key; I write `.env.local` (gitignored) and run the seed |
