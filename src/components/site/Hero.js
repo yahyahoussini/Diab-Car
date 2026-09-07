@@ -1,4 +1,5 @@
 import ReactDOM from 'react-dom';
+import manifest from '../../../public/images/cars/manifest.json';
 import { getLocale, getTranslations } from 'next-intl/server';
 import HeroTitle, { FadeIn } from '@/components/site/HeroTitle';
 import BookingWidget from '@/components/site/BookingWidget';
@@ -20,9 +21,13 @@ import BookingWidget from '@/components/site/BookingWidget';
 /* When the real .avif/.jpg master lands (section 12 input #4), switch   */
 /* back to next/image and drop the manual preload.                       */
 /* ------------------------------------------------------------------ */
-const HERO_CAR_SRC = '/images/cars/suv-premium.svg';
-const HERO_CAR_WIDTH = 800;
-const HERO_CAR_HEIGHT = 380;
+/* The real hero photograph, produced by scripts/images.mjs from
+   docs/inputs/photos/hero/front.jpg. Falls back to the category silhouette
+   until that file exists, so a fresh checkout still builds (plan 2.5). */
+const HERO_SHOT = manifest?.vehicles?.hero?.front || null;
+const HERO_CAR_SRC = HERO_SHOT ? `${HERO_SHOT.src}-1080.webp` : '/images/cars/suv-premium.svg';
+const HERO_CAR_WIDTH = HERO_SHOT?.width || 800;
+const HERO_CAR_HEIGHT = HERO_SHOT?.height || 380;
 
 /**
  * WOW 1 runs once per session (plan 5.2). This has to be a blocking inline
@@ -166,6 +171,8 @@ export default async function Hero({ settings, locations, fleetCount = 0 }) {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   data-testid="hero-car"
+                  srcSet={HERO_SHOT ? HERO_SHOT.widths.map((w) => `${HERO_SHOT.src}-${w}.webp ${w}w`).join(', ') : undefined}
+                  sizes={HERO_SHOT ? '(min-width: 1024px) 60vw, 100vw' : undefined}
                   src={HERO_CAR_SRC}
                   alt={t('carAlt')}
                   width={HERO_CAR_WIDTH}

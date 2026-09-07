@@ -37,15 +37,19 @@ export const LogoMark = Badge;
 /**
  * The full lockup: emblem, "DIAB CAR" band and the Arabic tagline
  * جودة تثق بها . خدمة تميزنا — for the footer and anywhere the brand stands alone.
+ * Both theme cuts are in the DOM, and a CSS-hidden <img> still downloads — so
+ * this is `loading="lazy"`. The lockup only ever appears in the footer, far
+ * below the fold; eager it cost 130 kB of bandwidth against the hero's LCP.
+ *
  * @param {{ className?: string, alt?: string }} props
  */
 export function LogoLockup({ className, alt = 'Diab Car' }) {
   return (
     <span className={cn('inline-block', className)}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={LOCKUP.light} alt={alt} width={LOCKUP.width} height={LOCKUP.height} decoding="async" className="block h-auto w-full dark:hidden" />
+      <img src={LOCKUP.light} alt={alt} width={LOCKUP.width} height={LOCKUP.height} loading="lazy" decoding="async" className="block h-auto w-full dark:hidden" />
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={LOCKUP.dark} alt="" width={LOCKUP.width} height={LOCKUP.height} decoding="async" className="hidden h-auto w-full dark:block" />
+      <img src={LOCKUP.dark} alt="" width={LOCKUP.width} height={LOCKUP.height} loading="lazy" decoding="async" className="hidden h-auto w-full dark:block" />
     </span>
   );
 }

@@ -1,4 +1,110 @@
 {
   "generatedFrom": "docs/inputs/photos",
-  "vehicles": {}
+  "widths": [
+    480,
+    768,
+    1080,
+    1600,
+    2000
+  ],
+  "angles": [
+    "front",
+    "side",
+    "rear",
+    "interior",
+    "dash"
+  ],
+  "vehicles": {
+    "dacia-duster-diesel": {
+      "front": {
+        "width": 1536,
+        "height": 1024,
+        "widths": [
+          480,
+          768,
+          1080
+        ],
+        "blur": "data:image/webp;base64,UklGRmoAAABXRUJQVlA4IF4AAACwAwCdASoYABAAPu1mqk2ppaQiMAgBMB2JZwAAWppbOICmYQYnQAD+7VluH2Kjwo7ns73kbCxhrGMa4VL5oyFS/v9MqeMuX8Exa6pYLINnUHhH3mou58ImzoACAAAA",
+        "src": "/images/cars/dacia-duster-diesel/front"
+      }
+    },
+    "dacia-logan-diesel": {
+      "front": {
+        "width": 1536,
+        "height": 1024,
+        "widths": [
+          480,
+          768,
+          1080
+        ],
+        "blur": "data:image/webp;base64,UklGRmYAAABXRUJQVlA4IFoAAADwAwCdASoYABAAPu1oqk6ppiQiMAgBMB2JaQAAWppJozRmIOapthMAAP7tSEaLHeqXkd/QYx+sHqJCvpudmw5kTnREzy/gE56dqqGVcqwWKOuVqPkj8ooAAAA=",
+        "src": "/images/cars/dacia-logan-diesel/front"
+      }
+    },
+    "hero": {
+      "front": {
+        "width": 1536,
+        "height": 1024,
+        "widths": [
+          480,
+          768,
+          1080
+        ],
+        "blur": "data:image/webp;base64,UklGRmIAAABXRUJQVlA4IFYAAADQAwCdASoYABAAPu1orU6ppiSiMAgBMB2JaQAAWppJot37G4icxwAA/up7P6our5TyrXPy/K1MG3GysOgCSieSHVs/vWtJCHURPSvVglYaKRgZO0UAAA==",
+        "src": "/images/cars/hero/front"
+      }
+    },
+    "hyundai-accent-auto": {
+      "front": {
+        "width": 1536,
+        "height": 1024,
+        "widths": [
+          480,
+          768,
+          1080
+        ],
+        "blur": "data:image/webp;base64,UklGRmIAAABXRUJQVlA4IFYAAADQAwCdASoYABAAPu1mq04ppaQiMAgBMB2JaQAAW+o1s3Eu1paJbIAA/up7EuVX/DooMz7GZLPn0F9+HjNwIcZK1LWr+aE5qWRlDhBv7+zoN2DSRUAAAA==",
+        "src": "/images/cars/hyundai-accent-auto/front"
+      }
+    },
+    "hyundai-grand-i10-auto": {
+      "front": {
+        "width": 1536,
+        "height": 1024,
+        "widths": [
+          480,
+          768,
+          1080
+        ],
+        "blur": "data:image/webp;base64,UklGRmYAAABXRUJQVlA4IFoAAADwAwCdASoYABAAPu1orU6ppiSiMAgBMB2JaQAAWppC8jx4/nwxPmS0AP7tSEZhYRJ8X2cQTgqS02LskXXwfdqgEoEgKK+OZUO4t1vcaG0j7JWkJa+oD9/+AAA=",
+        "src": "/images/cars/hyundai-grand-i10-auto/front"
+      }
+    },
+    "hyundai-tucson-auto": {
+      "front": {
+        "width": 1536,
+        "height": 1024,
+        "widths": [
+          480,
+          768,
+          1080
+        ],
+        "blur": "data:image/webp;base64,UklGRmIAAABXRUJQVlA4IFYAAADQAwCdASoYABAAPu1krU6ppaSiMAgBMB2JaQAAWppNjVdaE/XAdSwA/up6xix3ro+fzIhNzSC4xxqGFtNDG/qvZDPnMcAxcnkDhiBYufkJPlrN/X4AAA==",
+        "src": "/images/cars/hyundai-tucson-auto/front"
+      }
+    },
+    "peugeot-3008-hybride": {
+      "front": {
+        "width": 1536,
+        "height": 1024,
+        "widths": [
+          480,
+          768,
+          1080
+        ],
+        "blur": "data:image/webp;base64,UklGRmgAAABXRUJQVlA4IFwAAACwAwCdASoYABAAPu1orU6ppiSiMAgBMB2JaQAAWpPv6O516R7uIAD+7Vl4a6ugwTNce7e2ufJna8ipyLZAhoqYBXjUyu9np0ZRAiD6TL8P4ZIoKd/WAqNsd1gAAA==",
+        "src": "/images/cars/peugeot-3008-hybride/front"
+      }
+    }
+  }
 }

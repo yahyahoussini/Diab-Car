@@ -224,8 +224,10 @@
     },
     "fleet": {
       "eyebrow": "Our fleet",
-      "title": "Most requested this season",
-      "cta": "Full fleet"
+      "title": "Most booked this season",
+      "cta": "The whole fleet",
+      "viewAll": "See all {count} cars",
+      "showing": "{count} of {total} cars"
     },
     "why": {
       "eyebrow": "Why Diab Car",
@@ -270,13 +272,19 @@
     "airport": {
       "eyebrow": "Mohammed V Airport (CMN)",
       "title": "Land — your car is waiting",
-      "text": "31 km of motorway separate you from central Casablanca. Give us your flight number: we track the landing and greet you at the arrivals exit with the contract ready. Ten minutes, and you are on your way.",
-      "cta": "Airport car rental",
+      "text": "31 km of motorway separate the airport from central Casablanca. Book before you fly: the car is waiting when you land, contract signed on the spot.",
+      "cta": "Airport rental",
       "points": {
         "tracking": "Real-time flight tracking",
         "night": "Night flights at no extra cost",
-        "meet": "Meet & greet at arrivals"
-      }
+        "meet": "Meet & greet at arrivals",
+        "open": "Airport service around the clock",
+        "delivery": "Delivered wherever you choose",
+        "confirm": "WhatsApp confirmation before you fly"
+      },
+      "line1": "Land.",
+      "line2": "Collect.",
+      "line3": "Drive."
     },
     "steps": {
       "eyebrow": "How it works",
@@ -301,7 +309,9 @@
       "title": "They drove with us",
       "google": "Google reviews",
       "leave": "Leave a review",
-      "sampleNote": "Sample reviews — automatically replaced by your published Google reviews from the admin."
+      "sampleNote": "Sample reviews — automatically replaced by your published Google reviews from the admin.",
+      "previous": "Previous review",
+      "next": "Next review"
     },
     "faq": {
       "eyebrow": "Frequently asked questions",
@@ -314,10 +324,86 @@
       "cta": "All articles"
     },
     "cta": {
-      "title": "Your car in Casablanca, confirmed in 10 minutes",
+      "title": "Ready to hit the road?",
       "text": "Message us on WhatsApp or book online. Free delivery at Mohammed V Airport and across Casablanca.",
       "primary": "Book online",
       "secondary": "WhatsApp"
+    },
+    "purpose": {
+      "eyebrow": "Choose by use",
+      "title": "A car for every kind of trip",
+      "subtitle": "Tell us what you need the car for — we filter the fleet for you.",
+      "city": {
+        "title": "City & small budget",
+        "text": "Easy to park, cheap to run."
+      },
+      "family": {
+        "title": "Family",
+        "text": "Room for everyone and the luggage."
+      },
+      "suv": {
+        "title": "SUV & long roads",
+        "text": "Marrakech, the Atlas, real distances."
+      },
+      "business": {
+        "title": "Business",
+        "text": "Arrive well, without overdoing it."
+      },
+      "premium": {
+        "title": "Premium",
+        "text": "Weddings, shoots, occasions that matter."
+      }
+    },
+    "how": {
+      "eyebrow": "How it works",
+      "title": "Four steps, no pointless paperwork",
+      "items": {
+        "choose": {
+          "title": "Choose",
+          "text": "Your dates, your pick-up point, your car."
+        },
+        "book": {
+          "title": "Book",
+          "text": "Online or on WhatsApp. No online payment: you pay nothing now."
+        },
+        "collect": {
+          "title": "Collect",
+          "text": "At the agency, the airport or your address. Cash or card (TPE) on the spot."
+        },
+        "drive": {
+          "title": "Drive",
+          "text": "Condition photographed, deposit announced in advance, support for the whole rental."
+        }
+      }
+    },
+    "trust": {
+      "eyebrow": "Why Diab Car",
+      "title": "Luxury is the absence of nasty surprises",
+      "rating": "on Google ({count} reviews)",
+      "since": "A Casablanca agency since",
+      "airport": "Mohammed V airport service",
+      "paymentLead": "0",
+      "payment": "dirhams to pay online: cash or card at pick-up",
+      "chauffeurLead": "On request",
+      "chauffeur": "Professional driver available"
+    },
+    "drive": {
+      "title": "Morocco starts at your door",
+      "intro": "Casablanca sits at the centre of the motorway network. Here is what is within driving reach.",
+      "mapAlt": "Simplified map of Morocco with Casablanca and six cities",
+      "row": "{km} km · {duration}",
+      "duration": "{hours} h {minutes}",
+      "durationMinutes": "{minutes} min",
+      "approx": "Distances and times are approximate, excluding traffic and stops.",
+      "cities": {
+        "casablanca": "Casablanca",
+        "rabat": "Rabat",
+        "marrakech": "Marrakesh",
+        "fes": "Fez",
+        "tanger": "Tangier",
+        "essaouira": "Essaouira",
+        "agadir": "Agadir"
+      }
     }
   },
   "fleet": {

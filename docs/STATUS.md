@@ -1,6 +1,6 @@
 # Diab Car — build status
 
-**Updated:** 2026-09-07 · **Branch:** `build/v1` · **Last prompt:** PROMPT 05 — Supabase schema, roles, storage, seed (Sprint 2a)
+**Updated:** 2026-09-07 · **Branch:** `build/v1` · **Last prompt:** PROMPT 04 — Homepage sections and vehicle card (Sprint 1b)
 
 This file is the running state of the build. It is rewritten at the end of **every** prompt in `docs/PROMPTS.md`.
 Decisions in the *Plan §10* column come from `docs/MASTER-PLAN.md` §10 (keep / rebuild / extend / delete); where §10 is
@@ -22,7 +22,7 @@ not *never touched again*.
 | 01 | 0a | Tokens, fonts, logo, OG | **done** |
 | 02 | 0b | UI kit, motion primitives, dev kit page | todo |
 | 03 | 1a | Header, footer, hero, booking module | **done** |
-| 04 | 1b | Homepage sections, vehicle card, car images | **partial** — card + image pipeline + divider done (`2c2ee52`); the nine sections are still to build |
+| 04 | 1b | Homepage sections, vehicle card, car images | **done** |
 | 05 | 2a | Supabase: schema, roles, storage, seed | **done (SQL written; not yet applied to the project)** |
 | 06 | 2b | Availability engine: RPCs, holds, realtime | todo |
 | 07 | 3a | Results / fleet page with live availability | todo |
@@ -44,12 +44,12 @@ not *never touched again*.
 | Command | Result | Note |
 |---|---|---|
 | `npm run build` | **pass** | 139 static pages, Next 16.3.4 + Turbopack, 1 warning (see below) |
-| `npm run lint` | **10 errors, 3 warnings** | 5 pre-existing + 5 new in BookingWidget/Header (React Compiler rules) — see issue 14 |
+| `npm run lint` | **10 errors, 1 warning** | all pre-existing in BookingForm/BookingWidget/CookieBanner/CurrencyProvider/Header/LanguageSwitcher/ThemeToggle (React Compiler rules) — see issue 14. The 9 new sections lint clean |
 | `npm test` | **pass** — 41/41 | `src/lib/{pricing,whatsapp,format}.test.js` |
-| `npm run test:e2e` | **pass** — 7/7 | 4 locales + admin login + the booking module filled by keyboard in fr and ar |
-| `npm run check:messages` | **pass** | 562 leaf keys, identical across fr/en/ar/es |
+| `npm run test:e2e` | **pass** — 12/12 | 4 locales + admin + booking by keyboard (fr/ar) + all 9 homepage sections in 4 locales + the purpose-tile filter |
+| `npm run check:messages` | **pass** | 640 leaf keys, identical across fr/en/ar/es |
 | `npm run check:contrast` | **pass** | 56 pairs, 56 pass, 0 fail; every token of plan §2.2 declared |
-| `npm run lh` — /fr | Perf **74** · A11y **100** · BP **100** · SEO **100** | LCP 2.91 s · TBT 882 ms · CLS 0.000 — see issue 15 |
+| `npm run lh` — /fr | Perf **69–82** · A11y **97** · BP **100** · SEO **100** | LCP 3.42 s · TBT 1004 ms · CLS 0.005 — see issue 15. Readings swing ±40 % on this machine; Speed Index improved 2.57 → 1.11 s at best |
 | `npm run lh` — /fr/location-voiture-casablanca | Perf **64** · A11y **95** · BP **100** · SEO **100** | not re-tuned; the fleet page is rebuilt in PROMPT 07 |
 
 Budget (CLAUDE.md rule 7: LCP ≤ 2.0 s, INP ≤ 200 ms via TBT, CLS ≤ 0.05) — **CLS passes; LCP and TBT
@@ -82,7 +82,8 @@ means shipping less homepage JavaScript, which is PROMPT 04 (HomeSections rebuil
 | 13 | Arabic OG cards | satori spaces Arabic words oddly in RTL (visible gap between title words) | cosmetic; revisit when §9.3 moves OG generation to build time |
 | 14 | `BookingWidget.js`, `Header.js` | 5 new React Compiler lint errors: `set-state-in-effect` (localStorage-after-mount, media-query sync, time-chip snap-back) and `refs` (a handler that focuses an input). Each is an idiomatic pattern the compiler cannot prove safe | fix with `useSyncExternalStore` in PROMPT 02's kit pass; 3 of the 8 the agents introduced are already fixed with derive-during-render |
 | 15 | homepage JS | LCP 2.91 s / TBT 882 ms vs a 2.0 s / 200 ms budget. All bytes land by 284 ms; bootup-time is ~3.5 s — it is JS execution, not transfer | PROMPT 04 (lighter HomeSections) then Sprint 6 performance CI |
-| 16 | `docs/inputs/photos/` | **empty** — zero masters. `npm run images` is built and self-tested but has nothing to process, so every car is a silhouette and the card hover crossfade has no rear image | blocked on plan §12 input #4 (real fleet photography) |
+| 23 | homepage photography | 7 of 8 supplied and live (hero + 6 fleet cars, AI-generated from web reference). 20 cars still show category silhouettes, and the airport banner has no image | generate the rest from the shot list, or shoot the real fleet (plan §2.5) |
+| 16 | ~~`docs/inputs/photos/` empty~~ | partially resolved: `npm run images` is built and self-tested but has nothing to process, so every car is a silhouette and the card hover crossfade has no rear image | blocked on plan §12 input #4 (real fleet photography) |
 | 22 | PROMPT 05 not applied | the migrations are written and self-consistent but have **never run against the project**. Nothing in task 8 (counts, anon-RLS proof, overlap proof) can be reported as measured until they do | apply 0001-0006 in the SQL editor, do the two dashboard steps, `npm run db:seed`, then run 0007 |
 | 21 | `SUPABASE_SERVICE_ROLE_KEY` | never supplied, so `.env.local` still has the Supabase block commented out and the seed has only been dry-run | paste the key; I write `.env.local` (gitignored) and run the seed |
 | 20 | `bookings` vs `reservations` | the starter's `bookings` table is untouched and still backs the current lead form; `reservations` is canonical from here | migrate the funnel in PROMPT 09, then drop `bookings` |
@@ -156,6 +157,21 @@ means shipping less homepage JavaScript, which is PROMPT 04 (HomeSections rebuil
 | Dev tooling | `scripts/images.mjs` | — | Build-time AVIF/WebP car image pipeline + manifest | **keep** | plan §2.5 delivery sizes; §9.1 zero per-request CPU | 1 | done | Self-tested on a synthetic master; no real photos to process yet |
 | Dev tooling | `tests/e2e/booking.spec.js` | — | Fills the booking module by keyboard in fr and ar | **keep** | PROMPT 03 task 8 | 1 | done | Asserts the ?pickup&dropoff&from&to search URL |
 | Public asset | `public/images/cars/manifest.json` | `/images/cars/manifest.json` | Which photo angles exist per vehicle | **extend** | plan §2.5 | 1 | todo | Empty until docs/inputs/photos receives masters |
+| Site component — home | `src/components/site/home/FleetSection.js` | — | Purpose tiles + fleet block, all 27 cards prerendered | **keep** | plan §4.3 §2–3 | 1 | done | Filtering toggles `hidden` on server-rendered cards: crawlable, ISR-safe, no refetch |
+| Site component — home | `src/components/site/home/PurposeTiles.js` | — | Five usage tiles, set the filter and scroll to the fleet | **keep** | plan §4.3 §2 | 1 | done | Strings arrive as props — the 6.6 kB `home` namespace never ships to the client |
+| Site component — home | `src/components/site/home/FleetGrid.js` | — | Client filter, six visible at a time | **keep** | plan §4.3 §3 | 1 | done | Queries the DOM per effect rather than caching a mutable list |
+| Site component — home | `src/components/site/home/purposes.js` | — | Purpose → category map, shared server + client | **keep** | plan §4.3 §2 | 1 | done | Deliberately not 'use client': a client export reaches a server component as a reference, not a value |
+| Site component — home | `src/components/site/home/purposeStore.js` | — | useSyncExternalStore for the active tile | **keep** | plan §4.3 §2 | 1 | done | Server snapshot null, so hydration cannot mismatch |
+| Site component — home | `src/components/site/home/AirportBanner.js` | — | ATTERRIR. RÉCUPÉRER. ROULER. + scroll-driven runway | **keep** | plan §4.3 §4 | 1 | done | Only renders proof points settings can support; car crossing is PROMPT 14 |
+| Site component — home | `src/components/site/home/HowItWorks.js` | — | Four numbered rows, red line grows on hover | **keep** | plan §4.3 §5 | 1 | done | Numbering is real sequence information, not decoration |
+| Site component — home | `src/components/site/home/Trust.js` | — | Four big statements, verified facts only | **keep** | plan §4.3 §6; rule 11 | 1 | done | Renders nothing below two verified facts; rating/review count suppressed |
+| Site component — home | `src/components/site/home/Reviews.js` | — | One large review, 01/05 counter, prev/next | **keep** | plan §4.3 §7 | 1 | done | Sample reviews render ONLY in demo mode; Google link only if the URL exists |
+| Site component — home | `src/components/site/home/ReviewsCarousel.js` | — | The client island for the review carousel | **keep** | plan §4.3 §7 | 1 | done | Arrow keys, aria-live, RTL-correct direction |
+| Site component — home | `src/components/site/home/DriveMorocco.js` | — | Drive Morocco section, localized server-side | **keep** | plan §4.3 §8 | 1 | done | Rows resolved to plain strings; a function prop cannot cross the RSC boundary |
+| Site component — home | `src/components/site/home/MoroccoMap.js` | — | Inline SVG silhouette + the city list | **keep** | plan §4.3 §8 | 1 | done | Map wrapped in dir=ltr — RTL mirrors UI, not geography |
+| Site component — home | `src/components/site/home/moroccoRoutes.js` | — | Static distance/time table from Casablanca | **keep** | plan §4.3 §8 | 1 | done | Marked approximate; only links to the one blog guide that exists |
+| Site component — home | `src/components/site/home/FaqSection.js` | — | Five questions + FAQPage JSON-LD | **keep** | plan §4.3 §9 | 1 | done | Reuses the zero-JS FaqAccordion; schema matches the visible text (rule 8) |
+| Site component — home | `src/components/site/home/CtaBand.js` | — | PRÊT À PRENDRE LA ROUTE ? + the two booking channels | **keep** | plan §4.3 §10 | 1 | done | Black in both themes via the `dark` class, no hexes |
 | Site component — shell | `src/components/site/Header.js` | — | Sticky site header: nav, logo, theme, language, CTA | **rebuild** | §10 row "Header, Footer, Hero, … FaqAccordion → Rebuild" | 1 | done | Services dropdown, redline active state, full-screen mobile panel with the slide-then-navigate. |
 | Site component — shell | `src/components/site/LanguageSwitcher.js` | — | Locale dropdown writing NEXT_LOCALE cookie, swapping route | **keep** | §10 row "…Theme, Language, Cookie banner… → Keep" | 0 | done | Token-only changes; language view transition added in sprint 6. |
 | Site component — shell | `src/components/site/Logo.js` | — | Logo wordmark plus gold gradient mark SVG | **rebuild** | §10 row "Logo → Rebuild (badge SVG + wordmark)" | 0 | done | Real mark (light/dark cuts) + Archivo wordmark; LogoLockup for the footer; LogoMark alias kept. |
@@ -166,7 +182,6 @@ means shipping less homepage JavaScript, which is PROMPT 04 (HomeSections rebuil
 | Site component — home | `src/components/site/Hero.js` | — | Homepage hero: title, CTAs, trust counters, booking widget | **rebuild** | §10 row "Header, Footer, Hero, HeroTitle… → Rebuild" | 1 | done | WOW 1 ignition, plain <img> LCP element with a hinted preload, verified-only trust strip. |
 | Site component — home | `src/components/site/HeroTitle.js` | — | CSS-keyframe masked hero line reveal plus FadeIn | **rebuild** | §10 row "Header, Footer, Hero, HeroTitle… → Rebuild" | 1 | done | Two-line masked reveal; nothing starts at opacity 0. |
 | Site component — home | `src/components/site/HomeSections.js` | — | Ten homepage sections: categories, fleet, pricing, reviews, FAQ | **rebuild** | §10 row "…HomeSections, VehicleCard… → Rebuild" to §§4–5 | 1 | todo | 20 kB monolith; section set and order change per §4.3. |
-| Site component — home | `src/components/site/Marquee.js` | — | CSS brand-name marquee strip with edge fades | **rebuild** | §10 row "…Marquee… → Rebuild — Marquee becomes the road divider" | 1 | todo | Hard-coded brand list unverified against the real fleet. |
 | Site component — booking | `src/components/site/BookingForm.js` | — | Multi-step reservation form with quote and server action | **rebuild** | §10 row "…BookingForm… → Rebuild (structure reused: BookingForm zod schema)" | 3 | todo | Zod schema reused; needs hold timer, Turnstile, gold classes removed. |
 | Site component — booking | `src/components/site/BookingWidget.js` | — | Search widget: locations, dates, times, promo code | **rebuild** | §10 row "…BookingWidget, FleetFilters… → Rebuild"; spec in §4.2 | 1 | done | Searchable combobox, lazy RangeCalendar, time chips, inline validation, CompactSearchBar. |
 | Site component — booking | `src/components/site/FleetFilters.js` | — | Category, transmission and sort filters synced to URL | **rebuild** | §10 row "…FleetFilters… → Rebuild (structure reused: FleetFilters URL sync)" | 3 | todo | URL-sync logic explicitly reused; counts become live availability in sprint 3. |
