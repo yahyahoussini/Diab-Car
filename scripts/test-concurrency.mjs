@@ -73,13 +73,23 @@ const endAt = END.toISOString();
 
 const created = { reservations: [], customers: [] };
 
+/* Every fake customer this script writes shares this e-mail domain. Cleaning up
+   by pattern rather than by collected id: create_reservation() upserts the
+   customer inside the RPC and only returns the reservation, so the ids never
+   come back to be collected — an earlier version tracked a `created.customers`
+   array that stayed empty for ever and left rows behind on every run. */
+const TEST_EMAIL_PATTERN = 'concurrency-%@example.invalid';
+
 async function cleanup() {
   if (KEEP) {
     console.log('  --keep: leaving test rows in place.\n');
     return;
   }
   if (created.reservations.length) await sb.from('reservations').delete().in('id', created.reservations);
-  if (created.customers.length) await sb.from('customers').delete().in('id', created.customers);
+  /* Reservations first: customer_id is ON DELETE SET NULL, but deleting the
+     customer while a test reservation still points at it would leave an
+     orphaned row that looks like a real anonymous booking. */
+  await sb.from('customers').delete().like('email', TEST_EMAIL_PATTERN);
 }
 
 function payload(suffix) {

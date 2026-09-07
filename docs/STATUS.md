@@ -1,6 +1,6 @@
 # Diab Car — build status
 
-**Updated:** 2026-09-07 · **Branch:** `build/v1` · **Last prompt:** PROMPT 06 — availability engine (Sprint 2b). Code complete; the measured half waits on the database.
+**Updated:** 2026-09-07 · **Branch:** `build/v1` · **Last prompt:** PROMPT 06 — availability engine (Sprint 2b). **Database applied, seeded and verified against the live project.**
 
 This file is the running state of the build. It is rewritten at the end of **every** prompt in `docs/PROMPTS.md`.
 Decisions in the *Plan §10* column come from `docs/MASTER-PLAN.md` §10 (keep / rebuild / extend / delete); where §10 is
@@ -23,8 +23,8 @@ not *never touched again*.
 | 02 | 0b | UI kit, motion primitives, dev kit page | todo |
 | 03 | 1a | Header, footer, hero, booking module | **done** |
 | 04 | 1b | Homepage sections, vehicle card, car images | **done** |
-| 05 | 2a | Supabase: schema, roles, storage, seed | **done (SQL written and re-audited; not yet applied to the project)** |
-| 06 | 2b | Availability engine: RPCs, holds, realtime | **done (code + tests; EXPLAIN ANALYZE and the concurrency run need the DB applied)** |
+| 05 | 2a | Supabase: schema, roles, storage, seed | **done and APPLIED — 20 tables, 39 policies, 3 buckets, owner created, auth hook live** |
+| 06 | 2b | Availability engine: RPCs, holds, realtime | **done and MEASURED — 8.2 ms median search, 23P01 overlap rejection, 5/5 concurrency** |
 | 07 | 3a | Results / fleet page with live availability | todo |
 | 08 | 3b | Vehicle page | todo |
 | 09 | 3c | Booking funnel, confirmation, WhatsApp, email | todo |
@@ -95,6 +95,32 @@ means shipping less homepage JavaScript, which is PROMPT 04 (HomeSections rebuil
 | 27 | realtime subscribes to `availability_ping`, not `holds`/`reservations` | Plan 6.4 names the two tables directly, but Realtime honours RLS: delivering those rows to a visitor needs an anon SELECT policy, and any policy loose enough to deliver the row also delivers `customer_id`, the travel dates and the stored `quote`. Discarding it client-side is no help — it has already crossed the wire | **deviation from plan 6.4, deliberate.** 0008 adds a two-column table (`vehicle_id`, `updated_at`) written by triggers on holds/reservations/blocks. It says "something moved, ask again"; `/api/availability` stays the only thing that decides what a visitor may know. Plan §6.4 wants a one-line amendment |
 | 28 | stale `next start` served phantom test failures | A `next start` left running from an earlier step kept port 3000 and served a build predating the new routes, so all 9 API tests 404'd and, earlier, 12 e2e tests "failed" against unchanged code | no code change; noted because it cost two debugging rounds. Kill the listener on 3000 before trusting an e2e run |
 | 17 | `/livraison`, `/automatique` | in the header Services dropdown but the routes do not exist until PROMPT 13; rendered with a "bientôt" marker rather than a dead link | PROMPT 13 |
+
+---
+
+## Measured on the live database — 2026-09-07
+
+Project `vmodgrkxiitwwneqhtbo` (`diabcar`), region **eu-central-1 / Frankfurt** — note plan §9.2 asked for West EU / Paris. Still EU, which is what the CNDP out-of-Morocco transfer wording turns on, so recorded rather than changed.
+
+| Check | Result |
+|---|---|
+| Schema objects | 20 tables · 1 view · 39 policies · 25 triggers · **2 exclusion constraints** · btree_gist · pg_cron |
+| Seed | 1 settings · 8 locations · **27 vehicles** · **36 units** · 10 faqs (9 TODO → unpublished) · 4 reviews |
+| Seed idempotency | three consecutive runs → identical counts, no duplicates |
+| `search_availability` (27 vehicles) | **8.2 ms median**, 8.05 min, 21.0 cold · planning 0.04 ms · 2497 shared hits, 0 reads |
+| Overlapping reservation | rejected — **SQLSTATE 23P01**, `reservations_no_overlap` |
+| Prep buffer | period widened 02:00:00 both ends, and follows a date change (trigger, not GENERATED) |
+| Concurrency (last car) | **5/5 runs**: exactly one BOOKED, one SOLD_OUT with 3 alternatives, 0 free after · 147–285 ms |
+| Anon reads | vehicles 27 · locations 8 · faqs 1 · public_settings 1 · reviews 0 |
+| Anon reads (must be zero) | units **0** · customers **0** · reservations **0** · holds **0** · blocks **0** · vehicle_events **0** · audit_log **0** · profiles **0** · settings **0** |
+| Owner reads (same tables) | units 36 · customers 3 · settings 1 · audit_log 93 · profiles 1 |
+| Auth hook | enabled via the Management API; a real sign-in returns a JWT carrying `user_role: owner` |
+| Storage | `vehicles` (public), `inspections` (private), `documents` (private) · 8 policies |
+| Realtime | `availability_ping` is in the `supabase_realtime` publication |
+| pg_cron | `diabcar-expire-holds` scheduled `* * * * *`, active |
+| App on Postgres | `/api/health` reports `mode: supabase`; `/fr`, `/ar`, `/fr/vehicules` render; **e2e 21/21 against Postgres as well as demo** |
+
+The homepage drops its Reviews section in Supabase mode and keeps it in demo — correct, and the clearest demonstration of rule 11 so far: all four seeded reviews are unpublished samples, so anon receives none and the section deletes itself rather than showing a thin row.
 
 ---
 
