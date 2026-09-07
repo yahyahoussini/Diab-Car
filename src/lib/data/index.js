@@ -59,6 +59,10 @@ export const releaseHold = async (id) => (await db()).releaseHold(id);
 export const listEvents = async (f) => (await db()).listEvents(f);
 export const createEvent = async (d) => (await db()).createEvent(d);
 
+/* Notifications (plan 7.4) — the admin bell. */
+export const listNotifications = async (f) => (await db()).listNotifications(f);
+export const createNotification = async (d) => (await db()).createNotification(d);
+
 /* Availability (plan 6.3/6.4). Postgres decides; these only ask.
    The adapters share one shape so the funnel never branches on the backend. */
 export const searchAvailability = async (a) => (await db()).searchAvailability(a);

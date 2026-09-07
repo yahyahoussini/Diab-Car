@@ -2,7 +2,8 @@
 
 import { cookies } from 'next/headers';
 import { z } from 'zod';
-import { bookVehicle, getSettings, getVehicleBySlug, listExtras, listLocations, listSeasons } from '@/lib/data';
+import { bookVehicle, createNotification, getSettings, getVehicleBySlug, listExtras, listLocations, listSeasons } from '@/lib/data';
+import { verifyTurnstile } from '@/lib/turnstile';
 import { makeReference, quote } from '@/lib/pricing';
 import { sendBookingEmails } from '@/lib/email';
 import { toISO } from '@/lib/format';
@@ -34,6 +35,10 @@ const schema = z.object({
   locale: z.enum(['fr', 'en', 'ar', 'es']).default('fr'),
   /* Present when the funnel took a hold. Optional so a direct POST still works. */
   holdId: z.string().optional(),
+  /* Cloudflare Turnstile. Optional in the schema because the widget is skipped
+     when no site key is configured; the SERVER decides whether it was
+     required (see verifyTurnstile). */
+  turnstileToken: z.string().optional(),
 });
 
 /**
@@ -62,6 +67,12 @@ export async function submitBooking(input) {
     return { ok: false, error: 'validation', fieldErrors };
   }
   const d = parsed.data;
+
+  /* Anti-spam before anything expensive. Skipped when unconfigured, so the
+     funnel keeps working in development and on the day a key expires — the
+     result says which happened rather than failing silently. */
+  const turnstile = await verifyTurnstile(d.turnstileToken);
+  if (!turnstile.ok) return { ok: false, error: 'captcha', fieldErrors: { turnstile: 'captcha' } };
 
   const [vehicle, settings, seasons, extras, locations] = await Promise.all([
     getVehicleBySlug(d.vehicle),
@@ -157,29 +168,43 @@ export async function submitBooking(input) {
 
   const reference = result.reservation.reference;
 
-  /* The reservation exists whether or not the mail goes out; a mail failure
-     must not tell the customer their booking did not happen. */
-  try {
-    await sendBookingEmails({
-      booking: {
-        reference,
-        startAt,
-        endAt,
-        locale: d.locale,
-        customerName: d.name,
-        customerPhone: d.phone,
-        customerEmail: d.email,
-        pickupLabel: label(d.pickup, d.pickupAddress),
-        dropoffLabel: label(d.dropoff, d.dropoffAddress),
-        totalMad: q.total,
-        priceBreakdown: q,
-      },
-      vehicle,
-      settings,
-    });
-  } catch {
-    /* Swallowed on purpose — see above. */
-  }
+  /* Everything after this point is notification, not truth. The reservation
+     already exists in Postgres; a failure here must never tell the customer
+     their booking did not happen. */
+  const notifyPayload = {
+    reference,
+    startAt,
+    endAt,
+    locale: d.locale,
+    customerName: d.name,
+    customerPhone: d.phone.replace(/[\s().-]/g, ''),
+    customerEmail: d.email.toLowerCase(),
+    flightNumber: d.flightNumber || null,
+    notes: d.notes || null,
+    pickupLabel: label(d.pickup, d.pickupAddress),
+    dropoffLabel: label(d.dropoff, d.dropoffAddress),
+    totalMad: q.total,
+    priceBreakdown: q,
+  };
 
-  return { ok: true, reference, unitsFree: result.unitsFree };
+  await Promise.allSettled([
+    sendBookingEmails({ booking: notifyPayload, vehicle, settings }),
+    /* The admin bell (plan 7.4). No customer data in the row — a reference and
+       a link — because it is written from an anonymous request. */
+    createNotification({
+      level: 'action',
+      title: `Nouvelle réservation ${reference}`,
+      body: `${vehicle.brand} ${vehicle.model} · ${q.days} j · ${q.total} MAD`,
+      href: `/admin/reservations/${result.reservation.id}`,
+    }),
+  ]);
+
+  return {
+    ok: true,
+    reference,
+    unitsFree: result.unitsFree,
+    /* Reported so a test can assert the widget was actually enforced rather
+       than quietly skipped in production. */
+    turnstile: turnstile.skipped ? 'skipped' : 'verified',
+  };
 }

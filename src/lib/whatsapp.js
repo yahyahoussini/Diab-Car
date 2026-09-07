@@ -78,3 +78,57 @@ export function bookingFollowUpMessage(locale, reference) {
       return `${GREETING.fr} je viens d’envoyer la demande de réservation ${reference}. Pouvez-vous confirmer la disponibilité ?`;
   }
 }
+
+/**
+ * From the results page: dates and place, no car chosen yet (plan 4.4's empty
+ * state and the results WhatsApp escape hatch). Enough for staff to answer
+ * "yes, we have something" without a round of questions.
+ *
+ * @param {string} locale
+ * @param {{from?:string, to?:string, place?:string}} [search]
+ */
+export function searchInquiryMessage(locale, { from, to, place } = {}) {
+  const g = GREETING[locale] || GREETING.fr;
+  const dates = from && to ? ` ${from} → ${to}` : '';
+  switch (locale) {
+    case 'en':
+      return `${g} I am looking for a car${dates}${place ? `, pick-up: ${place}` : ''}. What do you have available?`;
+    case 'ar':
+      return `${g} أبحث عن سيارة${dates}${place ? `، الاستلام: ${place}` : ''}. ما المتوفر لديكم؟`;
+    case 'es':
+      return `${g} busco un coche${dates}${place ? `, recogida: ${place}` : ''}. ¿Qué tenéis disponible?`;
+    default:
+      return `${g} je cherche une voiture${dates}${place ? `, prise en charge : ${place}` : ''}. Qu’avez-vous de disponible ?`;
+  }
+}
+
+/**
+ * After a reservation is created (plan 4.7): everything the agent needs to
+ * confirm in one message — reference, car, exact dates, place, and the total
+ * that was displayed.
+ *
+ * This is the most important template on the site. Diab Car takes no payment
+ * online (plan 9.5), so this thread IS the confirmation step; anything missing
+ * here becomes a question the customer has to answer twice.
+ *
+ * @param {string} locale
+ * @param {{reference:string, vehicleName?:string, from?:string, to?:string, pickup?:string, dropoff?:string, total?:string}} booking
+ */
+export function bookingConfirmedMessage(locale, { reference, vehicleName, from, to, pickup, dropoff, total } = {}) {
+  const g = GREETING[locale] || GREETING.fr;
+  const car = vehicleName ? ` ${vehicleName}` : '';
+  const when = from && to ? ` ${from} → ${to}` : '';
+  /* Only mentioned when it differs — a one-way return is the exception. */
+  const back = dropoff && dropoff !== pickup ? dropoff : null;
+
+  switch (locale) {
+    case 'en':
+      return `${g} booking ${reference}:${car}${when}${pickup ? `, pick-up ${pickup}` : ''}${back ? `, return ${back}` : ''}${total ? `, total shown ${total}` : ''}. Please confirm.`;
+    case 'ar':
+      return `${g} الحجز ${reference}:${car}${when}${pickup ? `، الاستلام ${pickup}` : ''}${back ? `، الإرجاع ${back}` : ''}${total ? `، المجموع المعروض ${total}` : ''}. يرجى التأكيد.`;
+    case 'es':
+      return `${g} reserva ${reference}:${car}${when}${pickup ? `, recogida ${pickup}` : ''}${back ? `, devolución ${back}` : ''}${total ? `, total mostrado ${total}` : ''}. Confirmen, por favor.`;
+    default:
+      return `${g} réservation ${reference} :${car}${when}${pickup ? `, prise en charge ${pickup}` : ''}${back ? `, restitution ${back}` : ''}${total ? `, total affiché ${total}` : ''}. Merci de confirmer.`;
+  }
+}

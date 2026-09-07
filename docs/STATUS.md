@@ -1,6 +1,6 @@
 # Diab Car — build status
 
-**Updated:** 2026-09-08 · **Branch:** `build/v1` · **Last prompt:** PROMPT 08 — vehicle page (Sprint 3b). Static OG per car; a11y 100 on every public page measured so far.
+**Updated:** 2026-09-08 · **Branch:** `build/v1` · **Last prompt:** PROMPT 09 — booking funnel and confirmation (Sprint 3c). The site can now take a real reservation end to end.
 
 This file is the running state of the build. It is rewritten at the end of **every** prompt in `docs/PROMPTS.md`.
 Decisions in the *Plan §10* column come from `docs/MASTER-PLAN.md` §10 (keep / rebuild / extend / delete); where §10 is
@@ -27,7 +27,7 @@ not *never touched again*.
 | 06 | 2b | Availability engine: RPCs, holds, realtime | **done and MEASURED — 8.2 ms median search, 23P01 overlap rejection, 5/5 concurrency** |
 | 07 | 3a | Results / fleet page with live availability | **done (a11y 100; Lighthouse perf 73, short of the >=90 target)** |
 | 08 | 3b | Vehicle page | **done (a11y/BP/SEO 100; Lighthouse perf 66, short of the >=90 target)** |
-| 09 | 3c | Booking funnel, confirmation, WhatsApp, email | todo |
+| 09 | 3c | Booking funnel, confirmation, WhatsApp, email | **done** |
 | 10 | 4a | Admin foundation: auth, roles, shell, dashboard | todo |
 | 11 | 4b | Admin reservations, state machine, calendar | todo |
 | 12 | 4c | Admin fleet, operations, content, prices, settings | todo |
@@ -161,6 +161,29 @@ The homepage drops its Reviews section in Supabase mode and keeps it in demo —
 - No FAQ is vehicle-scoped yet (none carry `category = vehicle` or a `vehicle_id`, and 9 of 10 seeded rows are unpublished TODOs), so the page falls back to the general published set, capped at 4. `FAQPage` is emitted for exactly what renders — Google requires the structured data to match the visible text.
 
 **Not met: Lighthouse ≥ 90 / LCP ≤ 2.0 s.** Vehicle page measures **Performance 66, Accessibility 100, Best practices 100, SEO 100**; LCP 3.5–4.2 s, TBT 0.9–1.8 s. Same cause as the fleet page: site-wide JS execution under 4× CPU throttle. Sprint 6's performance budget work.
+
+---
+
+## PROMPT 09 notes — 2026-09-08
+
+**Where funnel state lives, and why it is split.** The URL carries step, dates, place, car and chosen extras — shareable and restorable, and the back button works. sessionStorage carries the hold and the customer's name, phone and e-mail. **Personal data never enters a URL:** URLs land in history, in the `Referer` of every third-party request the page makes, in analytics and in screenshots sent to support. Plan 9.4 and Loi 09-08 both say collect the minimum and do not spread it around. The funnel restores completely on reload without a phone number ever appearing in the address bar.
+
+**The confirmation page never reads the database.** `reservations` is staff-only under RLS (0005). Adding an anonymous read keyed by reference would let anyone who guessed a `DC-` code see a stranger's dates and pick-up point, so the funnel hands the confirmation its own figures through sessionStorage instead. Asserted: the server HTML for `?ref=DC-NOPE12` contains no `data-testid="confirmation"`, no `booking-reference` and no `data-car-transition` — the server emits only the loading line. The reference echoed back is shape-checked against `/^DC-[A-Z0-9-]{4,20}$/` rather than reflected raw.
+
+**Turnstile is verified server-side and skipped when unconfigured**, and `submitBooking` reports which happened (`turnstile: 'verified' | 'skipped'`) so it can be asserted rather than assumed. If Cloudflare is unreachable the booking is allowed through and the failure logged — their outage should not become a funnel that cannot take a reservation.
+
+**WOW-3 hook placed early.** `data-car-transition={slug}` is on the funnel summary and on the confirmation's car line. PROMPT 14 attaches the `view-transition-name` to it without touching this markup. An e2e test asserts the attribute exists.
+
+**Two bugs found by running it**
+
+| Bug | Finding |
+|---|---|
+| the funnel leaked live holds | The first e2e run left **9 live holds** in the database — a visitor who picks a car and then goes back was silently holding a unit. `goToStep` now releases on the way back, and the test asserts the timer disappears. Self-healing anyway (expiry + pg_cron), but it was quietly eating capacity |
+| orphan notifications | Each booking writes an admin-bell row; deleting test reservations left rows pointing at nothing. Test cleanup now removes notifications whose `href` names a reservation that no longer exists — matched by id, not by text, because the text is indistinguishable from a real booking's |
+
+Two of my own test assertions were wrong rather than the code: `toContainText('MAD')` fails in Arabic because `formatMAD` renders **درهم**, and `not.toContain('MAD')` on the confirmation matched the footer's `aria-label="MAD / EUR"` currency toggle — site chrome, not data.
+
+**Verified after a full e2e run: 0 reservations, 0 customers, 0 live holds, 0 notifications** — the database is exactly as it was before.
 
 ---
 

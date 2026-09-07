@@ -377,6 +377,25 @@ export const supabaseAdapter = {
     return data;
   },
 
+  async listNotifications({ unreadOnly = false, limit = 50 } = {}) {
+    return selectAll('notifications', (q) => {
+      let b = q.order('created_at', { ascending: false }).limit(limit);
+      if (unreadOnly) b = b.is('read_at', null);
+      return b;
+    });
+  },
+  /* Written through the SERVICE client: the booking action runs for an
+     anonymous visitor, and `notifications` is staff-only under RLS. The row
+     carries no customer data — a reference and a link — so it is safe to
+     create from an unauthenticated path. */
+  async createNotification(data) {
+    const sb = createServiceClient();
+    if (!sb) return null;
+    const { data: row, error } = await sb.from('notifications').insert(modelToRow(data)).select().single();
+    if (error) fail(error);
+    return rowToModel(row);
+  },
+
   /* Sweeper. `expire_holds` is granted to service_role only, so this needs the
      service client — the anon key would be refused, which is the point. */
   async expireHolds() {

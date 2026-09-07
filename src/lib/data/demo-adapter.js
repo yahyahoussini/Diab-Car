@@ -496,6 +496,23 @@ export const demoAdapter = {
     };
   },
 
+  /* Notifications (plan 7.4): the bell in the admin. Written by the booking
+     action so staff see a new reservation without polling the list. */
+  async listNotifications({ unreadOnly = false, limit = 50 } = {}) {
+    const s = getStore();
+    s.notifications = s.notifications || [];
+    let rows = s.notifications;
+    if (unreadOnly) rows = rows.filter((n) => !n.readAt);
+    return clone([...rows].sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt))).slice(0, limit));
+  },
+  async createNotification(data) {
+    const s = getStore();
+    s.notifications = s.notifications || [];
+    const row = { id: `n-${s.notifications.length + 1}-${Date.now()}`, level: 'info', createdAt: now(), readAt: null, ...data };
+    s.notifications.push(row);
+    return clone(row);
+  },
+
   async expireHolds() {
     const s = getStore();
     const stamp = now();

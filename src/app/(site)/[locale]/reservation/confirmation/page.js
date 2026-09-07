@@ -1,10 +1,19 @@
 import { getTranslations } from 'next-intl/server';
-import Button from '@/components/ui/Button';
-import { CheckIcon, WhatsAppIcon } from '@/components/site/icons';
-import { getBooking, getSettings, getVehicleById } from '@/lib/data';
-import { formatDateTime, formatMAD, formatPhone } from '@/lib/format';
+import Confirmation from '@/components/site/funnel/Confirmation';
+import { getSettings } from '@/lib/data';
 import { localizedMetadata } from '@/lib/seo';
-import { bookingFollowUpMessage, whatsappLink } from '@/lib/whatsapp';
+
+/**
+ * The confirmation screen (plan 4.7).
+ *
+ * `noindex` — it is per-customer and has nothing to rank for (rule 8).
+ *
+ * The server contributes only the agency's WhatsApp number, the response-time
+ * promise and the copy. The booking itself is carried by the client from the
+ * funnel's own session: `reservations` is staff-only under RLS, and adding an
+ * anonymous read keyed by reference would let anyone who guessed a DC- code
+ * see a stranger's booking (plan 9.4).
+ */
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
@@ -15,71 +24,39 @@ export async function generateMetadata({ params }) {
 export default async function ConfirmationPage({ params, searchParams }) {
   const { locale } = await params;
   const { ref } = await searchParams;
-  const t = await getTranslations({ locale, namespace: 'booking.confirmation' });
-  const tb = await getTranslations({ locale, namespace: 'booking' });
-  const tv = await getTranslations({ locale, namespace: 'vehicle' });
-  const booking = ref ? await getBooking(ref) : null;
-  const [settings, vehicle] = await Promise.all([getSettings(), booking ? getVehicleById(booking.vehicleId) : null]);
+
+  const tf = await getTranslations({ locale, namespace: 'funnel' });
+  const settings = await getSettings();
+
+  const labels = {
+    kicker: tf('confirm.kicker'),
+    title: tf('confirm.title'),
+    reference: tf('confirm.reference'),
+    whatsapp: tf('confirm.whatsapp'),
+    calendar: tf('confirm.calendar'),
+    nextTitle: tf('confirm.nextTitle'),
+    nextBody: tf.raw('confirm.nextBody'),
+    notFound: tf('confirm.notFound'),
+    notFoundBody: tf('confirm.notFoundBody'),
+    skip: tf('confirm.skip'),
+    dates: tf('summaryTitle'),
+    pickup: tf('delivery'),
+    total: tf('total'),
+    deposit: tf('deposit'),
+    payment: tf('payment'),
+  };
 
   return (
-    <div className="pt-[calc(var(--header-h)+2rem)] pb-24">
-      <div className="container-x max-w-3xl">
-        {booking ? (
-          <>
-            <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-success-soft text-success">
-              <CheckIcon className="h-8 w-8" />
-            </div>
-            <h1 className="mt-5 text-display-2 text-text">{t('title')}</h1>
-            <p className="mt-2 text-sm text-text-muted">
-              {t('reference')} · <bdi className="font-latin-sans font-semibold text-text">{booking.reference}</bdi>
-            </p>
-            <p className="mt-5 text-lg text-text-2">{t('text', { name: booking.customerName, phone: formatPhone(booking.customerPhone) })}</p>
-
-            <div className="mt-8 flex flex-wrap gap-3">
-              {settings?.whatsapp ? (
-                <Button href={whatsappLink(settings.whatsapp, bookingFollowUpMessage(locale, booking.reference))} external variant="whatsapp" size="lg">
-                  <WhatsAppIcon className="h-5 w-5" />
-                  {t('whatsapp')}
-                </Button>
-              ) : null}
-              <Button href="/" variant="secondary" size="lg">
-                {t('home')}
-              </Button>
-            </div>
-
-            <section className="card mt-10 p-6">
-              <h2 className="font-display text-2xl text-text">{t('details')}</h2>
-              <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
-                <Item label={tb('vehicle')} value={vehicle ? `${vehicle.brand} ${vehicle.model} ${vehicle.year}` : '—'} />
-                <Item label={tb('pickup')} value={`${booking.pickupLabel} · ${formatDateTime(booking.startAt, locale)}`} />
-                <Item label={tb('dropoff')} value={`${booking.dropoffLabel} · ${formatDateTime(booking.endAt, locale)}`} />
-                {booking.flightNumber ? <Item label={tb('flight')} value={booking.flightNumber} /> : null}
-                <Item label={tv('quote.total')} value={formatMAD(booking.totalMad, locale)} />
-                <Item label={tv('quote.deposit')} value={formatMAD(booking.priceBreakdown?.deposit, locale)} />
-              </dl>
-            </section>
-          </>
-        ) : (
-          <>
-            <h1 className="text-display-2 text-text">{t('title')}</h1>
-            <p className="mt-4 text-text-2">{t('notFound')}</p>
-            <Button href="/reservation" className="mt-6">
-              {tb('title')}
-            </Button>
-          </>
-        )}
+    <div className="relative pb-24 pt-[calc(var(--header-h)+2.5rem)]">
+      <div className="container-x max-w-2xl">
+        <Confirmation
+          reference={typeof ref === 'string' ? ref : null}
+          whatsappNumber={settings?.whatsapp || null}
+          locale={locale}
+          labels={labels}
+          responseMinutes={settings?.responseTime || 10}
+        />
       </div>
-    </div>
-  );
-}
-
-function Item({ label, value }) {
-  return (
-    <div>
-      <dt className="text-xs uppercase tracking-[0.08em] text-text-muted rtl:tracking-normal">{label}</dt>
-      <dd className="mt-0.5 font-medium text-text">
-        <bdi>{value}</bdi>
-      </dd>
     </div>
   );
 }
