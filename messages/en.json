@@ -826,5 +826,35 @@
       "other": "Other",
       "recent": "Recent"
     }
+  },
+  "card": {
+    "from": "From",
+    "perDay": "/ day",
+    "total": "{total} · {count, plural, one {# day} other {# days}}",
+    "book": "Book",
+    "orSimilar": "or similar",
+    "seats": "{count} seats",
+    "luggage": "{count, plural, one {# bag} other {# bags}}",
+    "view": "View",
+    "flip": "Show the rear",
+    "photoAlt": "{name} — {angle} view",
+    "angles": {
+      "front": "front three-quarter",
+      "rear": "rear three-quarter"
+    },
+    "state": {
+      "available": "Available",
+      "last": "Last one available",
+      "unavailable": "Unavailable",
+      "availableFrom": "Available from {date}",
+      "high": "High demand"
+    },
+    "badge": {
+      "bestPrice": "Best price",
+      "popular": "Popular",
+      "family": "Family",
+      "automatic": "Automatic",
+      "premium": "Premium"
+    }
   }
 }

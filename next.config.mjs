@@ -15,6 +15,10 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   images: {
+    // Variants are generated once at build by scripts/images.mjs (AVIF + WebP at
+    // 480-2000 px). No per-request optimizer: free on Cloudflare Workers, and
+    // portable to any host (plan 2.5 / 9.1).
+    unoptimized: true,
     formats: ['image/avif', 'image/webp'],
     qualities: [60, 75, 85],
     remotePatterns: [

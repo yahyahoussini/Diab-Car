@@ -826,5 +826,35 @@
       "other": "أخرى",
       "recent": "الأخير"
     }
+  },
+  "card": {
+    "from": "ابتداءً من",
+    "perDay": "/ اليوم",
+    "total": "{total} · {count, plural, zero {# يوم} one {يوم واحد} two {يومان} few {# أيام} many {# يوماً} other {# يوم}}",
+    "book": "احجز",
+    "orSimilar": "أو ما يماثلها",
+    "seats": "{count} مقاعد",
+    "luggage": "{count, plural, one {حقيبة واحدة} two {حقيبتان} few {# حقائب} other {# حقيبة}}",
+    "view": "عرض",
+    "flip": "عرض الخلف",
+    "photoAlt": "{name} — منظر {angle}",
+    "angles": {
+      "front": "أمامي جانبي",
+      "rear": "خلفي جانبي"
+    },
+    "state": {
+      "available": "متاحة",
+      "last": "آخر سيارة متاحة",
+      "unavailable": "غير متاحة",
+      "availableFrom": "متاحة ابتداءً من {date}",
+      "high": "طلب مرتفع"
+    },
+    "badge": {
+      "bestPrice": "أفضل سعر",
+      "popular": "الأكثر طلباً",
+      "family": "عائلية",
+      "automatic": "أوتوماتيكية",
+      "premium": "فاخرة"
+    }
   }
 }

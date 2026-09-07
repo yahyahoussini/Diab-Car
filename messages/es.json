@@ -826,5 +826,35 @@
       "other": "Otra",
       "recent": "Reciente"
     }
+  },
+  "card": {
+    "from": "Desde",
+    "perDay": "/ día",
+    "total": "{total} · {count, plural, one {# día} other {# días}}",
+    "book": "Reservar",
+    "orSimilar": "o similar",
+    "seats": "{count} plazas",
+    "luggage": "{count, plural, one {# maleta} other {# maletas}}",
+    "view": "Ver",
+    "flip": "Ver la parte trasera",
+    "photoAlt": "{name} — vista {angle}",
+    "angles": {
+      "front": "tres cuartos frontal",
+      "rear": "tres cuartos trasera"
+    },
+    "state": {
+      "available": "Disponible",
+      "last": "Última disponible",
+      "unavailable": "No disponible",
+      "availableFrom": "Disponible a partir del {date}",
+      "high": "Alta demanda"
+    },
+    "badge": {
+      "bestPrice": "Mejor precio",
+      "popular": "Popular",
+      "family": "Familiar",
+      "automatic": "Automático",
+      "premium": "Premium"
+    }
   }
 }

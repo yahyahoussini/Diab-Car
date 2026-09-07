@@ -570,6 +570,43 @@
 /* The animation has finished paying for itself — release the layer. */
 .ignite-car { animation-fill-mode: both; }
 
+/* ================================================================== */
+/* The road divider (plan 2.4 / 5.3): two rules with a dashed centre   */
+/* line whose dashes drift as you scroll - background-position bound   */
+/* to the scroll timeline, zero JS. Static where unsupported and under */
+/* prefers-reduced-motion (the global rule zeroes the duration).        */
+/* ================================================================== */
+@keyframes road-drift { from { background-position-x: 0; } to { background-position-x: -96px; } }
+.road-dash {
+  background-image: repeating-linear-gradient(to right, var(--silver) 0 24px, transparent 24px 48px);
+  background-size: 48px 2px;
+  background-repeat: repeat-x;
+  background-position: 0 50%;
+}
+[dir="rtl"] .road-dash { background-image: repeating-linear-gradient(to left, var(--silver) 0 24px, transparent 24px 48px); }
+@supports (animation-timeline: scroll()) {
+  .road-dash { animation: road-drift linear both; animation-timeline: scroll(root); }
+  [dir="rtl"] .road-dash { animation-direction: reverse; }
+}
+
+/* Vehicle card (plan 4.5): lift 6px, crossfade front -> rear, scanline
+   sweep, specs lift. Hover on pointer devices, [data-flipped] on tap. */
+.vcard-rear { opacity: 0; transition: opacity var(--dur-hover) var(--ease-out); }
+.vcard:hover .vcard-rear, .vcard[data-flipped="true"] .vcard-rear { opacity: 1; }
+.vcard-front { transition: opacity var(--dur-hover) var(--ease-out); }
+.vcard:hover .vcard-front[data-has-rear="true"], .vcard[data-flipped="true"] .vcard-front[data-has-rear="true"] { opacity: 0; }
+@keyframes scanline { from { transform: translate3d(-120%, 0, 0); } to { transform: translate3d(220%, 0, 0); } }
+.vcard-scan {
+  position: absolute; inset-block: 0; inset-inline-start: 0; inline-size: 40%;
+  background: linear-gradient(90deg, transparent, var(--red-glow), transparent);
+  opacity: 0; pointer-events: none; transform: translate3d(-120%, 0, 0);
+}
+.vcard:hover .vcard-scan { opacity: 1; animation: scanline var(--dur-section) var(--ease-out) both; }
+[dir="rtl"] .vcard:hover .vcard-scan { animation-direction: reverse; }
+.vcard-arrow { transition: transform var(--dur-micro) var(--ease-out); }
+.vcard:hover .vcard-arrow { transform: translateX(4px); }
+[dir="rtl"] .vcard:hover .vcard-arrow { transform: translateX(-4px); }
+
 /* Currency toggle: EUR approximations are server-rendered, shown via a data attribute */
 .price-eur { display: none; }
 html[data-currency="EUR"] .price-eur { display: inline; }

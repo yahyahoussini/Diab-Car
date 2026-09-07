@@ -1,82 +1,147 @@
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import Badge from '@/components/ui/Badge';
-import { Price } from '@/components/site/Price';
-import { vehicleImage } from '@/lib/constants';
+import CarImage, { hasCarShot } from '@/components/site/CarImage';
+import CarSwap from '@/components/site/CarSwap';
+import { formatDate, formatMAD } from '@/lib/format';
 import { cn } from '@/lib/cn';
 
-export default async function VehicleCard({ vehicle, query, priority = false, className }) {
-  const t = await getTranslations('common');
-  const tv = await getTranslations('vehicle');
+/**
+ * Pick at most ONE badge for a card (plan 4.5), in priority order:
+ * MEILLEUR PRIX (lowest per-day in its category, needs the fleet to compare) ·
+ * FAMILLE (>= 7 seats) · PREMIUM · AUTOMATIQUE. POPULAIRE needs rental counts
+ * that only the availability engine will have (Sprint 2) - not guessed.
+ * @param {object} vehicle
+ * @param {object[]} [fleet]
+ * @returns {'bestPrice'|'family'|'premium'|'automatic'|null}
+ */
+export function pickBadge(vehicle, fleet = []) {
+  const peers = fleet.filter((v) => v.category === vehicle.category && v.published !== false);
+  if (peers.length > 1 && peers.every((v) => v.pricePerDay >= vehicle.pricePerDay) && peers.some((v) => v.pricePerDay > vehicle.pricePerDay)) return 'bestPrice';
+  if (vehicle.seats >= 7) return 'family';
+  if (vehicle.category === 'premium' || vehicle.category === 'luxury') return 'premium';
+  if (vehicle.transmission === 'automatic') return 'automatic';
+  return null;
+}
+
+/**
+ * The vehicle card, used on the homepage fleet block, the results page, the
+ * airport page and the "similar cars" row (plan 4.5).
+ *
+ * - One link target: the name is the accessible name, the whole card is
+ *   clickable through the stretched link. Badges and state carry real text.
+ * - Availability renders ONLY when the caller passes it: without dates there
+ *   is no truthful state to show (CLAUDE.md rule 5 - Postgres decides).
+ * - Price object: per day always; total + day count when `dates` is given -
+ *   never a total the caller did not compute (rule 4).
+ * - Motion: lift 6 px, crossfade front -> rear when a rear shot exists,
+ *   scanline sweep, specs lift, arrow slide - transforms/opacity only; tap
+ *   flips the image on touch (CarSwap).
+ *
+ * @param {{
+ *   vehicle: object,
+ *   fleet?: object[],
+ *   query?: object,
+ *   dates?: { from: string, to: string, days: number, total: number } | null,
+ *   availability?: 'available'|'last'|'unavailable'|'high' | null,
+ *   nextAvailable?: string | null,
+ *   priority?: boolean,
+ *   className?: string,
+ * }} props
+ */
+export default async function VehicleCard({ vehicle, fleet = [], query, dates = null, availability = null, nextAvailable = null, priority = false, className }) {
+  const t = await getTranslations('card');
+  const tc = await getTranslations('common');
   const locale = await getLocale();
   const v = vehicle;
-  const href = { pathname: '/vehicules/[slug]', params: { slug: v.slug }, ...(query ? { query } : {}) };
   const name = `${v.brand} ${v.model}`;
+  const href = { pathname: '/vehicules/[slug]', params: { slug: v.slug }, ...(query ? { query } : {}) };
+  const badge = pickBadge(v, fleet);
+  const rear = hasCarShot(v, 'rear');
+  const unavailable = availability === 'unavailable';
+  const angleAlt = (angle) => t('photoAlt', { name, angle: t(`angles.${angle}`) });
+
+  /* Max 3 specs; luggage joins on desktop only (plan 4.5). */
+  const specs = [tc(`transmission.${v.transmission}`), t('seats', { count: v.seats }), tc(`fuel.${v.fuel}`)];
 
   return (
-    <article className={cn('card group relative flex flex-col overflow-hidden transition-[transform,border-color,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:border-border-strong hover:shadow-float', className)}>
-      <Link href={href} className="bg-surface-1 relative block aspect-[4/3] overflow-hidden" aria-label={name}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={vehicleImage(v)}
-          alt={`${name} ${v.year} — ${t(`categories.${v.category}`)}`}
-          width={800}
-          height={380}
-          loading={priority ? 'eager' : 'lazy'}
-          decoding="async"
-          className="absolute inset-x-6 bottom-4 top-8 h-[calc(100%-3rem)] w-[calc(100%-3rem)] object-contain drop-shadow-[0_24px_30px_rgba(0,0,0,0.35)] transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+    <article
+      data-vcard=""
+      className={cn(
+        'vcard card group relative flex flex-col overflow-hidden transition-[transform,border-color] duration-[var(--dur-hover)] ease-[var(--ease-out)] hover:-translate-y-1.5 hover:border-border-strong',
+        unavailable && 'opacity-90',
+        className,
+      )}
+    >
+      {/* ---- media: chamfered, front -> rear crossfade, scanline ---- */}
+      <div className="chamfer relative aspect-[4/3] overflow-hidden bg-surface-1">
+        <CarImage
+          vehicle={v}
+          angle="front"
+          alt={angleAlt('front')}
+          priority={priority}
+          data-has-rear={rear ? 'true' : 'false'}
+          className={cn('vcard-front absolute inset-0', unavailable && 'grayscale')}
+          imgClassName="p-4"
         />
-        <div className="absolute start-3 top-3 flex gap-1.5">
-          <Badge tone="neutral" className="bg-surface-1/90 backdrop-blur">
-            {t(`categories.${v.category}`)}
-          </Badge>
-          {v.featured ? <Badge tone="brand">{t('featured')}</Badge> : null}
-        </div>
-      </Link>
+        {rear ? <CarImage vehicle={v} angle="rear" alt="" aria-hidden="true" className="vcard-rear absolute inset-0" imgClassName="p-4" /> : null}
+        <span className="vcard-scan" aria-hidden="true" />
 
+        {/* meta row over the image: badge (max one) and the availability state */}
+        <div className="pointer-events-none absolute inset-x-3 top-3 flex items-start justify-between gap-2">
+          {badge ? <span className="text-meta rounded-full bg-bg/90 px-2.5 py-1 text-text backdrop-blur">{t(`badge.${badge}`)}</span> : <span />}
+          {availability ? <AvailabilityState kind={availability} t={t} date={nextAvailable ? formatDate(nextAvailable, locale) : null} /> : null}
+        </div>
+
+        {rear ? (
+          <CarSwap
+            enabled
+            label={t('flip')}
+            className="absolute bottom-3 end-3 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-bg/90 text-text backdrop-blur lg:hidden"
+          />
+        ) : null}
+      </div>
+
+      {/* ---- body ---- */}
       <div className="flex flex-1 flex-col p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h3 className="font-display text-xl text-text">
-              <Link href={href} className="after:absolute after:inset-0">
-                {name}
-              </Link>
-            </h3>
-            <p className="mt-0.5 text-xs text-text-muted">
-              <bdi>{v.year}</bdi> · {tv('orSimilar')}
-            </p>
-          </div>
-          <div className="text-end">
-            <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-text-muted rtl:tracking-normal">{t('fromPrice')}</div>
-            <Price amount={v.pricePerDay} className="font-display text-xl leading-tight text-text" eurClassName="block text-xs font-normal text-text-muted" />
-            <div className="text-[11px] text-text-muted">{t('perDay')}</div>
-          </div>
-        </div>
+        <p className="text-meta text-text-muted">{tc(`categories.${v.category}`)}</p>
+        <h3 className="text-h3 mt-1 text-text">
+          <Link href={href} className="after:absolute after:inset-0 after:z-10">
+            {name}
+          </Link>
+        </h3>
+        <span className="redline mt-3" aria-hidden="true" />
 
-        <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-[13px] text-text-2">
-          <li className="inline-flex items-center gap-1.5">
-            <SpecIcon name="seats" />
-            {t('seats', { count: v.seats })}
-          </li>
-          <li className="inline-flex items-center gap-1.5">
-            <SpecIcon name="luggage" />
+        <ul className="text-meta mt-3 flex flex-wrap gap-x-2 text-text-2 transition-transform duration-[var(--dur-hover)] ease-[var(--ease-out)] group-hover:-translate-y-0.5">
+          {specs.map((s, i) => (
+            <li key={s} className="inline-flex items-center gap-2">
+              {i > 0 ? <span aria-hidden="true">·</span> : null}
+              {s}
+            </li>
+          ))}
+          <li className="hidden items-center gap-2 lg:inline-flex">
+            <span aria-hidden="true">·</span>
             {t('luggage', { count: v.luggage })}
-          </li>
-          <li className="inline-flex items-center gap-1.5">
-            <SpecIcon name="gear" />
-            {t(`transmission.${v.transmission}`)}
-          </li>
-          <li className="inline-flex items-center gap-1.5">
-            <SpecIcon name="fuel" />
-            {t(`fuel.${v.fuel}`)}
           </li>
         </ul>
 
-        <div className="mt-4 flex items-center justify-between border-t border-border pt-4 text-xs text-text-muted">
-          <span>{v.mileageLimit ? t('kmPerDay', { km: v.mileageLimit }) : t('unlimitedKm')}</span>
-          <span className="relative z-10 inline-flex items-center gap-1 font-semibold text-accent">
-            {t('details')}
-            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 rtl:-scale-x-100 rtl:group-hover:-translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        {/* price object (rule 4): per day, then total for the dates when known */}
+        <div className="mt-5">
+          <p className="text-meta text-text-muted">{t('from')}</p>
+          <p className="price mt-1 text-[1.75rem]">
+            <span className="price-value">{formatMAD(v.pricePerDay, locale, { withUnit: false })}</span>
+            <span className="price-unit">MAD</span>
+            <span className="price-period">{t('perDay')}</span>
+          </p>
+          {dates && dates.days > 0 ? (
+            <p className="text-meta tnum mt-1 text-text-2">{t('total', { total: formatMAD(dates.total, locale), count: dates.days })}</p>
+          ) : null}
+        </div>
+
+        <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
+          <span className="text-meta text-text-muted">{t('orSimilar')}</span>
+          <span className="text-meta inline-flex items-center gap-2 text-text">
+            {t('book')}
+            <svg viewBox="0 0 24 24" className="vcard-arrow h-4 w-4 rtl:-scale-x-100" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M5 12h14M13 5l7 7-7 7" />
             </svg>
           </span>
@@ -86,6 +151,26 @@ export default async function VehicleCard({ vehicle, query, priority = false, cl
   );
 }
 
+/** Availability state pill (plan 4.5). Red dot = available; hollow = unavailable; arrow = high demand. */
+function AvailabilityState({ kind, t, date }) {
+  const label = kind === 'unavailable' && date ? t('state.availableFrom', { date }) : t(`state.${kind}`);
+  const mark =
+    kind === 'unavailable' ? (
+      <span className="inline-block h-2 w-2 rounded-full border border-current" aria-hidden="true" />
+    ) : kind === 'high' ? (
+      <span aria-hidden="true">↗</span>
+    ) : (
+      <span className="inline-block h-2 w-2 rounded-full bg-red-signal" aria-hidden="true" />
+    );
+  return (
+    <span className={cn('text-meta inline-flex items-center gap-1.5 rounded-full bg-bg/90 px-2.5 py-1 backdrop-blur', kind === 'unavailable' ? 'text-text-muted' : 'text-text')}>
+      {mark}
+      {label}
+    </span>
+  );
+}
+
+/** Spec icons still imported by the vehicle page - kept as-is. */
 export function SpecIcon({ name, className = 'h-4 w-4 text-text-muted' }) {
   const common = { viewBox: '0 0 24 24', className, fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
   switch (name) {
