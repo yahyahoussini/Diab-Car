@@ -82,7 +82,10 @@
       "airport": "مطار محمد الخامس",
       "station": "محطة الدار البيضاء المسافرين",
       "address": "فندق / منزل"
-    }
+    },
+    "seatsCount": "{count} مقاعد",
+    "doorsCount": "{count} أبواب",
+    "luggageCount": "{count} حقائب"
   },
   "nav": {
     "home": "الرئيسية",
@@ -479,7 +482,43 @@
       "deposit": "الضمانة (حجز مسبق)"
     },
     "minAgeLabel": "الحد الأدنى للسن",
-    "minAgeValue": "{age} سنة"
+    "minAgeValue": "{age} سنة",
+    "backToFleet": "العودة إلى الأسطول",
+    "faqTitle": "أسئلة حول هذه السيارة",
+    "gallery": {
+      "exterior": "الخارج",
+      "interior": "الداخل",
+      "open": "تكبير الصور",
+      "close": "إغلاق",
+      "previous": "الصورة السابقة",
+      "next": "الصورة التالية",
+      "counter": "{i} / {n}"
+    },
+    "booking": {
+      "pricePerDay": "السعر لليوم",
+      "perDay": "/ اليوم",
+      "chooseDates": "اختر تواريخك لمعرفة التوفر والمجموع.",
+      "checking": "جاري التحقق من التوفر",
+      "availableForDates": "متوفرة في تواريخك {range}",
+      "unavailableUntil": "غير متوفرة · التوفر القادم {date}",
+      "unavailable": "غير متوفرة في هذه التواريخ",
+      "alternatives": "3 بدائل لتواريخك",
+      "checkFailed": "تعذر التحقق من التوفر الآن. راسلنا وسنؤكد لك.",
+      "pickDates": "اختيار التواريخ",
+      "totalFor": "المجموع لمدة {days} أيام",
+      "deposit": "الضمان",
+      "book": "احجز هذه السيارة",
+      "bookShort": "احجز",
+      "whatsapp": "الحجز عبر واتساب",
+      "close": "إغلاق"
+    },
+    "alt": {
+      "front": "{name}، {category}، منظر أمامي ثلاثة أرباع — كراء دياب كار الدار البيضاء",
+      "side": "{name} من الجانب — كراء دياب كار الدار البيضاء",
+      "rear": "{name}، منظر خلفي ثلاثة أرباع — كراء دياب كار الدار البيضاء",
+      "interior": "المقصورة الداخلية لـ {name} — المقاعد والتجهيزات",
+      "dash": "لوحة القيادة لـ {name}"
+    }
   },
   "booking": {
     "title": "الحجز",

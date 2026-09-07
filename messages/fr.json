@@ -82,7 +82,10 @@
       "airport": "Aéroport Mohammed V",
       "station": "Gare Casa-Voyageurs",
       "address": "Hôtel / domicile"
-    }
+    },
+    "seatsCount": "{count} places",
+    "doorsCount": "{count} portes",
+    "luggageCount": "{count} bagages"
   },
   "nav": {
     "home": "Accueil",
@@ -479,7 +482,43 @@
       "deposit": "Caution (pré-autorisation)"
     },
     "minAgeLabel": "Âge minimum",
-    "minAgeValue": "{age} ans"
+    "minAgeValue": "{age} ans",
+    "backToFleet": "RETOUR À LA FLOTTE",
+    "faqTitle": "Questions sur cette voiture",
+    "gallery": {
+      "exterior": "Extérieur",
+      "interior": "Intérieur",
+      "open": "Agrandir les photos",
+      "close": "Fermer",
+      "previous": "Photo précédente",
+      "next": "Photo suivante",
+      "counter": "{i} / {n}"
+    },
+    "booking": {
+      "pricePerDay": "Prix par jour",
+      "perDay": "/ jour",
+      "chooseDates": "Choisissez vos dates pour voir la disponibilité et le total.",
+      "checking": "VÉRIFICATION DE LA DISPONIBILITÉ",
+      "availableForDates": "DISPONIBLE POUR VOS DATES {range}",
+      "unavailableUntil": "INDISPONIBLE · prochaine disponibilité {date}",
+      "unavailable": "INDISPONIBLE pour ces dates",
+      "alternatives": "3 alternatives pour vos dates",
+      "checkFailed": "Disponibilité indisponible pour le moment. Écrivez-nous, nous vérifions.",
+      "pickDates": "Choisir les dates",
+      "totalFor": "Total pour {days} jours",
+      "deposit": "Caution",
+      "book": "RÉSERVER CETTE VOITURE",
+      "bookShort": "RÉSERVER",
+      "whatsapp": "Réserver par WhatsApp",
+      "close": "Fermer"
+    },
+    "alt": {
+      "front": "{name}, {category}, vue avant trois quarts — location Diab Car Casablanca",
+      "side": "{name} de profil — location Diab Car Casablanca",
+      "rear": "{name}, vue arrière trois quarts — location Diab Car Casablanca",
+      "interior": "Intérieur de la {name} — sièges et habitacle",
+      "dash": "Tableau de bord de la {name}"
+    }
   },
   "booking": {
     "title": "Réservation",

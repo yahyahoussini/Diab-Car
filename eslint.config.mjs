@@ -10,6 +10,12 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Playwright's generated HTML report bundles minified React — linting it
+    // produced hundreds of rules-of-hooks errors from code we do not own and
+    // buried the handful that are actually ours.
+    "playwright-report/**",
+    "test-results/**",
+    ".lighthouse/**",
   ]),
 ]);
 

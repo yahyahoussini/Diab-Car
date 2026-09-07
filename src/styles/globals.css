@@ -723,3 +723,24 @@ select { --chevron: var(--chevron-light); }
   .redline-loading::after { animation: none; transform: scaleX(0.4); }
   .silhouette { animation: none; opacity: 0.06; }
 }
+
+/* ------------------------------------------------------------------ */
+/* Vehicle page (plan 4.6 / 5.3).                                      */
+/* ------------------------------------------------------------------ */
+
+/* EXTÉRIEUR | INTÉRIEUR switches the gallery through a circular mask
+   (plan 4.6). clip-path only — the outgoing image stays put and the new
+   one opens over it, so nothing reflows and the browser composites it. */
+@keyframes gallery-iris {
+  from { clip-path: circle(0% at 50% 55%); }
+  to   { clip-path: circle(140% at 50% 55%); }
+}
+.gallery-iris { animation: gallery-iris var(--dur-panel) var(--ease-out) both; }
+
+/* The fullscreen viewer. `DRAG ↔` is the custom-cursor label from plan 5.3;
+   the attribute is read by the cursor component when it lands (prompt 14). */
+.gallery-fullscreen { background: color-mix(in oklab, var(--bg) 92%, black); }
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery-iris { animation: none; }
+}

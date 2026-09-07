@@ -1,6 +1,6 @@
 # Diab Car — build status
 
-**Updated:** 2026-09-07 · **Branch:** `build/v1` · **Last prompt:** PROMPT 07 — live results page (Sprint 3a). Fleet page is now ISR + live availability.
+**Updated:** 2026-09-08 · **Branch:** `build/v1` · **Last prompt:** PROMPT 08 — vehicle page (Sprint 3b). Static OG per car; a11y 100 on every public page measured so far.
 
 This file is the running state of the build. It is rewritten at the end of **every** prompt in `docs/PROMPTS.md`.
 Decisions in the *Plan §10* column come from `docs/MASTER-PLAN.md` §10 (keep / rebuild / extend / delete); where §10 is
@@ -26,7 +26,7 @@ not *never touched again*.
 | 05 | 2a | Supabase: schema, roles, storage, seed | **done and APPLIED — 20 tables, 39 policies, 3 buckets, owner created, auth hook live** |
 | 06 | 2b | Availability engine: RPCs, holds, realtime | **done and MEASURED — 8.2 ms median search, 23P01 overlap rejection, 5/5 concurrency** |
 | 07 | 3a | Results / fleet page with live availability | **done (a11y 100; Lighthouse perf 73, short of the >=90 target)** |
-| 08 | 3b | Vehicle page | todo |
+| 08 | 3b | Vehicle page | **done (a11y/BP/SEO 100; Lighthouse perf 66, short of the >=90 target)** |
 | 09 | 3c | Booking funnel, confirmation, WhatsApp, email | todo |
 | 10 | 4a | Admin foundation: auth, roles, shell, dashboard | todo |
 | 11 | 4b | Admin reservations, state machine, calendar | todo |
@@ -138,6 +138,29 @@ The homepage drops its Reviews section in Supabase mode and keeps it in demo —
 | 32 | footer wordmark link had no accessible name; results count failed contrast on the active chip; card `<h3>` followed `<h1>` with no `<h2>` | **a11y was 92 on the fleet page and 97 on the home page. All three fixed → 100 on both** |
 
 **Not met: Lighthouse ≥ 90 on the bare fleet page.** Measured 57 before optimisation, **73 after** (LCP 4.37 → 3.39 s). Lazy-loading the booking module behind the "✎ Modifier" sheet (`next/dynamic`, `ssr:false`, gated on first open because a `<dialog>` renders its children while closed) is what bought most of that. What remains is TBT — site-wide JS execution, not this page's markup — and the homepage sits at the same 63–69 on unchanged code. This is the "performance budget CI" work in Sprint 6, not something the results page can fix alone. Readings still swing ±40 % on this machine (home measured 37 and 69 in the same session).
+
+---
+
+## PROMPT 08 notes — 2026-09-08
+
+**The three "known bugs" in the prompt, checked rather than assumed**
+
+| Bug | Finding |
+|---|---|
+| "Kilométrage kilométrage illimité" | **Not present.** `vehicle.includedItems.mileage` already reads `{mileage} inclus` in all four locales, and no label is paired with the value. Rendered output is `KILOMÉTRAGE ILLIMITÉ INCLUS` (screenshot in the report). Nothing to change |
+| truncated time select | **Was still real.** The prompt said "now replaced by chips, verify" — chips replaced it in `BookingWidget` only; `VehicleQuote` still used `<Select>`. The vehicle page no longer renders `VehicleQuote`; its dates come from the module in a sheet, which uses chips. `VehicleQuote.js` is now dead on this route and is a delete candidate once the funnel stops using it |
+| FAB overlap | **Structurally impossible now.** `WhatsAppFab` already returned null on `/vehicules/`, which STATUS called a workaround — plan 4.6 actually specifies it ("the WhatsApp FAB hides on this page"), because the booking panel and the mobile bar both carry WhatsApp. Verified: `animate-ping` (a FAB-only class) is absent from the vehicle HTML and present on the home page, and an e2e test asserts it |
+
+**Also fixed:** `vehicleInquiryMessage(locale)` with no rental rendered "réserver la **undefined**" (STATUS issue 4). The `= {}` default only fires when the whole argument is missing. Fixed with a per-language fallback that carries its own determiner, plus the price clause plan 4.6 asks for — three regression tests.
+
+**Static Open Graph cards (plan 9.3).** `npm run og` writes `public/og/<locale>/<slug>.png` — 108 cards, 27 vehicles × 4 locales, 8.2 MB — and a manifest `src/lib/seo.js` imports statically, so `ogImageUrl` returns the file when it exists and falls back to the dynamic route otherwise. It generates them by asking the running site for each card rather than importing the renderer: `src/lib/og.js` is JSX, which bare Node cannot parse, and a JSX transform would be a new dependency for one build step. Driving the real route also means there is no second implementation to drift.
+
+**Honest gaps, by design**
+
+- Only `front` exists in the photo pipeline, so the gallery renders one image: the EXTÉRIEUR | INTÉRIEUR toggle and the thumbnail strip appear only when those photos exist. An empty INTÉRIEUR tab would be rule 11 in UI form. Both light up with no code change once `side`/`rear`/`interior`/`dash` land in `docs/inputs/photos/<slug>/`.
+- No FAQ is vehicle-scoped yet (none carry `category = vehicle` or a `vehicle_id`, and 9 of 10 seeded rows are unpublished TODOs), so the page falls back to the general published set, capped at 4. `FAQPage` is emitted for exactly what renders — Google requires the structured data to match the visible text.
+
+**Not met: Lighthouse ≥ 90 / LCP ≤ 2.0 s.** Vehicle page measures **Performance 66, Accessibility 100, Best practices 100, SEO 100**; LCP 3.5–4.2 s, TBT 0.9–1.8 s. Same cause as the fleet page: site-wide JS execution under 4× CPU throttle. Sprint 6's performance budget work.
 
 ---
 

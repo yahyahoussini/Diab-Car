@@ -12,18 +12,44 @@ const GREETING = {
   es: 'Hola Diab Car,',
 };
 
-export function vehicleInquiryMessage(locale, { vehicleName, from, to, pickup } = {}) {
+/**
+ * The message behind "Réserver par WhatsApp" (plan 4.6).
+ *
+ * Everything the staff member needs to answer without a second exchange: which
+ * car, which dates, where, and the price the customer was actually shown. That
+ * last one matters — with no online payment (plan 9.5) the WhatsApp thread IS
+ * the confirmation channel, and a quote the agent cannot see is a quote they
+ * will re-invent.
+ *
+ * `vehicleName` falls back to a generic phrase rather than interpolating
+ * `undefined`: calling this with no rental used to produce "je souhaite
+ * réserver la **undefined**" (STATUS issue 4), because a `= {}` default only
+ * fires when the whole argument is missing.
+ *
+ * @param {string} locale
+ * @param {{vehicleName?:string, from?:string, to?:string, pickup?:string, price?:string}} [rental]
+ */
+export function vehicleInquiryMessage(locale, { vehicleName, from, to, pickup, price } = {}) {
   const g = GREETING[locale] || GREETING.fr;
   const dates = from && to ? ` ${from} → ${to}` : '';
+
+  /* The article belongs to the NAMED case only — "réserver la Dacia Logan" is
+     right, "réserver la une voiture" is not. So the fallback carries its own
+     determiner and the article is prepended only when there is a model to
+     attach it to. */
+  const ARTICLE = { fr: 'la ', en: 'the ', es: 'el ', ar: '' };
+  const FALLBACK = { fr: 'une voiture', en: 'a car', es: 'un coche', ar: 'سيارة' };
+  const car = vehicleName ? `${ARTICLE[locale] ?? ARTICLE.fr}${vehicleName}` : FALLBACK[locale] || FALLBACK.fr;
+
   switch (locale) {
     case 'en':
-      return `${g} I would like to book the ${vehicleName}${dates}${pickup ? `, pick-up: ${pickup}` : ''}. Is it available?`;
+      return `${g} I would like to book ${car}${dates}${pickup ? `, pick-up: ${pickup}` : ''}${price ? `, price shown: ${price}` : ''}. Is it available?`;
     case 'ar':
-      return `${g} أرغب في كراء ${vehicleName}${dates}${pickup ? `، الاستلام: ${pickup}` : ''}. هل هي متوفرة؟`;
+      return `${g} أرغب في كراء ${car}${dates}${pickup ? `، الاستلام: ${pickup}` : ''}${price ? `، السعر المعروض: ${price}` : ''}. هل هي متوفرة؟`;
     case 'es':
-      return `${g} me gustaría reservar el ${vehicleName}${dates}${pickup ? `, recogida: ${pickup}` : ''}. ¿Está disponible?`;
+      return `${g} me gustaría reservar ${car}${dates}${pickup ? `, recogida: ${pickup}` : ''}${price ? `, precio mostrado: ${price}` : ''}. ¿Está disponible?`;
     default:
-      return `${g} je souhaite réserver la ${vehicleName}${dates}${pickup ? `, prise en charge : ${pickup}` : ''}. Est-elle disponible ?`;
+      return `${g} je souhaite réserver ${car}${dates}${pickup ? `, prise en charge : ${pickup}` : ''}${price ? `, prix affiché : ${price}` : ''}. Est-elle disponible ?`;
   }
 }
 

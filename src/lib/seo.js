@@ -1,6 +1,9 @@
 import { getPathname } from '@/i18n/navigation';
 import { ogLocales, routing } from '@/i18n/routing';
 import { t } from '@/lib/constants';
+/* Which Open Graph cards `npm run og` has pre-rendered. Static import, never
+   an fs read — this module runs inside the Worker (CLAUDE.md rule 9). */
+import ogManifest from '../../public/og/manifest.json';
 
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://diabcar.ma').replace(/\/$/, '');
 export const SITE_NAME = 'Diab Car';
@@ -18,7 +21,26 @@ export function absoluteUrl(locale, href) {
  * route (e.g. '/vehicules' or { pathname: '/vehicules/[slug]', params: { slug } }).
  */
 /** URL of the dynamic Open Graph card for a page. */
-export function ogImageUrl(locale, { title, subtitle, kicker, car, price } = {}) {
+/**
+ * The Open Graph card for a page.
+ *
+ * Prefers a card pre-rendered by `npm run og` (plan 9.3: static per page
+ * instead of a runtime image route, so a share costs the Worker nothing).
+ * Falls back to the dynamic /[locale]/og route for every page that has no
+ * pre-rendered card — which is all of them until the script has run.
+ *
+ * The manifest is a static JSON import, never an fs read: this runs inside the
+ * Worker at request time for dynamic pages (CLAUDE.md rule 9).
+ *
+ * @param {string} locale
+ * @param {{ slug?: string, title?: string, subtitle?: string, kicker?: string, car?: string, price?: string }} [options]
+ *   `slug` opts into the static lookup; without it the dynamic route is used.
+ */
+export function ogImageUrl(locale, { slug, title, subtitle, kicker, car, price } = {}) {
+  if (slug && ogManifest?.vehicles?.[locale]?.includes(slug)) {
+    return `${SITE_URL}/og/${locale}/${slug}.png`;
+  }
+
   const q = new URLSearchParams();
   if (title) q.set('title', title.replace(/\s*\|\s*Diab Car$/i, '').slice(0, 90));
   if (subtitle) q.set('subtitle', subtitle.slice(0, 140));

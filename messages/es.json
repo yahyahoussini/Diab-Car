@@ -82,7 +82,10 @@
       "airport": "Aeropuerto Mohammed V",
       "station": "Estación Casa-Voyageurs",
       "address": "Hotel / domicilio"
-    }
+    },
+    "seatsCount": "{count} plazas",
+    "doorsCount": "{count} puertas",
+    "luggageCount": "{count} maletas"
   },
   "nav": {
     "home": "Inicio",
@@ -479,7 +482,43 @@
       "deposit": "Fianza (preautorización)"
     },
     "minAgeLabel": "Edad mínima",
-    "minAgeValue": "{age} años"
+    "minAgeValue": "{age} años",
+    "backToFleet": "VOLVER A LA FLOTA",
+    "faqTitle": "Preguntas sobre este coche",
+    "gallery": {
+      "exterior": "Exterior",
+      "interior": "Interior",
+      "open": "Ampliar las fotos",
+      "close": "Cerrar",
+      "previous": "Foto anterior",
+      "next": "Foto siguiente",
+      "counter": "{i} / {n}"
+    },
+    "booking": {
+      "pricePerDay": "Precio por día",
+      "perDay": "/ día",
+      "chooseDates": "Elige tus fechas para ver la disponibilidad y el total.",
+      "checking": "COMPROBANDO LA DISPONIBILIDAD",
+      "availableForDates": "DISPONIBLE PARA TUS FECHAS {range}",
+      "unavailableUntil": "NO DISPONIBLE · próxima disponibilidad {date}",
+      "unavailable": "NO DISPONIBLE para estas fechas",
+      "alternatives": "3 alternativas para tus fechas",
+      "checkFailed": "No se puede comprobar la disponibilidad ahora. Escríbenos y lo confirmamos.",
+      "pickDates": "Elegir las fechas",
+      "totalFor": "Total para {days} días",
+      "deposit": "Fianza",
+      "book": "RESERVAR ESTE COCHE",
+      "bookShort": "RESERVAR",
+      "whatsapp": "Reservar por WhatsApp",
+      "close": "Cerrar"
+    },
+    "alt": {
+      "front": "{name}, {category}, vista frontal tres cuartos — alquiler Diab Car Casablanca",
+      "side": "{name} de perfil — alquiler Diab Car Casablanca",
+      "rear": "{name}, vista trasera tres cuartos — alquiler Diab Car Casablanca",
+      "interior": "Interior del {name} — asientos y habitáculo",
+      "dash": "Salpicadero del {name}"
+    }
   },
   "booking": {
     "title": "Reserva",

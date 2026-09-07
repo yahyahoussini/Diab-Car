@@ -94,3 +94,33 @@ describe('bookingFollowUpMessage', () => {
     assert.equal(bookingFollowUpMessage('nl', REFERENCE), `Bonjour Diab Car, je viens d’envoyer la demande de réservation ${REFERENCE}. Pouvez-vous confirmer la disponibilité ?`);
   });
 });
+
+/* ------------------------------------------------------------------ */
+/* Regression: STATUS issue 4 — calling this with no rental produced   */
+/* "je souhaite réserver la undefined", because a `= {}` default only  */
+/* fires when the whole argument is missing, not when a field is.      */
+/* Also covers the price line added for the vehicle page (plan 4.6).   */
+/* ------------------------------------------------------------------ */
+describe('vehicleInquiryMessage — missing data and price', () => {
+  test('never interpolates undefined when no vehicle is given', () => {
+    for (const locale of ['fr', 'en', 'ar', 'es']) {
+      const msg = vehicleInquiryMessage(locale);
+      assert.ok(!msg.includes('undefined'), `${locale} must not say "undefined": ${msg}`);
+      assert.ok(msg.length > 20, `${locale} must still be a real sentence`);
+    }
+    /* And the article does not survive without a model to attach it to. */
+    assert.ok(!vehicleInquiryMessage('fr').includes('la une voiture'));
+    assert.ok(!vehicleInquiryMessage('es').includes('el un coche'));
+  });
+
+  test('carries the quoted price so staff can answer without re-quoting', () => {
+    const msg = vehicleInquiryMessage('fr', { vehicleName: 'Dacia Logan', price: '660 MAD' });
+    assert.match(msg, /prix affiché : 660 MAD/);
+    assert.match(vehicleInquiryMessage('en', { vehicleName: 'Dacia Logan', price: '660 MAD' }), /price shown: 660 MAD/);
+  });
+
+  test('omits the price clause entirely when there is no quote', () => {
+    const msg = vehicleInquiryMessage('fr', { vehicleName: 'Dacia Logan' });
+    assert.ok(!msg.includes('prix affiché'));
+  });
+});

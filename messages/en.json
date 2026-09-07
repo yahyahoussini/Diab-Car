@@ -82,7 +82,10 @@
       "airport": "Mohammed V Airport",
       "station": "Casa-Voyageurs station",
       "address": "Hotel / home"
-    }
+    },
+    "seatsCount": "{count} seats",
+    "doorsCount": "{count} doors",
+    "luggageCount": "{count} bags"
   },
   "nav": {
     "home": "Home",
@@ -479,7 +482,43 @@
       "deposit": "Deposit (pre-authorisation)"
     },
     "minAgeLabel": "Minimum age",
-    "minAgeValue": "{age} years"
+    "minAgeValue": "{age} years",
+    "backToFleet": "BACK TO THE FLEET",
+    "faqTitle": "Questions about this car",
+    "gallery": {
+      "exterior": "Exterior",
+      "interior": "Interior",
+      "open": "Open the photos",
+      "close": "Close",
+      "previous": "Previous photo",
+      "next": "Next photo",
+      "counter": "{i} / {n}"
+    },
+    "booking": {
+      "pricePerDay": "Price per day",
+      "perDay": "/ day",
+      "chooseDates": "Choose your dates to see availability and the total.",
+      "checking": "CHECKING AVAILABILITY",
+      "availableForDates": "AVAILABLE FOR YOUR DATES {range}",
+      "unavailableUntil": "UNAVAILABLE · next available {date}",
+      "unavailable": "UNAVAILABLE for these dates",
+      "alternatives": "3 alternatives for your dates",
+      "checkFailed": "Availability cannot be checked right now. Message us and we will confirm.",
+      "pickDates": "Choose the dates",
+      "totalFor": "Total for {days} days",
+      "deposit": "Deposit",
+      "book": "BOOK THIS CAR",
+      "bookShort": "BOOK",
+      "whatsapp": "Book on WhatsApp",
+      "close": "Close"
+    },
+    "alt": {
+      "front": "{name}, {category}, front three-quarter view — Diab Car rental Casablanca",
+      "side": "{name} side view — Diab Car rental Casablanca",
+      "rear": "{name}, rear three-quarter view — Diab Car rental Casablanca",
+      "interior": "Interior of the {name} — seats and cabin",
+      "dash": "Dashboard of the {name}"
+    }
   },
   "booking": {
     "title": "Booking",
