@@ -184,10 +184,15 @@ async function main() {
       lng: num(r.lng),
       /* TODO in the CSV means "not yet known" -> null -> the UI says
          "sur devis". Never 0, which would promise free delivery. */
-      deliveryFee: num(r.delivery_fee_mad),
+      /* delivery_fee_mad only. The starter's `locations` also has a legacy
+         `fee` column, and an earlier draft of this map wrote a `deliveryFee`
+         key that matches neither — PostgREST rejected the whole batch with
+         "Could not find the 'delivery_fee' column". */
       deliveryFeeMad: num(r.delivery_fee_mad),
       hours: TODO(r.hours) ? null : { opens: r.hours.split('-')[0], closes: r.hours.split('-')[1] },
-      is24h: bool(r.is_24h),
+      /* Written in snake_case already: snake() only splits on capitals, so
+         `is24h` would stay `is24h` and never reach the `is_24h` column. */
+      is_24h: bool(r.is_24h),
       sort: (i + 1) * 10,
       active: true,
     }));
@@ -283,7 +288,28 @@ async function main() {
      mode. Real Google reviews are imported from the admin (plan 8.4). */
   if (wants('reviews')) {
     const { seedReviews } = await import('../src/lib/data/seed.js');
-    await upsert('reviews', seedReviews.map(({ id, ...r }) => ({ ...r, isSample: true, published: false })), undefined);
+    /* `vehicleId` is dropped along with `id`: the demo store keys vehicles as
+       'v-tucson' and Postgres wants a uuid, so passing it through failed with
+       `22P02 invalid input syntax for type uuid: "v-tucson"`. These four rows
+       are unpublished design placeholders — the link buys nothing, and
+       inventing a uuid to satisfy the column would be worse. Real reviews
+       arrive with a real vehicle from the admin import (plan 8.4). */
+    /* Replace, don't append. Sample reviews have no natural key to upsert on —
+       they are not Google rows, so `(source, external_id)` is null for all of
+       them — and passing no conflict target made every run insert four more.
+       Two runs produced eight rows, which is exactly the kind of drift the
+       "idempotent" requirement exists to stop. The seed owns these rows
+       entirely, so it clears its own before writing. Real reviews are never
+       touched: the delete is scoped to is_sample. */
+    if (!DRY) {
+      const { error } = await sb.from('reviews').delete().eq('is_sample', true);
+      if (error) throw new Error(`reviews cleanup: ${error.message}`);
+    }
+    await upsert(
+      'reviews',
+      seedReviews.map(({ id, vehicleId, ...r }) => ({ ...r, vehicleId: null, isSample: true, published: false })),
+      undefined,
+    );
   }
 
   console.log('\n  Done. Run supabase/migrations/0007_verify.sql to check counts and RLS.\n');

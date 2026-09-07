@@ -58,6 +58,24 @@ update locations set kind = 'custom'::location_kind where kind is null;
 update locations set delivery_fee_mad = fee where delivery_fee_mad is null and fee is not null and fee > 0;
 
 alter table locations alter column kind set not null;
+
+-- `kind` is authoritative from here; `type` is the starter's column, kept so
+-- anything still reading it keeps working until it is dropped.
+--
+-- It has to lose NOT NULL, or every new row must supply a legacy value it no
+-- longer owns — and it cannot simply be copied, because `type`'s CHECK only
+-- allows agency|airport|station|address while `kind` adds city, district and
+-- custom (the owner's Sept 2026 requirement for delivery to other cities).
+-- Backfilled below for the rows that do map cleanly, left null for the rest.
+alter table locations alter column type drop not null;
+
+update locations set type = case kind
+    when 'airport'  then 'airport'
+    when 'agency'   then 'agency'
+    when 'district' then 'station'
+    else null
+  end
+ where type is null;
 create unique index if not exists locations_slug_key on locations (slug);
 create index if not exists locations_kind_idx on locations (kind, sort);
 
@@ -165,19 +183,24 @@ create table if not exists reservations (
   start_at             timestamptz not null,
   end_at               timestamptz not null,
 
-  -- Copied from the vehicle on write (trigger below) so `period` can be a
-  -- GENERATED column: a generated expression may only read its own row.
+  -- Copied from the vehicle on write by the trigger below, so the period
+  -- calculation only ever reads its own row.
   prep_buffer_minutes  int not null default 120,
 
   -- The bookable window, widened by the prep buffer on BOTH ends so the same
   -- car is never promised 30 minutes after a return (plan 6.3).
-  period tstzrange generated always as (
-    tstzrange(
-      start_at - make_interval(mins => prep_buffer_minutes),
-      end_at   + make_interval(mins => prep_buffer_minutes),
-      '[)'
-    )
-  ) stored,
+  --
+  -- Maintained by a trigger, NOT `generated always as`. Postgres requires a
+  -- generation expression to be IMMUTABLE, and `timestamptz - interval` is only
+  -- STABLE: adding a day or a month is calendar arithmetic that depends on the
+  -- session TimeZone (DST). Writing it as a generated column fails at CREATE
+  -- TABLE with `42P17: generation expression is not immutable`.
+  --
+  -- Everything downstream is unchanged — the exclusion constraint, the GiST
+  -- index and free_units() all read `period` exactly as before. The only
+  -- difference is what keeps it in step, and the trigger below covers every
+  -- write path because it fires on the columns the value derives from.
+  period tstzrange,
 
   status      reservation_status not null default 'pending',
   quote       jsonb not null default '{}'::jsonb,   -- snapshot: nothing recomputed later (rule 4)
@@ -195,19 +218,40 @@ create index if not exists reservations_status_idx  on reservations (status, sta
 create index if not exists reservations_vehicle_idx on reservations (vehicle_id, start_at);
 create index if not exists reservations_period_idx  on reservations using gist (period);
 
--- Keep prep_buffer_minutes in step with the vehicle it was booked from.
-create or replace function set_reservation_prep_buffer() returns trigger
+-- Keep prep_buffer_minutes in step with the vehicle, and `period` in step with
+-- both the dates and the buffer.
+--
+-- This is what a GENERATED column would have done, minus the immutability
+-- restriction. It must fire on INSERT and on any UPDATE of vehicle_id,
+-- start_at or end_at — miss one and a reservation silently keeps a stale
+-- window, which the exclusion constraint would then happily allow to overlap.
+create or replace function set_reservation_period() returns trigger
 language plpgsql as $$
 begin
-  select v.prep_buffer_minutes into new.prep_buffer_minutes
+  select coalesce(v.prep_buffer_minutes, 120) into new.prep_buffer_minutes
     from vehicles v where v.id = new.vehicle_id;
   new.prep_buffer_minutes := coalesce(new.prep_buffer_minutes, 120);
+
+  new.period := tstzrange(
+    new.start_at - make_interval(mins => new.prep_buffer_minutes),
+    new.end_at   + make_interval(mins => new.prep_buffer_minutes),
+    '[)'
+  );
   return new;
 end $$;
 
 drop trigger if exists reservations_prep_buffer on reservations;
-create trigger reservations_prep_buffer before insert or update of vehicle_id on reservations
-  for each row execute function set_reservation_prep_buffer();
+drop trigger if exists reservations_period on reservations;
+create trigger reservations_period
+  before insert or update of vehicle_id, start_at, end_at on reservations
+  for each row execute function set_reservation_period();
+
+-- `period` is never null once the trigger has run; enforced so a future write
+-- path that somehow bypasses the trigger fails loudly instead of creating a
+-- reservation the exclusion constraint cannot see.
+do $$ begin
+  alter table reservations add constraint reservations_period_present check (period is not null) not valid;
+exception when duplicate_object then null; end $$;
 
 -- ---------------------------------------------------------------- blocks
 create table if not exists blocks (

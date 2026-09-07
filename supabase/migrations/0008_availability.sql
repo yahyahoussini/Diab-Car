@@ -385,8 +385,15 @@ declare
   v_free      int;
   v_customer  customers%rowtype;
   v_res       reservations%rowtype;
+  -- Fallback reference for direct RPC calls; the app normally supplies one
+  -- from makeReference(). Built from gen_random_uuid(), which is core Postgres
+  -- 13+, NOT gen_random_bytes(): that one lives in pgcrypto, and Supabase
+  -- installs pgcrypto into the `extensions` schema, which this function's
+  -- pinned `search_path = public, pg_temp` deliberately does not include.
+  -- Adding `extensions` to a SECURITY DEFINER path to reach one helper would
+  -- widen the surface for no reason.
   v_ref       text        := coalesce(nullif(payload ->> 'reference', ''),
-                                      'DC-' || upper(substr(encode(gen_random_bytes(4), 'hex'), 1, 6)));
+                                      'DC-' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 6)));
 begin
   if v_start is null or v_end is null or v_end <= v_start then
     return jsonb_build_object('ok', false, 'error', 'BAD_DATES');

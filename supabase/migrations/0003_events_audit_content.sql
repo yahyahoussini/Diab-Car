@@ -29,7 +29,12 @@ create index if not exists vehicle_events_reservation_idx on vehicle_events (res
 create table if not exists audit_log (
   id         bigserial primary key,
   table_name text not null,
+  -- uuid for the tables keyed that way, so the index below stays useful.
   row_id     uuid,
+  -- The raw primary key as text, for tables that are NOT uuid-keyed —
+  -- `settings.id` is `int check (id = 1)`. Without this, audit_row() casts "1"
+  -- to uuid and every write to settings fails with 22P02.
+  row_key    text,
   action     text not null check (action in ('INSERT', 'UPDATE', 'DELETE')),
   before     jsonb,
   after      jsonb,
@@ -38,7 +43,12 @@ create table if not exists audit_log (
   at         timestamptz not null default now()
 );
 create index if not exists audit_log_table_idx on audit_log (table_name, at desc);
+-- Before the indexes: on a database created before row_key existed, the index
+-- below would otherwise be asked to reference a column that is not there yet.
+alter table audit_log add column if not exists row_key text;
+
 create index if not exists audit_log_row_idx on audit_log (row_id, at desc);
+create index if not exists audit_log_rowkey_idx on audit_log (table_name, row_key, at desc);
 
 -- ---------------------------------------------------------------- notifications
 create table if not exists notifications (
@@ -75,7 +85,14 @@ update faqs set sort = sort_order where sort = 100 and sort_order is not null;
 -- The starter's single `answer` becomes the long answer; the short one is the
 -- AEO answer block and is authored per question (prompt 13).
 update faqs set long_answer = answer where long_answer = '{}'::jsonb and answer is not null;
-create unique index if not exists faqs_slug_key on faqs (slug) where slug is not null;
+-- NOT partial. `ON CONFLICT (slug)` can only use a partial index if the
+-- statement repeats the index predicate, which PostgREST cannot express — so
+-- `where slug is not null` made the seed fail with "no unique or exclusion
+-- constraint matching the ON CONFLICT specification".
+-- Dropping the predicate costs nothing: Postgres treats NULLs as distinct in a
+-- unique index, so any number of slug-less FAQs are still allowed.
+drop index if exists faqs_slug_key;
+create unique index if not exists faqs_slug_key on faqs (slug);
 
 -- ---------------------------------------------------------------- reviews
 alter table reviews add column if not exists external_id text;

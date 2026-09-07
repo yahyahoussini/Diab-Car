@@ -9,17 +9,22 @@
 -- A unit can never hold two overlapping reservations while the reservation is
 -- one that actually occupies the car. `pending` is excluded on purpose: a
 -- pending request has no unit assigned and blocks nothing.
+-- `duplicate_table` as well as `duplicate_object`: an EXCLUDE constraint builds
+-- an index behind it, so re-running reports the clash as a relation name
+-- collision (42P07), not a constraint one (42710). Catching only the latter
+-- made this file fail on a second run, against 0001's promise that every
+-- migration is a no-op when re-applied.
 do $$ begin
   alter table reservations add constraint reservations_no_overlap
     exclude using gist (unit_id with =, period with &&)
     where (unit_id is not null and status in ('confirmed', 'ready', 'active'));
-exception when duplicate_object then null; end $$;
+exception when duplicate_object or duplicate_table then null; end $$;
 
 -- A unit cannot be blocked twice for overlapping periods.
 do $$ begin
   alter table blocks add constraint blocks_no_overlap
     exclude using gist (unit_id with =, period with &&);
-exception when duplicate_object then null; end $$;
+exception when duplicate_object or duplicate_table then null; end $$;
 
 -- ---------------------------------------------------------------- block vs reservation
 -- The exclusion constraints above cannot see across tables, so a trigger does
@@ -85,30 +90,41 @@ grant execute on function set_reason(text) to authenticated;
 create or replace function audit_row() returns trigger
 language plpgsql security definer set search_path = public as $$
 declare
-  v_before jsonb;
-  v_after  jsonb;
-  v_row_id uuid;
+  v_before  jsonb;
+  v_after   jsonb;
+  v_row_key text;
+  v_row_id  uuid;
 begin
   if tg_op = 'DELETE' then
     v_before := to_jsonb(old);
     v_after  := null;
-    v_row_id := (to_jsonb(old) ->> 'id')::uuid;
+    v_row_key := to_jsonb(old) ->> 'id';
   elsif tg_op = 'INSERT' then
     v_before := null;
     v_after  := to_jsonb(new);
-    v_row_id := (to_jsonb(new) ->> 'id')::uuid;
+    v_row_key := to_jsonb(new) ->> 'id';
   else
     v_before := to_jsonb(old);
     v_after  := to_jsonb(new);
-    v_row_id := (to_jsonb(new) ->> 'id')::uuid;
+    v_row_key := to_jsonb(new) ->> 'id';
     -- Nothing changed but updated_at: not worth an audit row.
     if v_before - 'updated_at' = v_after - 'updated_at' then
       return coalesce(new, old);
     end if;
   end if;
 
-  insert into audit_log (table_name, row_id, action, before, after, actor_id, reason)
-  values (tg_table_name, v_row_id, tg_op, v_before, v_after, current_actor(), current_reason());
+  -- Cast only when the key really is a uuid. `settings.id` is `int check
+  -- (id = 1)`, and an unconditional ::uuid made EVERY write to settings fail
+  -- with `22P02 invalid input syntax for type uuid: "1"` — the seed and the
+  -- admin's settings form included. The raw key is always kept in row_key.
+  v_row_id := case
+    when v_row_key ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    then v_row_key::uuid
+    else null
+  end;
+
+  insert into audit_log (table_name, row_id, row_key, action, before, after, actor_id, reason)
+  values (tg_table_name, v_row_id, v_row_key, tg_op, v_before, v_after, current_actor(), current_reason());
 
   return coalesce(new, old);
 end $$;
