@@ -22,7 +22,7 @@
 /* ------------------------------------------------------------------ */
 
 import { readFile, writeFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -30,6 +30,36 @@ import { createClient } from '@supabase/supabase-js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const INPUTS = path.join(ROOT, 'docs', 'inputs');
+
+/**
+ * Load .env.local into process.env.
+ *
+ * Next does this for the app, but a bare `node scripts/seed.mjs` gets nothing —
+ * so the script used to tell you to put the key in .env.local and then ignore
+ * the file you put it in. Hand-parsed rather than adding dotenv: one dependency
+ * for six lines is not worth a line in the plan (CLAUDE.md rule 9).
+ *
+ * A real environment variable always wins, so CI and one-off overrides still
+ * work: `SUPABASE_SERVICE_ROLE_KEY=… npm run db:seed`.
+ */
+function loadEnvLocal() {
+  const file = path.join(ROOT, '.env.local');
+  if (!existsSync(file)) return;
+  for (const raw of readFileSync(file, 'utf8').split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line || line.startsWith('#')) continue;
+    const eq = line.indexOf('=');
+    if (eq < 1) continue;
+    const key = line.slice(0, eq).trim();
+    if (process.env[key] !== undefined) continue;
+    let value = line.slice(eq + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    process.env[key] = value;
+  }
+}
+loadEnvLocal();
 
 const argv = process.argv.slice(2);
 /* `--dry-run` is the spelling most people reach for first; accepting both

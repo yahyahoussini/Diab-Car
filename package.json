@@ -13,7 +13,8 @@
     "check:messages": "node scripts/check-messages.mjs",
     "lh": "node scripts/lh.mjs",
     "images": "node scripts/images.mjs",
-    "db:seed": "node scripts/seed.mjs"
+    "db:seed": "node scripts/seed.mjs",
+    "db:sql": "node scripts/build-sql.mjs"
   },
   "dependencies": {
     "@internationalized/date": "^3.12.4",
