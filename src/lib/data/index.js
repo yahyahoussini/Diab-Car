@@ -59,4 +59,12 @@ export const releaseHold = async (id) => (await db()).releaseHold(id);
 export const listEvents = async (f) => (await db()).listEvents(f);
 export const createEvent = async (d) => (await db()).createEvent(d);
 
+/* Availability (plan 6.3/6.4). Postgres decides; these only ask.
+   The adapters share one shape so the funnel never branches on the backend. */
+export const searchAvailability = async (a) => (await db()).searchAvailability(a);
+export const nextAvailable = async (a) => (await db()).nextAvailable(a);
+export const holdVehicle = async (a) => (await db()).holdVehicle(a);
+export const releaseVehicleHold = async (a) => (await db()).releaseVehicleHold(a);
+export const bookVehicle = async (p) => (await db()).bookVehicle(p);
+
 export { CATEGORIES, TRANSMISSIONS, FUELS, FEATURES, BOOKING_STATUSES, CAR_IMAGES, LOCALES, t, vehicleImage } from '@/lib/constants';

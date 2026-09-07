@@ -1,4 +1,4 @@
-import { createPublicClient, createSessionClient } from '@/lib/supabase/server';
+import { createPublicClient, createServiceClient, createSessionClient } from '@/lib/supabase/server';
 
 /* camelCase <-> snake_case mapping between the app model and Postgres columns */
 const toSnake = (s) => s.replace(/[A-Z]/g, (m) => `_${m.toLowerCase()}`);
@@ -327,6 +327,64 @@ export const supabaseAdapter = {
     const { error } = await sb.from('holds').update({ released_at: new Date().toISOString() }).eq('id', id);
     if (error) fail(error);
     return true;
+  },
+
+  /* ---------------------------------------------------------------- availability
+     Everything below goes through the RPCs in supabase/migrations/0008. The
+     anon key has no SELECT on reservations, holds, units or customers — the
+     functions are SECURITY DEFINER, so a visitor can learn "two left" without
+     being able to read who booked the other one (plan 6.5, CLAUDE.md rule 5). */
+
+  async searchAvailability({ pickupLocationId = null, dropoffLocationId = null, startAt, endAt }) {
+    const sb = await readClient();
+    const { data, error } = await sb.rpc('search_availability', {
+      p_pickup_location_id: pickupLocationId,
+      p_dropoff_location_id: dropoffLocationId,
+      p_start_at: startAt,
+      p_end_at: endAt,
+    });
+    if (error) fail(error);
+    return (data || []).map(rowToModel);
+  },
+
+  async nextAvailable({ vehicleId, from }) {
+    const sb = await readClient();
+    const { data, error } = await sb.rpc('next_available', { p_vehicle_id: vehicleId, p_from: from || new Date().toISOString() });
+    if (error) fail(error);
+    return data || null;
+  },
+
+  async holdVehicle({ vehicleId, startAt, endAt, sessionToken }) {
+    const sb = await readClient();
+    const { data, error } = await sb.rpc('create_hold', {
+      p_vehicle_id: vehicleId, p_start_at: startAt, p_end_at: endAt, p_session_token: sessionToken,
+    });
+    if (error) fail(error);
+    return data;
+  },
+
+  async releaseVehicleHold({ holdId, sessionToken }) {
+    const sb = await readClient();
+    const { data, error } = await sb.rpc('release_hold', { p_hold_id: holdId, p_session_token: sessionToken });
+    if (error) fail(error);
+    return data;
+  },
+
+  async bookVehicle(payload) {
+    const sb = await readClient();
+    const { data, error } = await sb.rpc('create_reservation', { payload });
+    if (error) fail(error);
+    return data;
+  },
+
+  /* Sweeper. `expire_holds` is granted to service_role only, so this needs the
+     service client — the anon key would be refused, which is the point. */
+  async expireHolds() {
+    const sb = createServiceClient();
+    if (!sb) throw new Error('[supabase] SUPABASE_SERVICE_ROLE_KEY is not set — the hold sweeper cannot run');
+    const { data, error } = await sb.rpc('expire_holds');
+    if (error) fail(error);
+    return Number(data) || 0;
   },
 
   async listEvents({ unitId, reservationId, limit = 50 } = {}) {

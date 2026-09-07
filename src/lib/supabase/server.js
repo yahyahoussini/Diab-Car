@@ -32,3 +32,22 @@ export function createPublicClient() {
   }
   return publicClient;
 }
+
+/**
+ * Service-role client. Bypasses RLS entirely, so it is reachable from exactly
+ * one place: the CRON_SECRET-protected sweeper at /api/cron/expire-holds,
+ * whose RPC (`expire_holds`) is granted to service_role and nobody else.
+ *
+ * Returns null when the key is absent rather than falling back to the anon
+ * client — a silent downgrade would make the sweep look like it ran when it
+ * quietly did nothing. The caller reports the failure instead.
+ *
+ * Never import this into anything that renders.
+ */
+export function createServiceClient() {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!key || !process.env.NEXT_PUBLIC_SUPABASE_URL) return null;
+  return createBaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}

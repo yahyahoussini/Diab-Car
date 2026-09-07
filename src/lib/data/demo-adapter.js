@@ -1,4 +1,5 @@
 import { getStore, newId } from './demo-store';
+import { availabilityRow, freeUnits, nextAvailable, soldOut } from './demo-availability';
 
 const clone = (v) => JSON.parse(JSON.stringify(v));
 const now = () => new Date().toISOString();
@@ -383,6 +384,129 @@ export const demoAdapter = {
     const h = s.holds.find((x) => x.id === id);
     if (h) h.releasedAt = now();
     return Boolean(h);
+  },
+
+  /* ---------------------------------------------------------------- availability
+     Mirrors supabase/migrations/0008 exactly — see demo-availability.js for
+     why that matters. The store is plain JS and every check-then-write below
+     runs without an await in between, so these are atomic by construction.
+     That makes the demo agree with Postgres on the OUTCOME of a race, but it
+     is not a proof that Postgres serialises correctly: only
+     scripts/test-concurrency.mjs against a real database shows that. */
+
+  async searchAvailability({ startAt, endAt } = {}) {
+    const s = getStore();
+    return s.vehicles
+      .filter((v) => v.published !== false)
+      .sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)) || (a.sortOrder || 0) - (b.sortOrder || 0) || a.pricePerDay - b.pricePerDay)
+      .map((v) => availabilityRow(s, v, startAt, endAt));
+  },
+
+  async nextAvailable({ vehicleId, from }) {
+    return nextAvailable(getStore(), vehicleId, from);
+  },
+
+  async holdVehicle({ vehicleId, startAt, endAt, sessionToken }) {
+    const s = getStore();
+    if (!sessionToken || sessionToken.length < 8) return { ok: false, error: 'BAD_SESSION' };
+    if (new Date(endAt) <= new Date(startAt)) return { ok: false, error: 'BAD_DATES' };
+
+    const vehicle = s.vehicles.find((v) => v.id === vehicleId);
+    if (!vehicle || vehicle.published === false) return { ok: false, error: 'NOT_FOUND' };
+
+    const free = freeUnits(s, vehicleId, startAt, endAt);
+    if (free <= 0) return soldOut(s, vehicleId, startAt, endAt);
+
+    const row = {
+      id: `h-${s.holds.length + 1}-${Date.now()}`,
+      vehicleId, startAt, endAt, sessionToken,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+      createdAt: now(),
+    };
+    s.holds.push(row);
+    return {
+      ok: true,
+      hold: { id: row.id, vehicleId, expiresAt: row.expiresAt, startAt, endAt },
+      unitsFree: free - 1,
+    };
+  },
+
+  async releaseVehicleHold({ holdId, sessionToken }) {
+    const s = getStore();
+    const h = s.holds.find((x) => x.id === holdId && x.sessionToken === sessionToken && !x.releasedAt);
+    if (h) h.releasedAt = now();
+    return { ok: Boolean(h) };
+  },
+
+  async bookVehicle(payload = {}) {
+    const s = getStore();
+    const { vehicleId, vehicleSlug, startAt, endAt, holdId, sessionToken, customer = {}, quote: q = {} } = payload;
+
+    if (!startAt || !endAt || new Date(endAt) <= new Date(startAt)) return { ok: false, error: 'BAD_DATES' };
+    if (!customer.phone) return { ok: false, error: 'BAD_CUSTOMER' };
+
+    const vehicle = s.vehicles.find((v) => v.id === vehicleId || v.slug === vehicleSlug);
+    if (!vehicle || vehicle.published === false) return { ok: false, error: 'NOT_FOUND' };
+
+    /* Release the hold first, so a booking is never blocked by its own hold. */
+    if (holdId) {
+      const h = s.holds.find((x) => x.id === holdId && x.sessionToken === sessionToken && !x.releasedAt);
+      if (h) h.releasedAt = now();
+    }
+
+    const free = freeUnits(s, vehicle.id, startAt, endAt);
+    if (free <= 0) return soldOut(s, vehicle.id, startAt, endAt);
+
+    const phone = String(customer.phone);
+    let cust = s.customers.find((c) => c.phone === phone);
+    if (cust) {
+      Object.assign(cust, {
+        firstName: customer.firstName || cust.firstName,
+        lastName: customer.lastName || cust.lastName,
+        email: customer.email || cust.email,
+        locale: customer.locale || cust.locale,
+      });
+    } else {
+      cust = {
+        id: `c-${s.customers.length + 1}-${Date.now()}`,
+        firstName: customer.firstName || '-', lastName: customer.lastName || '-',
+        phone, email: customer.email || null, locale: customer.locale || 'fr', createdAt: now(),
+      };
+      s.customers.push(cust);
+    }
+
+    const row = {
+      id: `r-${s.reservations.length + 1}-${Date.now()}`,
+      reference: payload.reference || `DC-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+      vehicleId: vehicle.id, unitId: null, customerId: cust.id,
+      pickupLocationId: payload.pickupLocationId || null,
+      dropoffLocationId: payload.dropoffLocationId || null,
+      startAt, endAt, status: 'pending', quote: q,
+      source: payload.source || 'web', locale: payload.locale || 'fr',
+      holdId: holdId || null, notes: payload.notes || null,
+      prepBufferMinutes: vehicle.prepBufferMinutes || 120,
+      createdAt: now(), updatedAt: now(),
+    };
+    s.reservations.push(row);
+
+    return {
+      ok: true,
+      reservation: { id: row.id, reference: row.reference, status: row.status, startAt, endAt },
+      unitsFree: free - 1,
+    };
+  },
+
+  async expireHolds() {
+    const s = getStore();
+    const stamp = now();
+    let n = 0;
+    for (const h of s.holds) {
+      if (!h.releasedAt && new Date(h.expiresAt) <= new Date()) {
+        h.releasedAt = stamp;
+        n += 1;
+      }
+    }
+    return n;
   },
 
   async listEvents({ unitId, reservationId, limit = 50 } = {}) {

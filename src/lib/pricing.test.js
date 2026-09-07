@@ -240,3 +240,90 @@ describe('makeReference', () => {
     );
   });
 });
+
+/* ------------------------------------------------------------------ */
+/* Deposit and the order of operations.                                */
+/*                                                                     */
+/* Added with the availability engine (PROMPT 06): the quote returned   */
+/* here is snapshotted into reservations.quote and becomes the agreed   */
+/* price, so the arithmetic below is a contract with the customer, not  */
+/* an internal detail (CLAUDE.md rule 4).                              */
+/* ------------------------------------------------------------------ */
+describe('deposit', () => {
+  test('is carried through untouched and is never discounted or prorated', () => {
+    const short = quote({ vehicle: VEHICLE, startAt: '2026-05-01T10:00:00Z', endAt: '2026-05-02T10:00:00Z', settings: { pricingTiers: TIERS } });
+    const long = quote({ vehicle: VEHICLE, startAt: '2026-05-01T10:00:00Z', endAt: '2026-06-10T10:00:00Z', settings: { pricingTiers: TIERS } });
+
+    assert.equal(short.deposit, 5000);
+    assert.equal(long.deposit, 5000, 'a 40-day rental at 20% off still holds the same deposit');
+    assert.ok(long.discountPct > 0, 'sanity: the long rental really did earn a discount');
+  });
+
+  test('is not part of the total — it is held, not charged', () => {
+    const q = quote({ vehicle: VEHICLE, startAt: '2026-05-01T10:00:00Z', endAt: '2026-05-04T10:00:00Z' });
+    assert.equal(q.total, q.subtotal - q.discountAmount + q.extrasTotal + q.deliveryFee + q.oneWayFee);
+    assert.ok(q.total < q.deposit + q.total, 'the deposit is reported separately from the total');
+  });
+
+  test('falls back to 0 rather than undefined when a vehicle carries no deposit', () => {
+    const q = quote({ vehicle: { pricePerDay: 200 }, startAt: '2026-05-01T10:00:00Z', endAt: '2026-05-03T10:00:00Z' });
+    assert.equal(q.deposit, 0);
+  });
+});
+
+describe('order of operations', () => {
+  test('the duration discount applies to the subtotal only — never to extras or fees', () => {
+    const q = quote({
+      vehicle: VEHICLE,
+      startAt: '2026-05-01T10:00:00Z',
+      endAt: '2026-05-08T10:00:00Z', // 7 days -> 10%
+      extras: EXTRAS,
+      selectedExtras: [{ key: 'child_seat', qty: 1 }],
+      settings: { pricingTiers: TIERS, airportDeliveryFee: 200, oneWayFee: 300 },
+      pickupKey: 'airport',
+      dropoffKey: 'agency',
+    });
+
+    assert.equal(q.days, 7);
+    assert.equal(q.discountPct, 10);
+    assert.equal(q.subtotal, 2450);
+    assert.equal(q.discountAmount, 245);
+    assert.equal(q.extrasTotal, 120, 'a per_rental extra is charged once');
+    assert.equal(q.deliveryFee, 200);
+    assert.equal(q.oneWayFee, 300);
+    /* 2450 - 245 + 120 + 200 + 300. If the discount ever reached the fees the
+       total would be 2725 or lower, and the customer would be quoted less than
+       the agency actually charges. */
+    assert.equal(q.total, 2825);
+  });
+
+  test('perDayEffective divides the WHOLE total, one-off fees included', () => {
+    const q = quote({
+      vehicle: VEHICLE,
+      startAt: '2026-05-01T10:00:00Z',
+      endAt: '2026-05-08T10:00:00Z',
+      extras: EXTRAS,
+      selectedExtras: [{ key: 'child_seat', qty: 1 }],
+      settings: { pricingTiers: TIERS, airportDeliveryFee: 200 },
+      pickupKey: 'airport',
+    });
+
+    /* Pinned against the real formula, with fees present so the two candidate
+       formulas actually differ — without extras and delivery this assertion
+       would pass against either and prove nothing. */
+    assert.equal(q.perDayEffective, Math.round(q.total / q.days));
+    assert.notEqual(
+      q.perDayEffective,
+      Math.round((q.subtotal - q.discountAmount) / q.days),
+      'sanity: the fees really are inside perDayEffective',
+    );
+
+    /* STATUS issue 5: this is an AVERAGE. Multiplying it back out does not
+       have to reproduce the total, so the UI must never present it as a
+       billable daily rate (CLAUDE.md rule 4). Pinned so nobody "fixes" it into
+       a number that silently contradicts the total. */
+    assert.equal(q.total, 2525); // 2450 - 245 + 120 + 200
+    assert.equal(q.perDayEffective, 361); // 2525 / 7 = 360.71
+    assert.notEqual(q.perDayEffective * q.days, q.total, '361 x 7 = 2527, not 2525 — an average, not a rate');
+  });
+});

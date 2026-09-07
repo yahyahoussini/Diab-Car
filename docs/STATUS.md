@@ -1,6 +1,6 @@
 # Diab Car — build status
 
-**Updated:** 2026-09-07 · **Branch:** `build/v1` · **Last prompt:** PROMPT 05 re-audit — four apply-blocking defects fixed; airport scene wired (Sprint 2a)
+**Updated:** 2026-09-07 · **Branch:** `build/v1` · **Last prompt:** PROMPT 06 — availability engine (Sprint 2b). Code complete; the measured half waits on the database.
 
 This file is the running state of the build. It is rewritten at the end of **every** prompt in `docs/PROMPTS.md`.
 Decisions in the *Plan §10* column come from `docs/MASTER-PLAN.md` §10 (keep / rebuild / extend / delete); where §10 is
@@ -24,7 +24,7 @@ not *never touched again*.
 | 03 | 1a | Header, footer, hero, booking module | **done** |
 | 04 | 1b | Homepage sections, vehicle card, car images | **done** |
 | 05 | 2a | Supabase: schema, roles, storage, seed | **done (SQL written and re-audited; not yet applied to the project)** |
-| 06 | 2b | Availability engine: RPCs, holds, realtime | todo |
+| 06 | 2b | Availability engine: RPCs, holds, realtime | **done (code + tests; EXPLAIN ANALYZE and the concurrency run need the DB applied)** |
 | 07 | 3a | Results / fleet page with live availability | todo |
 | 08 | 3b | Vehicle page | todo |
 | 09 | 3c | Booking funnel, confirmation, WhatsApp, email | todo |
@@ -91,6 +91,9 @@ means shipping less homepage JavaScript, which is PROMPT 04 (HomeSections rebuil
 | 20 | `bookings` vs `reservations` | the starter's `bookings` table is untouched and still backs the current lead form; `reservations` is canonical from here | migrate the funnel in PROMPT 09, then drop `bookings` |
 | 19 | places & supplementary services | owner's requirement (Sept 2026): chauffeur and delivery are extras on the **subtotal** (already how `pricing.quote()` works); places must be admin-managed and may be in **other Moroccan cities** (kind `city`, new `city` column in locations.csv, no city pre-filled) | PROMPT 05 schema step 0 · PROMPT 12 step 1b |
 | 18 | admin fleet gallery | owner's requirement (Sept 2026): add / replace / remove / reorder photos per car from the admin, per angle; first photo = card image; silhouette fallback when empty. Data model already carries `images[]` + `photoFolder` per vehicle | PROMPT 12 (plan §7.1 updated, PROMPTS.md prompt 12 step 1) |
+| 26 | `next_available()` probed at the wrong instant | Found by the new tests, present in BOTH implementations. The probe walked to `upper(period)`, but `free_units()` widens the *request* backwards by the prep buffer too, so a request starting exactly at that end still overlapped it. Every candidate looked occupied and the function returned **null** — the vehicle page would have printed nothing where "disponible à partir du 13 SEP" belongs | fixed in 0008 and `demo-availability.js`: probe at `upper(period) + prep_buffer`, which is two buffers clear of the return — exactly the clearance the exclusion constraint enforces. Pinned by a test |
+| 27 | realtime subscribes to `availability_ping`, not `holds`/`reservations` | Plan 6.4 names the two tables directly, but Realtime honours RLS: delivering those rows to a visitor needs an anon SELECT policy, and any policy loose enough to deliver the row also delivers `customer_id`, the travel dates and the stored `quote`. Discarding it client-side is no help — it has already crossed the wire | **deviation from plan 6.4, deliberate.** 0008 adds a two-column table (`vehicle_id`, `updated_at`) written by triggers on holds/reservations/blocks. It says "something moved, ask again"; `/api/availability` stays the only thing that decides what a visitor may know. Plan §6.4 wants a one-line amendment |
+| 28 | stale `next start` served phantom test failures | A `next start` left running from an earlier step kept port 3000 and served a build predating the new routes, so all 9 API tests 404'd and, earlier, 12 e2e tests "failed" against unchanged code | no code change; noted because it cost two debugging rounds. Kill the listener on 3000 before trusting an e2e run |
 | 17 | `/livraison`, `/automatique` | in the header Services dropdown but the routes do not exist until PROMPT 13; rendered with a "bientôt" marker rather than a dead link | PROMPT 13 |
 
 ---

@@ -14,7 +14,8 @@
     "lh": "node scripts/lh.mjs",
     "images": "node scripts/images.mjs",
     "db:seed": "node scripts/seed.mjs",
-    "db:sql": "node scripts/build-sql.mjs"
+    "db:sql": "node scripts/build-sql.mjs",
+    "test:concurrency": "node scripts/test-concurrency.mjs"
   },
   "dependencies": {
     "@internationalized/date": "^3.12.4",
