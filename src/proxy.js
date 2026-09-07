@@ -132,7 +132,22 @@ export async function proxy(request) {
   }
 
   // 3) cookie → Accept-Language → default locale, plus localized pathname rewrites.
-  return handleI18n(request);
+  const res = handleI18n(request);
+
+  /* 4) Parametrised result sets are noindex (CLAUDE.md rule 8: one URL = one
+     intent). Sent as a header rather than a <meta> tag on purpose: reading
+     searchParams inside the page or its generateMetadata would opt the whole
+     route out of static rendering, and the fleet page is the one public page
+     that most wants ISR. X-Robots-Tag is honoured by Google exactly like the
+     meta tag, and it works on a fully cached response.
+
+     `follow` is kept: the crawler should still walk through to the vehicle
+     pages, which ARE the pages worth indexing. */
+  if (res && request.nextUrl.search && request.nextUrl.search !== '?') {
+    res.headers.set('X-Robots-Tag', 'noindex, follow');
+  }
+
+  return res;
 }
 
 export const config = {

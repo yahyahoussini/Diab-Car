@@ -943,5 +943,48 @@
       "automatic": "Automatic",
       "premium": "Premium"
     }
+  },
+  "results": {
+    "modify": "Modify",
+    "modifyTitle": "Modify your search",
+    "days": "{n} DAYS",
+    "carsReady": "CARS READY FOR YOUR ROAD",
+    "noDatesEyebrow": "The whole fleet",
+    "noDatesTitle": "vehicles · choose your dates to see availability",
+    "checking": "CHECKING AVAILABILITY",
+    "errorLine": "Availability could not be checked right now. The list below is still browsable.",
+    "showMore": "Show more ({n})",
+    "unavailableGroup": "{n} more vehicles unavailable for these dates",
+    "continue": "CONTINUE",
+    "agency": "Zerktouni agency",
+    "liveOn": "Availability is updating live.",
+    "emptyTitle": "NO CAR. FOR NOW.",
+    "emptyBody": "Nothing free for these dates. Shift by a day, change the pick-up point, or message us — we usually find something.",
+    "emptyModify": "Change the dates",
+    "emptyPlace": "Change location",
+    "emptyWhatsapp": "WhatsApp",
+    "whatsappMessage": "Hello, I am looking for a car from {from} to {to} at {place}. Do you have anything available?",
+    "moreFilters": "FILTERS",
+    "remove": "Remove this filter",
+    "any": "Any",
+    "anyPrice": "Any price",
+    "maxPriceLabel": "Maximum price per day",
+    "comfort": "Comfort",
+    "ac": "Air conditioning",
+    "sevenSeats": "7 seats",
+    "seatsMin": "{n}+ seats",
+    "sortPremium": "Premium",
+    "card": {
+      "perDay": "/day",
+      "totalForDays": "{total} total for {days} days",
+      "fromPrice": "from {price} / day",
+      "see": "View the car",
+      "select": "Select {car}",
+      "available": "AVAILABLE",
+      "lastOne": "LAST ONE",
+      "unavailable": "UNAVAILABLE",
+      "nextAvailable": "Available from {date}",
+      "seats": "{n} seats"
+    }
   }
 }

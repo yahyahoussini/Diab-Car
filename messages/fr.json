@@ -943,5 +943,48 @@
       "automatic": "Automatique",
       "premium": "Premium"
     }
+  },
+  "results": {
+    "modify": "Modifier",
+    "modifyTitle": "Modifier la recherche",
+    "days": "{n} JOURS",
+    "carsReady": "VOITURES PRÊTES POUR VOTRE ROUTE",
+    "noDatesEyebrow": "Toute la flotte",
+    "noDatesTitle": "véhicules · choisissez vos dates pour voir les disponibilités",
+    "checking": "VÉRIFICATION DES DISPONIBILITÉS",
+    "errorLine": "Impossible de vérifier les disponibilités à l’instant. La liste ci-dessous reste consultable.",
+    "showMore": "Voir plus ({n})",
+    "unavailableGroup": "{n} autres véhicules indisponibles pour ces dates",
+    "continue": "CONTINUER",
+    "agency": "Agence Zerktouni",
+    "liveOn": "Disponibilités mises à jour en direct.",
+    "emptyTitle": "PAS DE VOITURE. POUR L’INSTANT.",
+    "emptyBody": "Aucun véhicule libre pour ces dates. Décalez d’un jour, changez de lieu, ou écrivez-nous : nous trouvons souvent une solution.",
+    "emptyModify": "Modifier les dates",
+    "emptyPlace": "Changer de lieu",
+    "emptyWhatsapp": "WhatsApp",
+    "whatsappMessage": "Bonjour, je cherche une voiture du {from} au {to} à {place}. Avez-vous une disponibilité ?",
+    "moreFilters": "FILTRES",
+    "remove": "Retirer ce filtre",
+    "any": "Indifférent",
+    "anyPrice": "Tous les prix",
+    "maxPriceLabel": "Prix maximum par jour",
+    "comfort": "Confort",
+    "ac": "Climatisation",
+    "sevenSeats": "7 places",
+    "seatsMin": "{n}+ places",
+    "sortPremium": "Premium",
+    "card": {
+      "perDay": "/jour",
+      "totalForDays": "{total} au total pour {days} jours",
+      "fromPrice": "à partir de {price} / jour",
+      "see": "Voir la voiture",
+      "select": "Sélectionner {car}",
+      "available": "DISPONIBLE",
+      "lastOne": "DERNIÈRE DISPONIBILITÉ",
+      "unavailable": "INDISPONIBLE",
+      "nextAvailable": "Disponible à partir du {date}",
+      "seats": "{n} places"
+    }
   }
 }

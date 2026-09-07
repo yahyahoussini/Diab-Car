@@ -6,6 +6,7 @@ import { bookVehicle, getSettings, getVehicleBySlug, listExtras, listLocations, 
 import { makeReference, quote } from '@/lib/pricing';
 import { sendBookingEmails } from '@/lib/email';
 import { toISO } from '@/lib/format';
+import { resolvePickup } from '@/lib/locations';
 
 const SESSION_COOKIE = 'dc_hold_session';
 
@@ -15,8 +16,10 @@ const schema = z.object({
   ft: z.string().regex(/^\d{2}:\d{2}$/),
   to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   tt: z.string().regex(/^\d{2}:\d{2}$/),
-  pickup: z.enum(['agency', 'airport', 'station', 'address']),
-  dropoff: z.enum(['agency', 'airport', 'station', 'address']),
+  /* Either vocabulary: a location key from the module, or a fee category from
+     an older link. resolvePickup() sorts it out. */
+  pickup: z.string().min(1).max(64),
+  dropoff: z.string().min(1).max(64),
   pickupAddress: z.string().max(200).optional().default(''),
   dropoffAddress: z.string().max(200).optional().default(''),
   flightNumber: z.string().max(20).optional().default(''),
@@ -85,8 +88,8 @@ export async function submitBooking(input) {
     extras,
     selectedExtras: d.extras.map((key) => ({ key, qty: 1 })),
     settings,
-    pickupKey: d.pickup,
-    dropoffKey: d.dropoff,
+    pickupKey: resolvePickup(locations, d.pickup).feeKey,
+    dropoffKey: resolvePickup(locations, d.dropoff).feeKey,
   });
 
   if (q.days < (vehicle.minDays || 1)) {
@@ -94,11 +97,14 @@ export async function submitBooking(input) {
   }
 
   const label = (key, address) => {
-    const loc = locations.find((l) => l.key === key);
-    const base = loc?.name?.[d.locale] || loc?.name?.fr || key;
-    return key === 'address' && address ? `${base}: ${address}` : base;
+    const { location } = resolvePickup(locations, key);
+    const base = location?.name?.[d.locale] || location?.name?.fr || key;
+    return address ? `${base}: ${address}` : base;
   };
-  const locationId = (key) => locations.find((l) => l.key === key)?.id || null;
+  /* Through the resolver, so a location KEY from the module actually finds its
+     row. The direct `find(l => l.key === 'agency')` this replaced never
+     matched, and every reservation was stored with a null pickup_location_id. */
+  const locationId = (key) => resolvePickup(locations, key).location?.id || null;
 
   const jar = await cookies();
   const sessionToken = jar.get(SESSION_COOKIE)?.value || null;

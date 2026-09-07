@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { getSettings, listSeasons, searchAvailability } from '@/lib/data';
+import { getSettings, listLocations, listSeasons, searchAvailability } from '@/lib/data';
+import { LOCATION_KEY_PATTERN, resolvePickup } from '@/lib/locations';
 import { quote } from '@/lib/pricing';
 
 /**
@@ -25,8 +26,11 @@ const schema = z
     endAt: isoish,
     pickupLocationId: z.string().uuid().nullish(),
     dropoffLocationId: z.string().uuid().nullish(),
-    pickup: z.enum(['agency', 'airport', 'station', 'address']).default('agency'),
-    dropoff: z.enum(['agency', 'airport', 'station', 'address']).optional(),
+    /* A LOCATION KEY, not a fee category — that is what the booking module
+       puts in the URL. Validated as a slug and resolved server-side; a strict
+       enum here rejected every real search with a 400. */
+    pickup: z.string().regex(LOCATION_KEY_PATTERN).optional(),
+    dropoff: z.string().regex(LOCATION_KEY_PATTERN).optional(),
     category: z.string().max(20).optional(),
     transmission: z.enum(['manual', 'automatic']).optional(),
     seats: z.coerce.number().int().min(1).max(9).optional(),
@@ -48,10 +52,18 @@ export async function GET(request) {
   const d = parsed.data;
 
   try {
+    /* Locations first: the pick-up key has to be resolved to a location row
+       before the availability call can be given its id, and before pricing can
+       be told which fee category applies. Cheap — the list is 8 rows and comes
+       from the same cached read the rest of the site uses. */
+    const locations = await listLocations();
+    const pick = resolvePickup(locations, d.pickup);
+    const drop = d.dropoff ? resolvePickup(locations, d.dropoff) : null;
+
     const [rows, settings, seasons] = await Promise.all([
       searchAvailability({
-        pickupLocationId: d.pickupLocationId || null,
-        dropoffLocationId: d.dropoffLocationId || null,
+        pickupLocationId: d.pickupLocationId || pick.location?.id || null,
+        dropoffLocationId: d.dropoffLocationId || drop?.location?.id || null,
         startAt: d.startAt,
         endAt: d.endAt,
       }),
@@ -68,8 +80,8 @@ export async function GET(request) {
         endAt: d.endAt,
         seasons,
         settings,
-        pickupKey: d.pickup,
-        dropoffKey: d.dropoff,
+        pickupKey: pick.feeKey,
+        dropoffKey: drop ? drop.feeKey : undefined,
       });
 
       return {

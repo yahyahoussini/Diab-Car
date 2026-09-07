@@ -539,7 +539,15 @@ function RangeRule() {
  * @param {string} [props.today] server-computed `yyyy-mm-dd`; pass it to close the
  *   last hydration gap (see the note on `baseToday`)
  */
-export default function BookingWidget({ locations = [], compact = false, className, initial = {}, today: todayProp }) {
+/**
+ * @param {object} props
+ * @param {(query: {pickup:string,dropoff:string,from:string,to:string}) => void} [props.onSearch]
+ *   When given, the module reports the search instead of navigating. The
+ *   results page passes this so "✎ Modifier" refreshes the list in place and
+ *   only rewrites the URL (plan 4.4) — a full navigation there would throw away
+ *   the fetched availability and the user's scroll position.
+ */
+export default function BookingWidget({ locations = [], compact = false, className, initial = {}, today: todayProp, onSearch }) {
   const t = useTranslations('widget');
   const tl = useTranslations('locations');
   const locale = useLocale();
@@ -693,6 +701,10 @@ export default function BookingWidget({ locations = [], compact = false, classNa
       from: toISO(from, ft),
       to: toISO(to, tt),
     };
+    if (onSearch) {
+      onSearch(query);
+      return;
+    }
     startTransition(() => {
       router.push({ pathname: '/vehicules', query });
     });

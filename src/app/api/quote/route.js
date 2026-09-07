@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { getSettings, getVehicleBySlug, listExtras, listLocations, listSeasons, nextAvailable, searchAvailability } from '@/lib/data';
+import { LOCATION_KEY_PATTERN, resolvePickup } from '@/lib/locations';
 import { quote } from '@/lib/pricing';
 
 /**
@@ -25,8 +26,9 @@ const schema = z
     vehicle: z.string().min(1).max(120),
     startAt: isoish,
     endAt: isoish,
-    pickup: z.enum(['agency', 'airport', 'station', 'address']).default('agency'),
-    dropoff: z.enum(['agency', 'airport', 'station', 'address']).optional(),
+    /* A location key (see src/lib/locations.js). */
+    pickup: z.string().regex(LOCATION_KEY_PATTERN).optional(),
+    dropoff: z.string().regex(LOCATION_KEY_PATTERN).optional(),
     /* Repeatable: ?extras=gps&extras=seat, or one comma-separated value. */
     extras: z.string().optional(),
     locale: z.enum(['fr', 'en', 'ar', 'es']).default('fr'),
@@ -73,8 +75,8 @@ export async function GET(request) {
       extras,
       selectedExtras: selected,
       settings,
-      pickupKey: d.pickup,
-      dropoffKey: d.dropoff,
+      pickupKey: resolvePickup(locations, d.pickup).feeKey,
+      dropoffKey: d.dropoff ? resolvePickup(locations, d.dropoff).feeKey : undefined,
     });
 
     if (q.days < (vehicle.minDays || 1)) {
@@ -91,8 +93,8 @@ export async function GET(request) {
     const unitsFree = row?.unitsFree ?? 0;
 
     const locationName = (key) => {
-      const loc = locations.find((l) => l.key === key);
-      return loc?.name?.[d.locale] || loc?.name?.fr || key;
+      const { location } = resolvePickup(locations, key);
+      return location?.name?.[d.locale] || location?.name?.fr || key;
     };
 
     return Response.json(

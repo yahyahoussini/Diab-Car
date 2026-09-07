@@ -1,6 +1,6 @@
 # Diab Car — build status
 
-**Updated:** 2026-09-07 · **Branch:** `build/v1` · **Last prompt:** PROMPT 06 — availability engine (Sprint 2b). **Database applied, seeded and verified against the live project.**
+**Updated:** 2026-09-07 · **Branch:** `build/v1` · **Last prompt:** PROMPT 07 — live results page (Sprint 3a). Fleet page is now ISR + live availability.
 
 This file is the running state of the build. It is rewritten at the end of **every** prompt in `docs/PROMPTS.md`.
 Decisions in the *Plan §10* column come from `docs/MASTER-PLAN.md` §10 (keep / rebuild / extend / delete); where §10 is
@@ -25,7 +25,7 @@ not *never touched again*.
 | 04 | 1b | Homepage sections, vehicle card, car images | **done** |
 | 05 | 2a | Supabase: schema, roles, storage, seed | **done and APPLIED — 20 tables, 39 policies, 3 buckets, owner created, auth hook live** |
 | 06 | 2b | Availability engine: RPCs, holds, realtime | **done and MEASURED — 8.2 ms median search, 23P01 overlap rejection, 5/5 concurrency** |
-| 07 | 3a | Results / fleet page with live availability | todo |
+| 07 | 3a | Results / fleet page with live availability | **done (a11y 100; Lighthouse perf 73, short of the >=90 target)** |
 | 08 | 3b | Vehicle page | todo |
 | 09 | 3c | Booking funnel, confirmation, WhatsApp, email | todo |
 | 10 | 4a | Admin foundation: auth, roles, shell, dashboard | todo |
@@ -121,6 +121,23 @@ Project `vmodgrkxiitwwneqhtbo` (`diabcar`), region **eu-central-1 / Frankfurt** 
 | App on Postgres | `/api/health` reports `mode: supabase`; `/fr`, `/ar`, `/fr/vehicules` render; **e2e 21/21 against Postgres as well as demo** |
 
 The homepage drops its Reviews section in Supabase mode and keeps it in demo — correct, and the clearest demonstration of rule 11 so far: all four seeded reviews are unpublished samples, so anon receives none and the section deletes itself rather than showing a thin row.
+
+---
+
+## PROMPT 07 notes — 2026-09-07
+
+**ISR vs `noindex`, resolved in the proxy.** Reading `searchParams` in the page or its `generateMetadata` opts the whole route out of static rendering, so the two requirements — "static shell (ISR)" and "parametrised URLs are noindex" — cannot both be met in the page. The page therefore never touches `searchParams` (the island reads the URL itself) and `src/proxy.js` sets `X-Robots-Tag: noindex, follow` on any request carrying a query string. Google honours the header exactly like the meta tag, and it works on a cached response. Measured: `/fr/vehicules` has no header, `/fr/vehicules?from=…` returns `noindex, follow`, and the route builds as `● … 1h`.
+
+**Bugs found while wiring it up**
+
+| # | Bug | Why it mattered |
+|---|---|---|
+| 29 | `pickup` was validated as a fee category (`agency\|airport\|…`) but the booking module puts a LOCATION KEY in the URL (`agence-zerktouni`) | every real search 400'd and the results page showed zero cars. The same mismatch made `submitBooking` look up `locations.find(l => l.key === 'agency')`, which never matched, so **every reservation was stored with a null `pickup_location_id`**. Fixed with one resolver, `src/lib/locations.js`, used by both routes and the action |
+| 30 | the island's URL writer ran before `useSyncExternalStore` adopted the query string | on first render the store returns the SERVER snapshot (empty), so `replaceState` wiped the search before it was read — the page silently forgot the dates it had just been given. The URL is now input-only until the first interaction |
+| 31 | `pick`/`drop` were referenced inside the `Promise.all` that produced them | a TDZ error the route's own try/catch turned into a silent 500 |
+| 32 | footer wordmark link had no accessible name; results count failed contrast on the active chip; card `<h3>` followed `<h1>` with no `<h2>` | **a11y was 92 on the fleet page and 97 on the home page. All three fixed → 100 on both** |
+
+**Not met: Lighthouse ≥ 90 on the bare fleet page.** Measured 57 before optimisation, **73 after** (LCP 4.37 → 3.39 s). Lazy-loading the booking module behind the "✎ Modifier" sheet (`next/dynamic`, `ssr:false`, gated on first open because a `<dialog>` renders its children while closed) is what bought most of that. What remains is TBT — site-wide JS execution, not this page's markup — and the homepage sits at the same 63–69 on unchanged code. This is the "performance budget CI" work in Sprint 6, not something the results page can fix alone. Readings still swing ±40 % on this machine (home measured 37 and 69 in the same session).
 
 ---
 

@@ -159,7 +159,10 @@ export default async function Footer({ settings }) {
         {/* ---- Wordmark + three columns ---------------------------- */}
         <div className="grid gap-12 py-16 lg:grid-cols-12 lg:gap-10 lg:py-24">
           <div className="lg:col-span-4">
-            <Link href="/" className="inline-block" data-testid="footer-wordmark">
+            {/* aria-label because the lockup ships as two theme-specific cuts,
+                one of which is always CSS-hidden — axe sees a link whose only
+                content is an invisible image and reports it as nameless. */}
+            <Link href="/" className="inline-block" data-testid="footer-wordmark" aria-label={s.name || 'Diab Car'}>
               {/* The real lockup — emblem, DIAB CAR band and the Arabic tagline —
                   is the footer identity (plan 2.1: badge = footer, OG, favicon). */}
               <LogoLockup alt={s.name || 'Diab Car'} className="w-full max-w-[22rem]" />

@@ -78,13 +78,30 @@ test.describe('GET /api/availability', () => {
     expect(body.issues.some((i) => i.path === 'endAt')).toBe(true);
   });
 
-  test('rejects a date that is not a date, and an out-of-range enum', async ({ request }) => {
+  test('rejects a date that is not a date', async ({ request }) => {
     const bad = await request.get(`/api/availability?${qs({ startAt: 'yesterday-ish', endAt: 'tomorrow' })}`);
     expect(bad.status()).toBe(400);
+  });
 
+  test('accepts a location key and rejects one that is not slug-shaped', async ({ request }) => {
     const w = window();
-    const enumRes = await request.get(`/api/availability?${qs({ ...w, pickup: 'helipad' })}`);
-    expect(enumRes.status()).toBe(400);
+
+    /* `pickup` carries a LOCATION KEY, not a fee category — that is what the
+       booking module puts in the URL (see src/lib/locations.js). An unknown but
+       well-formed key is accepted and priced as the agency rather than
+       rejected, because refusing it would break a link the moment a location is
+       renamed, and inventing a delivery fee for it would be worse. */
+    const known = await request.get(`/api/availability?${qs({ ...w, pickup: 'aeroport-mohammed-v' })}`);
+    expect(known.status()).toBe(200);
+    expect((await known.json()).ok).toBe(true);
+
+    const unknown = await request.get(`/api/availability?${qs({ ...w, pickup: 'somewhere-new' })}`);
+    expect(unknown.status()).toBe(200);
+
+    /* Not slug-shaped: still refused, so the parameter cannot carry anything
+       surprising into the query. */
+    const malformed = await request.get(`/api/availability?${qs({ ...w, pickup: 'Not A Slug!' })}`);
+    expect(malformed.status()).toBe(400);
   });
 
   test('filters narrow the list without changing the contract', async ({ request }) => {
