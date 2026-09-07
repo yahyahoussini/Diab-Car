@@ -54,10 +54,33 @@ function resolveAlias(specifier) {
   return null;
 }
 
+/**
+ * Resolve an extensionless RELATIVE import ("./demo-store") the way a bundler
+ * does. Next/Turbopack adds the extension; bare Node does not, so without this
+ * every module in src/lib/data is untestable and unscriptable.
+ * @param {string} specifier
+ * @param {string} parentURL
+ * @returns {string|null}
+ */
+function resolveRelative(specifier, parentURL) {
+  if (!parentURL?.startsWith('file:')) return null;
+  const base = path.dirname(fileURLToPath(parentURL));
+  const target = path.resolve(base, specifier);
+  if (existsSync(target) && path.extname(target)) return null; // already exact
+  for (const extension of EXTENSIONS) {
+    const candidate = target + extension;
+    if (extension && existsSync(candidate)) return pathToFileURL(candidate).href;
+  }
+  return null;
+}
+
 registerHooks({
   resolve(specifier, context, nextResolve) {
     if (specifier.startsWith('@/')) {
       const url = resolveAlias(specifier);
+      if (url) return { url, shortCircuit: true };
+    } else if (specifier.startsWith('./') || specifier.startsWith('../')) {
+      const url = resolveRelative(specifier, context.parentURL);
       if (url) return { url, shortCircuit: true };
     }
     return nextResolve(specifier, context);

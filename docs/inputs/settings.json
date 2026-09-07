@@ -1,0 +1,113 @@
+{
+  "_README": [
+    "Generated from src/lib/data/seed.js on the first `npm run db:seed`.",
+    "This file is the source of truth for the settings row from now on:",
+    "edit it here (or in the admin once prompt 12 lands) and re-run the seed.",
+    "Values marked UNVERIFIED in docs/inputs/facts.md must be confirmed by",
+    "Diab Car before launch (CLAUDE.md rule 11)."
+  ],
+  "id": 1,
+  "name": "Diab Car",
+  "legalName": "DIAB CAR SARL",
+  "tagline": {
+    "fr": "Location de voitures à Casablanca",
+    "en": "Car rental in Casablanca",
+    "ar": "كراء السيارات في الدار البيضاء",
+    "es": "Alquiler de coches en Casablanca"
+  },
+  "phonePrimary": "+212659775582",
+  "phoneSecondary": "+212625236229",
+  "phoneLandline": "+212522260305",
+  "fax": "+212522260361",
+  "whatsapp": "+212659775582",
+  "email": "diabcar@gmail.com",
+  "addressLine": "356 Boulevard Zerktouni",
+  "city": "Casablanca",
+  "postalCode": "20000",
+  "region": "Casablanca-Settat",
+  "country": "MA",
+  "lat": 33.5883,
+  "lng": -7.6314,
+  "googleMapsUrl": "https://www.google.com/maps/search/?api=1&query=356+Boulevard+Zerktouni+Casablanca",
+  "facebookUrl": "https://www.facebook.com/people/Diab-car/100063808380188/",
+  "instagramUrl": "",
+  "tiktokUrl": "",
+  "hours": [
+    {
+      "days": [
+        "mon",
+        "tue",
+        "wed",
+        "thu",
+        "fri",
+        "sat"
+      ],
+      "opens": "08:00",
+      "closes": "20:00"
+    },
+    {
+      "days": [
+        "sun"
+      ],
+      "opens": "09:00",
+      "closes": "18:00"
+    }
+  ],
+  "airportService24h": true,
+  "services": {
+    "daily": true,
+    "weekly": true,
+    "monthly": true,
+    "delivery": true,
+    "chauffeur": true,
+    "onlinePayment": false
+  },
+  "bookingChannels": [
+    "whatsapp",
+    "website"
+  ],
+  "rc": "285663",
+  "ice": "000032763000039",
+  "capitalMad": 1200000,
+  "foundedYear": 2013,
+  "eurRate": 10.8,
+  "responseTime": {
+    "fr": "Réponse WhatsApp en moins de 10 min (08h–23h)",
+    "en": "WhatsApp reply within 10 min (8am–11pm)",
+    "ar": "رد على واتساب في أقل من 10 دقائق (08:00–23:00)",
+    "es": "Respuesta por WhatsApp en menos de 10 min (8h–23h)"
+  },
+  "airportDeliveryFee": 0,
+  "cityDeliveryFee": 0,
+  "oneWayFee": 0,
+  "minAge": 21,
+  "premiumMinAge": 25,
+  "minLicenseYears": 1,
+  "fuelPolicy": "full-to-full",
+  "freeCancellationHours": 24,
+  "depositReleaseDays": 7,
+  "pricingTiers": [
+    {
+      "minDays": 7,
+      "discountPct": 10
+    },
+    {
+      "minDays": 15,
+      "discountPct": 15
+    },
+    {
+      "minDays": 30,
+      "discountPct": 25
+    }
+  ],
+  "monthlyFrom": {
+    "economy": 6500,
+    "suv": 9500,
+    "premium": 19000
+  },
+  "cndpReceipt": "",
+  "gbpUrl": "",
+  "gaId": "",
+  "indexNowKey": "",
+  "updatedAt": "2026-09-01T09:00:00.000Z"
+}

@@ -1,6 +1,6 @@
 # Diab Car — build status
 
-**Updated:** 2026-09-06 · **Branch:** `build/v1` · **Last prompt:** PROMPT 03 — Header, footer, hero, booking module (Sprint 1a)
+**Updated:** 2026-09-07 · **Branch:** `build/v1` · **Last prompt:** PROMPT 05 — Supabase schema, roles, storage, seed (Sprint 2a)
 
 This file is the running state of the build. It is rewritten at the end of **every** prompt in `docs/PROMPTS.md`.
 Decisions in the *Plan §10* column come from `docs/MASTER-PLAN.md` §10 (keep / rebuild / extend / delete); where §10 is
@@ -22,8 +22,8 @@ not *never touched again*.
 | 01 | 0a | Tokens, fonts, logo, OG | **done** |
 | 02 | 0b | UI kit, motion primitives, dev kit page | todo |
 | 03 | 1a | Header, footer, hero, booking module | **done** |
-| 04 | 1b | Homepage sections, vehicle card, car images | todo |
-| 05 | 2a | Supabase: schema, roles, storage, seed | todo |
+| 04 | 1b | Homepage sections, vehicle card, car images | **partial** — card + image pipeline + divider done (`2c2ee52`); the nine sections are still to build |
+| 05 | 2a | Supabase: schema, roles, storage, seed | **done (SQL written; not yet applied to the project)** |
 | 06 | 2b | Availability engine: RPCs, holds, realtime | todo |
 | 07 | 3a | Results / fleet page with live availability | todo |
 | 08 | 3b | Vehicle page | todo |
@@ -83,6 +83,9 @@ means shipping less homepage JavaScript, which is PROMPT 04 (HomeSections rebuil
 | 14 | `BookingWidget.js`, `Header.js` | 5 new React Compiler lint errors: `set-state-in-effect` (localStorage-after-mount, media-query sync, time-chip snap-back) and `refs` (a handler that focuses an input). Each is an idiomatic pattern the compiler cannot prove safe | fix with `useSyncExternalStore` in PROMPT 02's kit pass; 3 of the 8 the agents introduced are already fixed with derive-during-render |
 | 15 | homepage JS | LCP 2.91 s / TBT 882 ms vs a 2.0 s / 200 ms budget. All bytes land by 284 ms; bootup-time is ~3.5 s — it is JS execution, not transfer | PROMPT 04 (lighter HomeSections) then Sprint 6 performance CI |
 | 16 | `docs/inputs/photos/` | **empty** — zero masters. `npm run images` is built and self-tested but has nothing to process, so every car is a silhouette and the card hover crossfade has no rear image | blocked on plan §12 input #4 (real fleet photography) |
+| 22 | PROMPT 05 not applied | the migrations are written and self-consistent but have **never run against the project**. Nothing in task 8 (counts, anon-RLS proof, overlap proof) can be reported as measured until they do | apply 0001-0006 in the SQL editor, do the two dashboard steps, `npm run db:seed`, then run 0007 |
+| 21 | `SUPABASE_SERVICE_ROLE_KEY` | never supplied, so `.env.local` still has the Supabase block commented out and the seed has only been dry-run | paste the key; I write `.env.local` (gitignored) and run the seed |
+| 20 | `bookings` vs `reservations` | the starter's `bookings` table is untouched and still backs the current lead form; `reservations` is canonical from here | migrate the funnel in PROMPT 09, then drop `bookings` |
 | 19 | places & supplementary services | owner's requirement (Sept 2026): chauffeur and delivery are extras on the **subtotal** (already how `pricing.quote()` works); places must be admin-managed and may be in **other Moroccan cities** (kind `city`, new `city` column in locations.csv, no city pre-filled) | PROMPT 05 schema step 0 · PROMPT 12 step 1b |
 | 18 | admin fleet gallery | owner's requirement (Sept 2026): add / replace / remove / reorder photos per car from the admin, per angle; first photo = card image; silhouette fallback when empty. Data model already carries `images[]` + `photoFolder` per vehicle | PROMPT 12 (plan §7.1 updated, PROMPTS.md prompt 12 step 1) |
 | 17 | `/livraison`, `/automatique` | in the header Services dropdown but the routes do not exist until PROMPT 13; rendered with a "bientôt" marker rather than a dead link | PROMPT 13 |
@@ -233,6 +236,16 @@ means shipping less homepage JavaScript, which is PROMPT 04 (HomeSections rebuil
 | Font — Arabic text | `src/assets/fonts/ibm-plex-sans-arabic-700.woff2` | — | IBM Plex Sans Arabic bold weight for Arabic UI | **keep** | §2.3 "IBM Plex Sans Arabic (OFL, vendored)", loaded on /ar only | 0 | done | Static weight file; consider variable subset if budget tightens |
 | Font — OG renderer | `src/assets/fonts/og/manrope-500.woff` | — | Manrope 500 static woff read by OG image renderer | **keep** | §2.3 Manrope retained; §10 logo row rebuilds OG colours only | 0 | done | Still read by the recoloured OG renderer. |
 | Font — OG renderer | `src/assets/fonts/og/plex-arabic-600.woff` | — | IBM Plex Arabic 600 static woff for Arabic OG cards | **keep** | §2.3 IBM Plex Sans Arabic retained; §10 logo row rebuilds OG colours only | 0 | done | Still read by the recoloured OG renderer. |
+| Supabase | `supabase/migrations/0001_extensions_enums.sql` | — | btree_gist + the eight enums of plan §6.2 | **extend** | plan §6.2 | 2 | done | Idempotent; every enum guarded |
+| Supabase | `supabase/migrations/0002_core_tables.sql` | — | profiles, units, customers, holds, reservations, blocks; widens locations/vehicles/settings | **extend** | plan §6.1/§6.2 | 2 | done | `period` is GENERATED from a per-row prep buffer copied by trigger |
+| Supabase | `supabase/migrations/0003_events_audit_content.sql` | — | vehicle_events, audit_log, notifications, push_subscriptions; widens faqs/reviews | **extend** | plan §6.2 | 2 | done | Events are append-only |
+| Supabase | `supabase/migrations/0004_integrity.sql` | — | Exclusion constraints, block-vs-reservation trigger, audit + event triggers, set_reason | **extend** | plan §6.3 | 2 | done | Double-booking is impossible in Postgres, not in the UI |
+| Supabase | `supabase/migrations/0005_roles_rls.sql` | — | Access-token hook, role helpers, RLS on every table, public_settings view | **extend** | plan §7.2/§9.4 | 2 | done | agent cannot touch prices or settings; ga_id/index_now_key never exposed |
+| Supabase | `supabase/migrations/0005b_dashboard_steps.md` | — | The two dashboard clicks SQL cannot do | **keep** | plan §7.2 | 2 | done | Enable the hook; create the owner and set the role |
+| Supabase | `supabase/migrations/0006_storage.sql` | — | Buckets vehicles (public) / inspections / documents (private) + policies | **extend** | plan §9.4 | 2 | done | Inspection photos are evidence: no staff delete |
+| Supabase | `supabase/migrations/0007_verify.sql` | — | Counts, anon-RLS proof, overlap proof, prep-buffer proof | **keep** | PROMPT 05 task 8 | 2 | todo | Run after applying 0001-0006 |
+| Dev tooling | `scripts/seed.mjs` | — | Loads fleet/locations/faq CSV + settings.json into Postgres | **keep** | PROMPT 05 task 5 | 2 | done | Idempotent; expands units_count into unit rows |
+| Docs — inputs | `docs/inputs/settings.json` | — | The settings row, generated once from the committed seed | **extend** | PROMPT 05 task 5 | 2 | todo | 48 keys; confirm the UNVERIFIED ones before launch |
 | Supabase | `supabase/schema.sql` | — | Postgres schema: 9 tables, RLS policies, storage bucket rules | **extend** | §10 row "Schema + seed → Extend (section 6.2)"; tables per §6.2/§6.3 | 2 | todo | Needs units, holds, blocks, events, audit, customers, btree_gist exclusions |
 | Supabase | `supabase/seed.mjs` | — | Service-role script upserting demo seed data into Supabase | **extend** | §10 row "Schema + seed → Extend"; §11 Sprint 2 "seed with real fleet" | 2 | todo | Fix fax/email contacts; already skips sample reviews; add units/locations |
 | Public asset | `public/images/cars/berline.svg` | `/images/cars/berline.svg` | Dark-gradient sedan silhouette placeholder for cards and blog | **rebuild** | §2.5 imagery standard (two environments, real fleet); §13 "silhouettes are a stopgap" | 1 | todo | Dark-only gradients break light mode; raw hex; default fallback image |

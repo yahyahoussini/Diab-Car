@@ -229,6 +229,161 @@ export const demoAdapter = {
     return clone(s.bookings[i]);
   },
 
+
+  /* ---------------------------------------------------------------- fleet ops
+     Parity surface with the Supabase adapter. Availability is NOT decided here:
+     these are plain reads and writes. The real allocation logic lives in the
+     Postgres RPCs (plan 6.3, prompt 06) — the UI never decides availability
+     (CLAUDE.md rule 5). */
+
+  async listUnits({ vehicleId, status } = {}) {
+    let rows = getStore().units;
+    if (vehicleId) rows = rows.filter((u) => u.vehicleId === vehicleId);
+    if (status) rows = rows.filter((u) => u.status === status);
+    return clone(rows);
+  },
+  async getUnit(id) {
+    return clone(getStore().units.find((u) => u.id === id) || null);
+  },
+  async upsertUnit(data) {
+    const s = getStore();
+    const i = s.units.findIndex((u) => u.id === data.id);
+    if (i >= 0) {
+      const before = s.units[i];
+      s.units[i] = { ...before, ...data };
+      if (data.status && data.status !== before.status) {
+        s.events.push({
+          id: `e-${Date.now()}`, unitId: before.id, type: 'STATUS_CHANGED', at: now(),
+          data: { from: before.status, to: data.status }, reason: data.reason || null,
+        });
+      }
+      return clone(s.units[i]);
+    }
+    const row = { id: data.id || `u-${Date.now()}`, status: 'available', mileageKm: 0, ...data };
+    s.units.push(row);
+    return clone(row);
+  },
+
+  async listCustomers() {
+    return clone(getStore().customers);
+  },
+  async upsertCustomer(data) {
+    const s = getStore();
+    const i = s.customers.findIndex((c) => c.id === data.id || (data.phone && c.phone === data.phone));
+    if (i >= 0) {
+      s.customers[i] = { ...s.customers[i], ...data };
+      return clone(s.customers[i]);
+    }
+    const row = { id: data.id || `c-${Date.now()}`, createdAt: now(), ...data };
+    s.customers.push(row);
+    return clone(row);
+  },
+
+  async listReservations({ status, vehicleId, limit } = {}) {
+    let rows = getStore().reservations;
+    if (status) rows = rows.filter((r) => r.status === status);
+    if (vehicleId) rows = rows.filter((r) => r.vehicleId === vehicleId);
+    rows = [...rows].sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+    return clone(limit ? rows.slice(0, limit) : rows);
+  },
+  async getReservation(idOrRef) {
+    const s = getStore();
+    return clone(s.reservations.find((r) => r.id === idOrRef || r.reference === idOrRef) || null);
+  },
+  async createReservation(data) {
+    const s = getStore();
+    const row = {
+      id: `r-${Date.now()}`,
+      reference: data.reference || `DC-${Date.now().toString(36).toUpperCase()}`,
+      status: 'pending', source: 'web', locale: 'fr', quote: {},
+      createdAt: now(), updatedAt: now(), ...data,
+    };
+    s.reservations.push(row);
+    return clone(row);
+  },
+  async updateReservation(id, patch) {
+    const s = getStore();
+    const i = s.reservations.findIndex((r) => r.id === id);
+    if (i < 0) return null;
+    const before = s.reservations[i];
+    s.reservations[i] = { ...before, ...patch, updatedAt: now() };
+    if (patch.status && patch.status !== before.status && before.unitId) {
+      const type = patch.status === 'active' ? 'PICKUP' : patch.status === 'returned' ? 'RETURN' : null;
+      if (type) {
+        s.events.push({
+          id: `e-${Date.now()}`, unitId: before.unitId, reservationId: before.id, type, at: now(),
+          data: { from: before.status, to: patch.status, reference: before.reference }, reason: patch.reason || null,
+        });
+      }
+    }
+    return clone(s.reservations[i]);
+  },
+
+  async listBlocks({ unitId } = {}) {
+    const rows = getStore().blocks;
+    return clone(unitId ? rows.filter((b) => b.unitId === unitId) : rows);
+  },
+  async createBlock(data) {
+    const s = getStore();
+    /* Mirrors the Postgres trigger: a block may not land on a live reservation
+       for the same unit, and the error names the conflict (plan 6.3). */
+    const clash = s.reservations.find(
+      (r) => r.unitId === data.unitId
+        && ['confirmed', 'ready', 'active'].includes(r.status)
+        && !(new Date(r.endAt) <= new Date(data.startAt) || new Date(r.startAt) >= new Date(data.endAt)),
+    );
+    if (clash) {
+      const err = new Error('BLOCK_CONFLICTS_RESERVATION');
+      err.code = 'BLOCK_CONFLICTS_RESERVATION';
+      err.detail = { reservationReference: clash.reference, reservedFrom: clash.startAt, reservedTo: clash.endAt };
+      throw err;
+    }
+    const row = { id: `b-${Date.now()}`, kind: 'maintenance', createdAt: now(), ...data };
+    s.blocks.push(row);
+    return clone(row);
+  },
+  async deleteBlock(id) {
+    const s = getStore();
+    s.blocks = s.blocks.filter((b) => b.id !== id);
+    return true;
+  },
+
+  async listHolds({ vehicleId, live = true } = {}) {
+    let rows = getStore().holds;
+    if (vehicleId) rows = rows.filter((h) => h.vehicleId === vehicleId);
+    if (live) rows = rows.filter((h) => !h.releasedAt && new Date(h.expiresAt) > new Date());
+    return clone(rows);
+  },
+  async createHold(data) {
+    const s = getStore();
+    const row = {
+      id: `h-${Date.now()}`,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+      createdAt: now(), ...data,
+    };
+    s.holds.push(row);
+    return clone(row);
+  },
+  async releaseHold(id) {
+    const s = getStore();
+    const h = s.holds.find((x) => x.id === id);
+    if (h) h.releasedAt = now();
+    return Boolean(h);
+  },
+
+  async listEvents({ unitId, reservationId, limit = 50 } = {}) {
+    let rows = getStore().events;
+    if (unitId) rows = rows.filter((e) => e.unitId === unitId);
+    if (reservationId) rows = rows.filter((e) => e.reservationId === reservationId);
+    return clone([...rows].sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, limit));
+  },
+  async createEvent(data) {
+    const s = getStore();
+    const row = { id: `e-${Date.now()}`, at: now(), ...data };
+    s.events.push(row);
+    return clone(row);
+  },
+
   /* Stats */
   async getStats() {
     const s = getStore();
