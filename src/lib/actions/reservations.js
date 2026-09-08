@@ -170,6 +170,10 @@ export async function createReservationByStaff(input) {
     settings,
     pickupKey: resolvePickup(locations, d.pickup).feeKey,
     dropoffKey: resolvePickup(locations, d.dropoff).feeKey,
+    /* The resolved place itself, so quote() can charge ITS fee rather than
+       the one number its whole category shares (plan 6.2). */
+    pickupLocation: resolvePickup(locations, d.pickup).location,
+    dropoffLocation: resolvePickup(locations, d.dropoff).location,
   });
 
   const label = (key) => {

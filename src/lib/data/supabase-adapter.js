@@ -633,6 +633,15 @@ export const supabaseAdapter = {
 
   /* -------------------------------------------------------------- operations */
 
+  /* Day-by-day availability for ONE car, for the booking calendar. Public:
+     it answers "how many of this model are free that day" and nothing else. */
+  async getVehicleCalendar({ vehicleId, from, to }) {
+    const sb = await readClient();
+    const { data, error } = await sb.rpc('vehicle_availability_days', { p_vehicle: vehicleId, p_from: from, p_to: to });
+    if (error) fail(error);
+    return data;
+  },
+
   async getOperationsDay(day) {
     return rpcOutcome('operations_day', { p_day: day });
   },

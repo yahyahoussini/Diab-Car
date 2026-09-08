@@ -98,6 +98,7 @@ describe('quote', () => {
       extras: [],
       extrasTotal: 0,
       deliveryFee: 0,
+      deliveryOnRequest: false,
       oneWayFee: 0,
       total: 1050,
       deposit: 5000,
@@ -353,5 +354,54 @@ describe('deposit by category (plan 7.1 Tarifs)', () => {
     const bad = quote({ vehicle: suv, startAt: '2026-06-01T10:00:00Z', endAt: '2026-06-01T10:00:00Z', settings });
     assert.equal(bad.days, 0);
     assert.equal(bad.deposit, 5000);
+  });
+});
+
+describe('delivery fee per place (plan 6.2)', () => {
+  const settings = { airportDeliveryFee: 250, cityDeliveryFee: 150 };
+  const win = { startAt: '2026-04-10T10:00:00Z', endAt: '2026-04-13T10:00:00Z' };
+
+  test('the place own fee wins over the category default', () => {
+    const q = quote({ vehicle: VEHICLE, ...win, settings, pickupKey: 'address',
+      pickupLocation: { key: 'rabat', deliveryFee: 300 } });
+    assert.equal(q.deliveryFee, 300);
+    assert.equal(q.deliveryOnRequest, false);
+  });
+
+  test('a place with no fee falls back to its category default', () => {
+    const q = quote({ vehicle: VEHICLE, ...win, settings, pickupKey: 'airport',
+      pickupLocation: { key: 'aeroport-mohammed-v', deliveryFee: null } });
+    assert.equal(q.deliveryFee, 250);
+  });
+
+  test('an explicit 0 is free, not unset', () => {
+    const q = quote({ vehicle: VEHICLE, ...win, settings, pickupKey: 'address',
+      pickupLocation: { key: 'agence', deliveryFee: 0 } });
+    assert.equal(q.deliveryFee, 0);
+    assert.equal(q.deliveryOnRequest, false);
+  });
+
+  test('nothing configured anywhere is sur devis, never an invented 0', () => {
+    const q = quote({ vehicle: VEHICLE, ...win, settings: {}, pickupKey: 'airport',
+      pickupLocation: { key: 'aeroport-mohammed-v', deliveryFee: null } });
+    assert.equal(q.deliveryFee, 0, 'nothing is charged for a fee nobody set');
+    assert.equal(q.deliveryOnRequest, true, 'and the page must say so rather than show 0 MAD');
+  });
+
+  test('collecting at the agency is never a delivery, whatever the city default is', () => {
+    const q = quote({ vehicle: VEHICLE, ...win, settings, pickupKey: 'agency' });
+    assert.equal(q.deliveryFee, 0);
+    assert.equal(q.deliveryOnRequest, false);
+  });
+
+  test('a station keeps costing nothing, as it did before places had fees', () => {
+    const q = quote({ vehicle: VEHICLE, ...win, settings, pickupKey: 'station' });
+    assert.equal(q.deliveryFee, 0, 'the city default must not leak onto an unpriced category');
+  });
+
+  test('the snake_case key from Postgres is accepted too', () => {
+    const q = quote({ vehicle: VEHICLE, ...win, settings, pickupKey: 'address',
+      pickupLocation: { key: 'marrakech', deliveryFeeMad: 500 } });
+    assert.equal(q.deliveryFee, 500);
   });
 });

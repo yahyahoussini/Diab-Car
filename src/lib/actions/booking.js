@@ -28,8 +28,15 @@ const schema = z.object({
   name: z.string().trim().min(3).max(120),
   phone: z.string().trim().regex(/^\+?[\d\s().-]{8,20}$/),
   email: z.email(),
-  country: z.string().length(2),
-  age: z.coerce.number().int().min(18).max(90),
+  /* Optional for the quick per-car flow (plan 4.7). A reservation is a
+     REQUEST that a human confirms — Diab Car calls back — and the driver's age
+     and licence are checked against the physical document at the counter, by
+     the pickup checklist that refuses to complete without « identité vérifiée »
+     and « documents vérifiés » (prompt 12). Asking for them twice buys nothing
+     and costs bookings. The full funnel still sends both, and the minimum-age
+     rule below still runs whenever an age is given. */
+  country: z.string().length(2).optional(),
+  age: z.coerce.number().int().min(18).max(90).optional(),
   notes: z.string().max(1000).optional().default(''),
   consent: z.literal(true),
   locale: z.enum(['fr', 'en', 'ar', 'es']).default('fr'),
@@ -89,7 +96,7 @@ export async function submitBooking(input) {
   if (new Date(startAt) < new Date(Date.now() - 60 * 60 * 1000)) return { ok: false, error: 'past', fieldErrors: { from: 'past' } };
 
   const minAge = vehicle.minAge || settings?.minAge || 21;
-  if (d.age < minAge) return { ok: false, error: 'age', fieldErrors: { age: 'age' }, minAge };
+  if (d.age != null && d.age < minAge) return { ok: false, error: 'age', fieldErrors: { age: 'age' }, minAge };
 
   const q = quote({
     vehicle,
@@ -101,6 +108,10 @@ export async function submitBooking(input) {
     settings,
     pickupKey: resolvePickup(locations, d.pickup).feeKey,
     dropoffKey: resolvePickup(locations, d.dropoff).feeKey,
+    /* The resolved place itself, so quote() can charge ITS fee rather than
+       the one number its whole category shares (plan 6.2). */
+    pickupLocation: resolvePickup(locations, d.pickup).location,
+    dropoffLocation: resolvePickup(locations, d.dropoff).location,
   });
 
   if (q.days < (vehicle.minDays || 1)) {
@@ -148,8 +159,8 @@ export async function submitBooking(input) {
       pickup: { key: d.pickup, label: label(d.pickup, d.pickupAddress) },
       dropoff: { key: d.dropoff, label: label(d.dropoff, d.dropoffAddress) },
       flightNumber: d.flightNumber || null,
-      driverAge: d.age,
-      customerCountry: d.country.toUpperCase(),
+      driverAge: d.age ?? null,
+      customerCountry: d.country ? d.country.toUpperCase() : null,
       quotedAt: new Date().toISOString(),
     },
   });

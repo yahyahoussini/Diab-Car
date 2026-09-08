@@ -77,6 +77,10 @@ export async function GET(request) {
       settings,
       pickupKey: resolvePickup(locations, d.pickup).feeKey,
       dropoffKey: d.dropoff ? resolvePickup(locations, d.dropoff).feeKey : undefined,
+      /* The resolved place itself, so quote() can charge ITS fee rather than
+         the one number its whole category shares (plan 6.2). */
+      pickupLocation: resolvePickup(locations, d.pickup).location,
+      dropoffLocation: d.dropoff ? resolvePickup(locations, d.dropoff).location : undefined,
     });
 
     if (q.days < (vehicle.minDays || 1)) {

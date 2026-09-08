@@ -37,7 +37,7 @@ export function tierDiscount(days, tiers = []) {
  * @param {string} p.pickupKey       agency | airport | station | address
  * @param {string} p.dropoffKey
  */
-export function quote({ vehicle, startAt, endAt, seasons = [], extras = [], selectedExtras = [], settings = {}, pickupKey = 'agency', dropoffKey }) {
+export function quote({ vehicle, startAt, endAt, seasons = [], extras = [], selectedExtras = [], settings = {}, pickupKey = 'agency', dropoffKey, pickupLocation, dropoffLocation }) {
   const days = countDays(startAt, endAt);
   const basePerDay = Number(vehicle?.pricePerDay) || 0;
   const deposit = depositFor(vehicle, settings);
@@ -69,7 +69,8 @@ export function quote({ vehicle, startAt, endAt, seasons = [], extras = [], sele
     .filter(Boolean);
   const extrasTotal = extraLines.reduce((s, l) => s + l.total, 0);
 
-  const deliveryFee = pickupKey === 'airport' ? Number(settings.airportDeliveryFee) || 0 : pickupKey === 'address' ? Number(settings.cityDeliveryFee) || 0 : 0;
+  const delivery = deliveryFeeFor(pickupLocation, pickupKey, settings);
+  const deliveryFee = delivery.amount;
   const oneWayFee = dropoffKey && dropoffKey !== pickupKey ? Number(settings.oneWayFee) || 0 : 0;
 
   const total = subtotal - discountAmount + extrasTotal + deliveryFee + oneWayFee;
@@ -83,11 +84,49 @@ export function quote({ vehicle, startAt, endAt, seasons = [], extras = [], sele
     extras: extraLines,
     extrasTotal,
     deliveryFee,
+    /* True when neither the place nor the category carries a figure. The UI
+       shows « sur devis » and the total leaves it out, so nothing is charged
+       that was never displayed (rule 4) and nothing is invented (rule 11). */
+    deliveryOnRequest: delivery.onRequest,
     oneWayFee,
     total,
     deposit,
     perDayEffective: Math.round(total / days),
   };
+}
+
+/**
+ * What delivery to this place costs.
+ *
+ * The PLACE's own figure wins. Diab Car sets a fee per pick-up point — Rabat
+ * 300, Marrakech 500 — and `locations.delivery_fee_mad` is where the admin
+ * writes it (plan 6.2, prompt 12's Tarifs page). Before this, `quote()` only
+ * knew two numbers, `airportDeliveryFee` and `cityDeliveryFee`, so every
+ * district and every other city was billed the same amount whatever the
+ * booking module had displayed next to it.
+ *
+ * A null fee is NOT zero. Plan 6.2 is explicit that null means « sur devis »,
+ * and inventing a free delivery is exactly what rule 11 forbids — so a place
+ * with no figure falls back to its category default, and if that is missing
+ * too the caller is told to quote it by hand rather than shown 0 MAD.
+ *
+ * @returns {{ amount: number, onRequest: boolean }}
+ */
+export function deliveryFeeFor(location, feeKey = 'agency', settings = {}) {
+  const own = Number(location?.deliveryFee ?? location?.deliveryFeeMad);
+  if (Number.isFinite(own)) return { amount: own, onRequest: false };
+
+  /* Only two categories are a delivery at all. `agency` is collecting the car
+     where it already lives, and `station` has no configured fee — charging
+     either from the city default would bill a customer for something the page
+     never showed them (rule 4). This mirrors the behaviour before places
+     carried their own fee, and a test pins it.  */
+  if (feeKey !== 'airport' && feeKey !== 'address') return { amount: 0, onRequest: false };
+
+  const fallback = feeKey === 'airport' ? Number(settings.airportDeliveryFee) : Number(settings.cityDeliveryFee);
+  if (Number.isFinite(fallback) && fallback > 0) return { amount: fallback, onRequest: false };
+
+  return { amount: 0, onRequest: true };
 }
 
 /**

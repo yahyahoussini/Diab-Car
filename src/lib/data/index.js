@@ -93,6 +93,7 @@ export const setUnitStatus = async (a) => (await db()).setUnitStatus(a);
 export const getUnitDossier = async (id) => (await db()).getUnitDossier(id);
 
 /* Operations */
+export const getVehicleCalendar = async (a) => (await db()).getVehicleCalendar(a);
 export const getOperationsDay = async (day) => (await db()).getOperationsDay(day);
 export const completePickup = async (a) => (await db()).completePickup(a);
 export const completeReturn = async (a) => (await db()).completeReturn(a);

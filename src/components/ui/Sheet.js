@@ -23,9 +23,10 @@ import { cn } from '@/lib/cn';
  *   children: React.ReactNode,
  *   footer?: React.ReactNode,
  *   labelClose?: string,
+ *   wide?: boolean,
  * }} props
  */
-export default function Sheet({ open, onClose, title, side = 'bottom', children, footer, labelClose = 'Fermer' }) {
+export default function Sheet({ open, onClose, title, side = 'bottom', children, footer, labelClose = 'Fermer', wide = false }) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -58,14 +59,14 @@ export default function Sheet({ open, onClose, title, side = 'bottom', children,
       className={cn(
         'max-h-full max-w-full bg-transparent p-0 text-text backdrop:bg-black/50 backdrop:backdrop-blur-[2px]',
         side === 'bottom'
-          ? 'mt-auto mb-0 w-full sm:mx-auto sm:mb-auto sm:mt-auto sm:max-w-lg'
+          ? cn('mt-auto mb-0 w-full sm:mx-auto sm:mb-auto sm:mt-auto', wide ? 'sm:max-w-2xl' : 'sm:max-w-lg')
           : 'ms-auto me-0 my-0 h-full',
       )}
     >
       <div
         className={cn(
           'flex flex-col overflow-hidden border border-border bg-surface-1 shadow-2xl',
-          side === 'bottom' ? 'max-h-[85dvh] rounded-t-2xl sm:rounded-2xl' : 'h-full w-[min(92vw,26rem)]',
+          side === 'bottom' ? cn(wide ? 'max-h-[92dvh]' : 'max-h-[85dvh]', 'rounded-t-2xl sm:rounded-2xl') : 'h-full w-[min(92vw,26rem)]',
         )}
       >
         <header className="flex items-center justify-between gap-4 border-b border-border px-5 py-4">

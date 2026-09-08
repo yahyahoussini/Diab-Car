@@ -820,6 +820,49 @@ export const demoAdapter = {
 
   /* -------------------------------------------------------------- operations */
 
+  /* Mirrors vehicle_availability_days() in 0013. The per-day count is a HINT;
+     the range itself is still decided by searchAvailability, exactly as in
+     Postgres, so the demo cannot teach a laxer rule than production. */
+  async getVehicleCalendar({ vehicleId, from, to }) {
+    const s = getStore();
+    const v = s.vehicles.find((x) => x.id === vehicleId);
+    if (!v || v.published === false) return { ok: false, error: 'NOT_FOUND' };
+
+    const day0 = new Date(`${from}T00:00:00+01:00`);
+    const last = new Date(`${to}T00:00:00+01:00`);
+    const span = Math.min(92, Math.max(0, Math.round((last - day0) / 86400000)));
+    const bookable = s.units.filter((u) => u.vehicleId === vehicleId && !['maintenance', 'blocked', 'out_of_service'].includes(u.status));
+
+    const days = [];
+    let run = 0;
+    let best = 0;
+    for (let i = 0; i <= span; i += 1) {
+      const startAt = new Date(day0.getTime() + i * 86400000).toISOString();
+      const endAt = new Date(day0.getTime() + (i + 1) * 86400000).toISOString();
+      const free = freeUnits(s, vehicleId, startAt, endAt);
+      days.push({ day: startAt.slice(0, 10), free });
+      if (free > 0) {
+        run += 1;
+        if (run > best) best = run;
+      } else {
+        run = 0;
+      }
+    }
+
+    return clone({
+      ok: true,
+      vehicleId,
+      slug: v.slug,
+      from,
+      to: days[days.length - 1]?.day || from,
+      minDays: v.minDays || 1,
+      prepBufferMinutes: v.prepBufferMinutes || 120,
+      unitsTotal: bookable.length,
+      maxRun: best,
+      days,
+    });
+  },
+
   async getOperationsDay(day) {
     const s = getStore();
     const d0 = new Date(`${day}T00:00:00+01:00`);

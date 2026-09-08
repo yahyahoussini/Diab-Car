@@ -212,6 +212,64 @@ A read-only audit (5 parallel agents) ran before any code was written. It found 
 
 ---
 
+## Per-car booking sheet — owner's revision (2026-09-08)
+
+The owner sent screenshots of a competing flow and asked for the same shape: pick a CAR, see a
+calendar of the days THAT car is free, choose the pick-up place from priced option cards, then
+options, then coordinates. Three steps, one sheet.
+
+**The rule that shaped it.** A per-day free count is a HINT, not the answer. Three units where A
+is free Mon–Wed and B Wed–Fri leave every day « free » while no single unit covers Mon–Fri, and
+the exclusion constraint is per unit. So the calendar paints days from `vehicle_availability_days()`
+and the RANGE is settled by `/api/quote` — which asks `free_units()` for that exact window —
+before the continue button opens. The sheet never decides availability (rule 5).
+
+Verified on the live database with a realistic 10:00→10:00 rental over 19–21 Oct: days 19, 20 and
+21 grey (out, plus the return day for turnaround), 18 and 22 free. An earlier probe that booked
+midnight-to-midnight greyed three days for a one-day rental — an artefact of the test, not the code,
+caught before it became a « fix ».
+
+**Migration `0013_vehicle_calendar.sql`** (applied): `casablanca_day()` and
+`vehicle_availability_days(vehicle, from, to)` — public, capped at 92 days per call, `NOT_FOUND`
+for an unpublished car, and it returns a free-count per day and nothing else: no plate, no unit
+status, no reservation, no customer (plan 6.5, asserted by an e2e test).
+
+**The gap that would have made the priced place cards lie.** `quote()` only ever knew
+`airportDeliveryFee` and `cityDeliveryFee`, so a screen showing Casablanca +300 / Marrakech +500 /
+Agadir +700 would have billed all three the same. Each place now charges its own
+`delivery_fee_mad`, with null still meaning « sur devis » rather than a free delivery nobody agreed
+to (rule 11). Seven tests pin it — including one that pins the OLD behaviour for the `station`
+category, which my first version silently started charging 150 MAD for.
+
+**Payment: unchanged, and stated on screen.** The screenshots show an online payment step. Plan
+§9.5 is a locked decision — no online payment — and everything downstream rests on it: `pending`
+means a human confirms, prompt 12 built cash/TPE capture at the counter, and the auto-expiry sweep
+exists because nobody pays online. Step 3 collects coordinates and says plainly that payment happens
+at the agency. An e2e test asserts no card field ever appears. **If Diab Car wants real card
+payments, that is a provider, a merchant account and PCI scope — its own prompt, with a line in the plan.**
+
+**Also:** `/reservation` stays alive as the deep-link target and the no-JS path; both flows write
+through the same `submitBooking`. Age and country became optional there — a reservation is a
+REQUEST, and the licence is checked against the physical document by the pickup checklist that
+refuses to complete without « identité vérifiée ». The minimum-age rule still runs whenever an age
+is supplied.
+
+**Two bugs of my own, caught before they shipped:** `isoDay()` crashed the whole sheet on open
+(`addDays` handed it a number, it called `.getTime()`); and the React Compiler rejected `setState`
+inside both effects — fixed by DERIVING « is it loading » and « which inputs is this price for » from
+a key stamped on the answer, so a price can never outlive the dates it was calculated for.
+
+**Checks:** build pass · lint at the 10-error baseline · **99/99** unit (+7 delivery-fee) · contrast,
+messages (**833 keys × 4**, zero placeholder mismatches) and css pass · **108/108 e2e**, including 7
+new ones: the route leaks nothing, an unknown car gets nothing, a backwards range is refused, the
+three steps walk and price, no payment field exists, a fully-booked day reads 0, and the sheet works
+in Arabic RTL with Western digits.
+
+**Open:** the sheet is mounted on the vehicle page. Putting it on every fleet card as well needs
+`locations`/`extras`/labels threaded into `VehicleCard`, which is worth doing but is plumbing, not
+design — next pass.
+
+---
 ## Fix — two bugs `npm run dev` reported and every suite missed (2026-09-08)
 
 Running the dev server after the CSS fixes produced 18 i18n errors per page view and one

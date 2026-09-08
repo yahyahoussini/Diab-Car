@@ -99,7 +99,26 @@ function discClass({ isDisabled, isUnavailable, isSelected, isSelectionStart, is
  * @param {{ calendar: string, previousMonth: string, nextMonth: string }} props.labels
  * @param {string} [props.className]
  */
-export default function RangeCalendarPanel({ locale = 'fr', from, to, minDate, onChange, labels, className }) {
+export default function RangeCalendarPanel({
+  locale = 'fr',
+  from,
+  to,
+  minDate,
+  onChange,
+  labels,
+  className,
+  /* Booking from a CAR rather than from dates (plan 4.7): the days that car
+     cannot be had are struck out. react-aria does two things with this that
+     are worth knowing — it refuses to START a range on an unavailable day,
+     and it refuses to COMPLETE one that crosses it, which is exactly the rule
+     the exclusion constraint enforces in Postgres. The UI is not deciding
+     anything; it is declining to offer what the database would refuse. */
+  isDateUnavailable,
+  /* Fired when the visible months change, so the caller can fetch the next
+     month's availability. Receives a { start, end } of ISO date strings. */
+  onVisibleRangeChange,
+  maxDate,
+}) {
   // Latin digits in every locale, exactly as src/lib/format.js does it
   // (plan 4.12: numbers stay Western Arabic digits, also in Arabic).
   const tag = `${localeTags[locale] || 'fr-MA'}-u-nu-latn`;
@@ -137,6 +156,16 @@ export default function RangeCalendarPanel({ locale = 'fr', from, to, minDate, o
           if (range && range.start && range.end) onChange(range.start.toString(), range.end.toString());
         }}
         minValue={minValue}
+        maxValue={safeParse(maxDate) || undefined}
+        isDateUnavailable={isDateUnavailable}
+        onFocusChange={(date) => {
+          /* onFocusChange is how react-aria reports the visible month moving:
+             it fires with the first date of the new page. The caller turns
+             that into "fetch this month and the next". */
+          if (!onVisibleRangeChange || !date) return;
+          const first = date.subtract({ days: date.day - 1 });
+          onVisibleRangeChange({ start: first.toString(), end: first.add({ months }).toString() });
+        }}
         visibleDuration={{ months }}
         data-testid="range-calendar"
         className={cn('w-full select-none', className)}
