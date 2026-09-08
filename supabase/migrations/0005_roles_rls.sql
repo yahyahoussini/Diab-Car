@@ -61,8 +61,15 @@ language sql stable as $$
   )
 $$;
 
+/* coalesce(..., false) is NOT decoration. With no JWT, auth_role() is NULL, so
+   `NULL = any(roles)` is NULL — and in plpgsql `IF NOT NULL THEN` does not
+   fire, which means a guard written as `if not can_manage_pricing() then
+   return FORBIDDEN` FALLS THROUGH to the privileged path. RLS treats a NULL
+   predicate as false and was safe, but the operational RPCs in 0010 are not
+   RLS, and an unauthenticated connection could override a price. Proven and
+   fixed here rather than in each caller, so no future caller inherits it. */
 create or replace function has_role(roles text[]) returns boolean
-language sql stable as $$ select auth_role() = any(roles) $$;
+language sql stable as $$ select coalesce(auth_role() = any(roles), false) $$;
 
 create or replace function is_staff() returns boolean
 language sql stable as $$ select auth_role() is not null $$;

@@ -157,4 +157,104 @@ async function cleanup() {
   }
 }
 
-module.exports = { available, bookOut, cleanup, searchAvailability, createHold, tryBook };
+/* ------------------------------------------------------------------ */
+/* Prompt 11 helpers: units, and reservations pinned to one of them.   */
+/* These write with the SERVICE ROLE, which bypasses RLS but NOT the   */
+/* exclusion constraint — so a fixture that would double-book a unit   */
+/* fails loudly here instead of silently making a test meaningless.    */
+/* ------------------------------------------------------------------ */
+
+const headers = () => ({ apikey: KEY, Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' });
+
+async function get(pathAndQuery) {
+  const res = await fetch(`${URL_}/rest/v1/${pathAndQuery}`, { headers: headers() });
+  if (!res.ok) throw new Error(`GET ${pathAndQuery} -> ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  return res.json();
+}
+
+/** Units of one model, bookable ones first. */
+async function unitsOf(vehicleId) {
+  if (!available) return [];
+  return get(`units?vehicle_id=eq.${vehicleId}&select=id,plate,status&order=plate`);
+}
+
+/** Pin a reservation to a unit. Refused by Postgres if that unit is taken. */
+async function setUnit(reservationId, unitId) {
+  if (!available) return null;
+  const res = await fetch(`${URL_}/rest/v1/reservations?id=eq.${reservationId}`, {
+    method: 'PATCH',
+    headers: { ...headers(), Prefer: 'return=representation' },
+    body: JSON.stringify({ unit_id: unitId }),
+  });
+  if (!res.ok) throw new Error(`assign unit -> ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  return (await res.json())[0] || null;
+}
+
+/** One reservation as the database currently has it — the revert oracle. */
+async function reservationById(id) {
+  if (!available) return null;
+  const rows = await get(`reservations?id=eq.${id}&select=id,reference,start_at,end_at,unit_id,status`);
+  return rows[0] || null;
+}
+
+/** create_reservation, returning the row it made. */
+async function makeReservation({ vehicleId, startAt, endAt, phone, lastName = 'Calendar' }) {
+  if (!available) return null;
+  const out = await rpc('create_reservation', {
+    payload: {
+      vehicleId,
+      startAt,
+      endAt,
+      source: 'web',
+      locale: 'fr',
+      customer: { firstName: 'E2E', lastName, phone, email: TEST_EMAIL, locale: 'fr' },
+      quote: { test: true, total: 1000 },
+    },
+  });
+  if (!out?.ok) throw new Error(`create_reservation refused: ${JSON.stringify(out)}`);
+  return out.reservation;
+}
+
+/** What the database would offer instead of a sold-out car. */
+async function alternativesFor(vehicleId, startAt, endAt) {
+  if (!available) return [];
+  return rpc('availability_alternatives', {
+    p_vehicle_id: vehicleId,
+    p_start_at: startAt,
+    p_end_at: endAt,
+    p_limit: 3,
+  });
+}
+
+/**
+ * A model worth booking out: free for the window, and with at least one OTHER
+ * free model in its category, so the sold-out answer can actually carry the
+ * alternatives the test is there to check.
+ */
+async function pickModelWithAlternatives(startAt, endAt) {
+  if (!available) return null;
+  const rows = await searchAvailability(startAt, endAt);
+  const free = rows.filter((r) => r.units_free > 0);
+  for (const row of free) {
+    const alts = await alternativesFor(row.vehicle_id, startAt, endAt);
+    if (Array.isArray(alts) && alts.length > 0) {
+      return { slug: row.slug, vehicleId: row.vehicle_id, unitsFree: row.units_free, alternatives: alts };
+    }
+  }
+  return null;
+}
+
+module.exports = {
+  available,
+  bookOut,
+  cleanup,
+  searchAvailability,
+  createHold,
+  tryBook,
+  unitsOf,
+  setUnit,
+  reservationById,
+  makeReservation,
+  alternativesFor,
+  pickModelWithAlternatives,
+};

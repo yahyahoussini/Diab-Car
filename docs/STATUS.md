@@ -1,6 +1,6 @@
 # Diab Car — build status
 
-**Updated:** 2026-09-08 · **Branch:** `build/v1` · **Last prompt:** PROMPT 10 — admin foundation (Sprint 4a). Roles, shell, dashboard, journal and the live bell. **Web Push transport NOT done.**
+**Updated:** 2026-09-08 · **Branch:** `build/v1` · **Last prompt:** PROMPT 11 — admin reservations and calendar (Sprint 4b). State machine, unit assignment, counter booking, fleet Gantt, client files and the duplicate merge. **Web Push transport still NOT done (PROMPT 10 carry-over).**
 
 This file is the running state of the build. It is rewritten at the end of **every** prompt in `docs/PROMPTS.md`.
 Decisions in the *Plan §10* column come from `docs/MASTER-PLAN.md` §10 (keep / rebuild / extend / delete); where §10 is
@@ -29,7 +29,7 @@ not *never touched again*.
 | 08 | 3b | Vehicle page | **done (a11y/BP/SEO 100; Lighthouse perf 66, short of the >=90 target)** |
 | 09 | 3c | Booking funnel, confirmation, WhatsApp, email | **done** |
 | 10 | 4a | Admin foundation: auth, roles, shell, dashboard | **partial — see PROMPT 10 notes; Web Push transport and 8 routes outstanding** |
-| 11 | 4b | Admin reservations, state machine, calendar | todo |
+| 11 | 4b | Admin reservations, state machine, calendar | **done — 0010 + 0011 applied; 86 unit tests, 2 new e2e green** |
 | 12 | 4c | Admin fleet, operations, content, prices, settings | todo |
 | 13 | 5 | SEO / GEO / AEO pages and content | todo |
 | 14 | 6a | WOW motion, view transitions, RTL motion | todo |
@@ -212,6 +212,92 @@ A read-only audit (5 parallel agents) ran before any code was written. It found 
 
 ---
 
+## PROMPT 11 notes — 2026-09-08
+
+**The whole point: the admin has no side door.** Every operational write goes through an RPC that
+re-checks `is_staff()` and re-runs the same conflict test the exclusion constraint would: a booking
+taken at the counter for the last car is refused with the same message and the same alternatives a
+customer gets, and a bar dragged onto another booking on the calendar does not move. Two Playwright
+tests exist to say exactly that, and both pass.
+
+**Closed from PROMPT 10.** `/admin/reservations` now reads the real `reservations` table instead of
+the legacy `bookings` one, and the global search box finally does something: `?q=` matches a
+reference, a customer name, a phone, an e-mail or a model. `/calendrier` and `/clients` are real
+pages, not placeholders.
+
+**Security fix found while writing 0010.** `has_role()` returned `NULL` for a caller with no JWT,
+because `NULL = any(roles)` is NULL, not false. In plpgsql `if not NULL then …` does **not** fire, so
+a guard written as `if not can_manage_pricing() then return FORBIDDEN` FELL THROUGH to the privileged
+path — `override_reservation_price` succeeded unauthenticated. Fixed with `coalesce(…, false)` in
+`0005_roles_rls.sql`; verified: `has_role('{owner}')` → false and `can_manage_pricing()` → false with
+no JWT, and all four customer functions in 0011 answer `FORBIDDEN`/`[]`/`null` to `anon`.
+
+**Migrations applied to the live database.**
+
+| File | Contents |
+|---|---|
+| `0010_reservation_ops.sql` | `reservation_next_states`, `set_reservation_status`, `assign_reservation_unit`, `move_reservation`, `override_reservation_price`, `units_free_for_reservation`, `calendar_rows`. `authenticated` only, each re-checking its own guard |
+| `0011_customers.sql` | `phone_key` (+ index), `customer_duplicates`, `customer_profile`, `set_customer_notes`, `merge_customers` |
+
+**Why each operation is ONE RPC.** `set_reason()` is transaction-scoped and PostgREST runs one
+transaction per request, so "set the reason, then write" from the app would lose the reason before the
+audit trigger ever saw it. Verified end to end: the reason reaches `audit_log` for a status change, a
+price override, a date move and a customer merge.
+
+**Conflicts are answers, not errors.** Every RPC looks the conflict up *before* it writes, so the
+payload names the booking in the way and its dates — « CONFLIT — DC-260908-XXXX occupe déjà cette
+voiture du 10 au 15 sept » — which is what lets an operator solve the problem. The server actions
+return these outcomes instead of throwing.
+
+**The calendar is plain CSS grid and pointer events**, no library (rule 9). Drag-to-move and
+drag-to-resize are expressed as a whole number of SLOTS, never as an absolute snap, so a 10:00 pick-up
+is still 10:00 after being dragged a day later. Optimistic: the bar moves, Postgres is asked, and a
+refusal drops the override so the bar returns to where the database says it is. The window maths lives
+in `src/lib/calendar.js` with 20 tests against a fixed +01:00 Casablanca, so a server in UTC and a
+laptop in Casablanca draw the same grid.
+
+**Duplicate clients.** `customers.phone` is UNIQUE, so exact duplicates cannot exist — which is
+precisely why the real ones do: `+212612345678` and `0612345678` are one human and three different
+values. `phone_key()` (last nine digits) finds them; the merge moves the reservations first, then
+deletes, inheriting only what the survivor was missing. `customers` carries no audit trigger on
+purpose (every public booking inserts one, and copying names and numbers into `audit_log` each time
+would duplicate the customer table), so the merge writes its own journal row — by id and count, with
+the reason, no PII.
+
+**Verified on the live database**
+
+| Check | Result |
+|---|---|
+| anon calling the four 0011 functions | `[]`, `null`, `FORBIDDEN`, `FORBIDDEN` |
+| `phone_key('+212 612-345678') = phone_key('0612345678')` | true |
+| merge without a reason / onto itself | `REASON_REQUIRED` / `SAME` |
+| merge of two files, one with a reservation | ok, `moved: 1`, survivor inherited the e-mail, notes joined, dropped row gone |
+| journal after the merge | `DELETE` on `customers` with actor `57b71502…` and reason « fusion doublon », body = ids + count only |
+| audit reason on the moved reservation | « doublon telephone » |
+
+**Checks**
+
+| Command | Result |
+|---|---|
+| `npm run build` | pass |
+| `npm run lint` | 10 errors, 1 warning — **exactly the pre-existing baseline**; every new file lints clean |
+| `npm test` | **86 / 86 pass** (was 66; +20 from `src/lib/calendar.test.js`, plus the adapter-parity assertions picking up the new methods) |
+| `npm run check:contrast` | pass — 56 / 56 |
+| `npm run check:messages` | pass — 764 leaf keys × 4 locales |
+| `npm run test:e2e` | 59 passed · 2 flaky (home 404 on a sub-resource, green on retry) · 1 flaky-to-failing: see below |
+
+**NOT DONE / open — stated plainly**
+
+| Item | Status |
+|---|---|
+| The bell Realtime test | `admin.spec.js › a new reservation raises the bell without a reload` is **intermittent**. Alone it passes in ~6 s; after the five earlier tests in the same file it sometimes times out. Investigated rather than papered over: the notification trigger still fires (probed directly on the live DB — row created, `unread`), and the DOM shows no unread badge, so the `postgres_changes` event is not being delivered, not the trigger failing. A longer timeout does not fix it, so the timeout was reverted. Pre-existing from PROMPT 10; not caused by this prompt |
+| Web Push transport | Still not built — unchanged from PROMPT 10 |
+| `/operations/checklist/[id]`, `/flotte/unites/[id]` | Still no page (PROMPT 12) |
+| `/blocs` page | Blocks can now be created and deleted from the calendar; the standalone `/blocs` list is still a placeholder (PROMPT 12) |
+| Staff booking form | Deliberately quote-then-create, and the create button locks again if any pricing field changes. It does **not** yet offer extras quantities or a delivery address field |
+| Lighthouse | Not re-measured; the admin is not in the public performance budget |
+
+---
 ## Inventory — every route, component, lib module and asset
 
 167 files · **keep 76** · **rebuild 61** · **extend 26** · **delete 4** · 76 done / 91 todo

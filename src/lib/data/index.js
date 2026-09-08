@@ -68,12 +68,25 @@ export const markNotificationRead = async (id) => (await db()).markNotificationR
 export const listAuditLog = async (f) => (await db()).listAuditLog(f);
 export const getFleetSnapshot = async () => (await db()).getFleetSnapshot();
 
+/* Operational writes (plan 7.1). Each is one RPC so the audit reason travels
+   in the same transaction as the write — see supabase/migrations/0010. */
+export const setReservationStatus = async (a) => (await db()).setReservationStatus(a);
+export const assignReservationUnit = async (a) => (await db()).assignReservationUnit(a);
+export const moveReservation = async (a) => (await db()).moveReservation(a);
+export const overrideReservationPrice = async (a) => (await db()).overrideReservationPrice(a);
+export const unitsFreeForReservation = async (id) => (await db()).unitsFreeForReservation(id);
+export const getCalendar = async (a) => (await db()).getCalendar(a);
+export const getCustomerProfile = async (id) => (await db()).getCustomerProfile(id);
+export const listCustomerDuplicates = async () => (await db()).listCustomerDuplicates();
+export const mergeCustomers = async (a) => (await db()).mergeCustomers(a);
+export const setCustomerNotes = async (a) => (await db()).setCustomerNotes(a);
+
 /* Availability (plan 6.3/6.4). Postgres decides; these only ask.
    The adapters share one shape so the funnel never branches on the backend. */
 export const searchAvailability = async (a) => (await db()).searchAvailability(a);
 export const nextAvailable = async (a) => (await db()).nextAvailable(a);
 export const holdVehicle = async (a) => (await db()).holdVehicle(a);
 export const releaseVehicleHold = async (a) => (await db()).releaseVehicleHold(a);
-export const bookVehicle = async (p) => (await db()).bookVehicle(p);
+export const bookVehicle = async (p, o) => (await db()).bookVehicle(p, o);
 
 export { CATEGORIES, TRANSMISSIONS, FUELS, FEATURES, BOOKING_STATUSES, CAR_IMAGES, LOCALES, t, vehicleImage } from '@/lib/constants';

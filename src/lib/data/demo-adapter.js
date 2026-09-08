@@ -1,9 +1,19 @@
 import { getStore, newId } from './demo-store';
 import { availabilityRow, freeUnits, nextAvailable, soldOut } from './demo-availability';
 import { summarise } from './summarise';
+import { NEEDS_REASON, NEXT_STATES, OCCUPYING_STATUSES as OCCUPYING_ST } from '../reservation-states';
 
 const clone = (v) => JSON.parse(JSON.stringify(v));
+
+const rangesOverlap = (a, b) => new Date(a.startAt) < new Date(b.endAt) && new Date(b.startAt) < new Date(a.endAt);
 const now = () => new Date().toISOString();
+
+/* The last nine digits, matching phone_key() in 0011. */
+const phoneKey = (phone) => String(phone || '').replace(/[^0-9]/g, '').slice(-9);
+const vehicleName = (store, id) => {
+  const v = store.vehicles.find((x) => x.id === id);
+  return v ? `${v.brand} ${v.model}` : '—';
+};
 
 function applyVehicleFilters(list, { published, category, transmission, seats, fuel, minPrice, maxPrice, featured, sort } = {}) {
   let out = list;
@@ -497,11 +507,184 @@ export const demoAdapter = {
     };
   },
 
-  async listAuditLog({ table, actorId, since, until, limit = 100 } = {}) {
+  /* Mirrors supabase/migrations/0010 so the admin behaves the same with no
+     database. The transitions and the conflict answers are the part that must
+     match; the demo has no roles, so the FORBIDDEN branch cannot occur. */
+
+  async setReservationStatus({ id, status, reason }) {
+    const s = getStore();
+    const r = s.reservations.find((x) => x.id === id);
+    if (!r) return { ok: false, error: 'NOT_FOUND' };
+    if (!NEXT_STATES[r.status]?.includes(status)) {
+      return { ok: false, error: 'ILLEGAL_TRANSITION', from: r.status, to: status, allowed: NEXT_STATES[r.status] || [] };
+    }
+    if (NEEDS_REASON.includes(status) && !String(reason || '').trim()) return { ok: false, error: 'REASON_REQUIRED' };
+    r.status = status;
+    r.updatedAt = now();
+    return { ok: true, status };
+  },
+
+  async assignReservationUnit({ id, unitId, reason }) {
+    const s = getStore();
+    const r = s.reservations.find((x) => x.id === id);
+    if (!r) return { ok: false, error: 'NOT_FOUND' };
+    if (unitId) {
+      const clash = s.reservations.find(
+        (x) => x.unitId === unitId && x.id !== id && OCCUPYING_ST.includes(x.status) && rangesOverlap(x, r),
+      );
+      if (clash) return { ok: false, error: 'CONFLICT', reference: clash.reference, from: clash.startAt, to: clash.endAt };
+    }
+    r.unitId = unitId || null;
+    r.updatedAt = now();
+    return { ok: true };
+  },
+
+  async moveReservation({ id, startAt, endAt }) {
+    const s = getStore();
+    const r = s.reservations.find((x) => x.id === id);
+    if (!r) return { ok: false, error: 'NOT_FOUND' };
+    if (new Date(endAt) <= new Date(startAt)) return { ok: false, error: 'BAD_DATES' };
+    const moved = { startAt, endAt };
+    if (r.unitId) {
+      const clash = s.reservations.find(
+        (x) => x.unitId === r.unitId && x.id !== id && OCCUPYING_ST.includes(x.status) && rangesOverlap(x, moved),
+      );
+      if (clash) return { ok: false, error: 'CONFLICT', reference: clash.reference, from: clash.startAt, to: clash.endAt };
+      if (s.blocks.some((b) => b.unitId === r.unitId && rangesOverlap(b, moved))) return { ok: false, error: 'BLOCKED' };
+    }
+    r.startAt = startAt;
+    r.endAt = endAt;
+    r.updatedAt = now();
+    return { ok: true };
+  },
+
+  async overrideReservationPrice({ id, total, reason }) {
+    const s = getStore();
+    const r = s.reservations.find((x) => x.id === id);
+    if (!r) return { ok: false, error: 'NOT_FOUND' };
+    if (!String(reason || '').trim()) return { ok: false, error: 'REASON_REQUIRED' };
+    r.quote = { ...(r.quote || {}), original: r.quote?.original ?? r.quote, total, overridden: true, overrideReason: reason };
+    return { ok: true, total };
+  },
+
+  async unitsFreeForReservation(id) {
+    const s = getStore();
+    const r = s.reservations.find((x) => x.id === id);
+    if (!r) return [];
+    return clone(
+      s.units
+        .filter((u) => u.vehicleId === r.vehicleId && !['maintenance', 'blocked', 'out_of_service'].includes(u.status))
+        .filter((u) => !s.reservations.some((x) => x.unitId === u.id && x.id !== id && OCCUPYING_ST.includes(x.status) && rangesOverlap(x, r)))
+        .filter((u) => !s.blocks.some((b) => b.unitId === u.id && rangesOverlap(b, r)))
+        .map((u) => ({ unitId: u.id, plate: u.plate, status: u.status })),
+    );
+  },
+
+  async getCalendar({ from, to }) {
+    const s = getStore();
+    const win = { startAt: from, endAt: to };
+    const vehicleOf = (id) => s.vehicles.find((v) => v.id === id);
+    return clone({
+      units: s.units.map((u) => {
+        const v = vehicleOf(u.vehicleId);
+        return { id: u.id, plate: u.plate, status: u.status, vehicleId: u.vehicleId, vehicle: v ? `${v.brand} ${v.model}` : '-' };
+      }),
+      reservations: s.reservations
+        .filter((r) => OCCUPYING_ST.includes(r.status) && rangesOverlap(r, win))
+        .map((r) => ({ id: r.id, unitId: r.unitId, vehicleId: r.vehicleId, reference: r.reference, status: r.status, startAt: r.startAt, endAt: r.endAt })),
+      blocks: s.blocks.filter((b) => rangesOverlap(b, win)).map((b) => ({ id: b.id, unitId: b.unitId, kind: b.kind, reason: b.reason, startAt: b.startAt, endAt: b.endAt })),
+    });
+  },
+
+  /* Mirrors supabase/migrations/0011. The phone key is the same rule: the last
+     nine digits, so +212612345678 and 0612345678 are one person. */
+
+  async getCustomerProfile(id) {
+    const s = getStore();
+    const customer = s.customers.find((c) => c.id === id);
+    if (!customer) return null;
+    const mine = s.reservations.filter((r) => r.customerId === id);
+    const earned = mine.filter((r) => ['active', 'returned', 'closed'].includes(r.status));
+    return clone({
+      customer,
+      reservations: mine
+        .map((r) => ({
+          id: r.id,
+          reference: r.reference,
+          status: r.status,
+          startAt: r.startAt,
+          endAt: r.endAt,
+          total: r.quote?.total ?? null,
+          vehicle: vehicleName(s, r.vehicleId),
+        }))
+        .sort((a, b) => String(b.startAt).localeCompare(String(a.startAt))),
+      totals: {
+        count: mine.length,
+        revenue: earned.reduce((sum, r) => sum + (Number(r.quote?.total) || 0), 0),
+        cancelled: mine.filter((r) => ['cancelled', 'no_show'].includes(r.status)).length,
+        days: earned.reduce((sum, r) => sum + Math.ceil((new Date(r.endAt) - new Date(r.startAt)) / 86400000), 0),
+      },
+    });
+  },
+
+  async listCustomerDuplicates() {
+    const s = getStore();
+    const groups = new Map();
+    for (const c of s.customers) {
+      const key = phoneKey(c.phone);
+      if (!key) continue;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push({
+        id: c.id,
+        firstName: c.firstName,
+        lastName: c.lastName,
+        phone: c.phone,
+        email: c.email,
+        createdAt: c.createdAt,
+        reservations: s.reservations.filter((r) => r.customerId === c.id).length,
+      });
+    }
+    return clone([...groups.entries()].filter(([, list]) => list.length > 1).map(([key, customers]) => ({ key, customers })));
+  },
+
+  async mergeCustomers({ keepId, dropId, reason }) {
+    const s = getStore();
+    if (!keepId || !dropId || keepId === dropId) return { ok: false, error: 'SAME' };
+    if (!String(reason || '').trim()) return { ok: false, error: 'REASON_REQUIRED' };
+    const keep = s.customers.find((c) => c.id === keepId);
+    const drop = s.customers.find((c) => c.id === dropId);
+    if (!keep || !drop) return { ok: false, error: 'NOT_FOUND' };
+
+    let moved = 0;
+    for (const r of s.reservations) {
+      if (r.customerId === dropId) {
+        r.customerId = keepId;
+        moved += 1;
+      }
+    }
+    keep.email = keep.email || drop.email || null;
+    keep.whatsapp = keep.whatsapp || drop.whatsapp || null;
+    keep.notes = [keep.notes, drop.notes].map((n) => String(n || '').trim()).filter(Boolean).join('\n') || null;
+    keep.updatedAt = now();
+    s.customers = s.customers.filter((c) => c.id !== dropId);
+    return { ok: true, moved, kept: keep.phone, dropped: drop.phone };
+  },
+
+  async setCustomerNotes({ id, notes }) {
+    const s = getStore();
+    const c = s.customers.find((x) => x.id === id);
+    if (!c) return { ok: false, error: 'NOT_FOUND' };
+    c.notes = String(notes || '').trim() || null;
+    c.updatedAt = now();
+    return { ok: true };
+  },
+
+  async listAuditLog({ table, rowId, actorId, since, until, limit = 100 } = {}) {
     const s = getStore();
     s.auditLog = s.auditLog || [];
     let rows = s.auditLog;
     if (table) rows = rows.filter((r) => r.tableName === table);
+    if (rowId) rows = rows.filter((r) => r.rowId === rowId || r.rowKey === String(rowId));
     if (actorId) rows = rows.filter((r) => r.actorId === actorId);
     if (since) rows = rows.filter((r) => r.at >= since);
     if (until) rows = rows.filter((r) => r.at <= until);

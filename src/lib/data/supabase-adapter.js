@@ -37,6 +37,32 @@ async function selectAll(table, build) {
  * Reading them with the public client returns an EMPTY ARRAY and no error, so
  * the admin would have rendered "0 réservations" on a database full of them.
  */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/* `[from, to)` — half-open, the same convention the exclusion constraints and
+   booking_window() use, so a block that ends at 10:00 and a rental that starts
+   at 10:00 do not read as a conflict. */
+const rangeLiteral = (startAt, endAt) => `[${new Date(startAt).toISOString()},${new Date(endAt).toISOString()})`;
+
+/* Postgres prints `2026-09-10 09:00:00+00` — a space instead of the T, and a
+   two-digit offset that ISO 8601 does not define. Left as-is, Date.parse is
+   free to return NaN, and a bar with a NaN date is an invisible bar. */
+function isoFromPg(value) {
+  if (!value) return null;
+  const normalised = String(value).trim().replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00');
+  const t = Date.parse(normalised);
+  return Number.isNaN(t) ? null : new Date(t).toISOString();
+}
+
+/** `["2026-09-10 09:00+00","2026-09-12 09:00+00")` → { startAt, endAt }. */
+function blockToModel(row) {
+  if (!row) return row;
+  const { period, ...rest } = row;
+  if (!period) return rest;
+  const m = String(period).match(/^[[(]"?([^",]*)"?,"?([^",]*)"?[\])]$/);
+  return { ...rest, startAt: m ? isoFromPg(m[1]) : null, endAt: m ? isoFromPg(m[2]) : null };
+}
+
 async function selectAllAsStaff(table, build) {
   const sb = await writeClient();
   let q = sb.from(table).select('*');
@@ -310,15 +336,21 @@ export const supabaseAdapter = {
     return rowToModel(data);
   },
 
+  /* `blocks` stores a tstzrange, not two columns, so the generic snake_case
+     mapper cannot round-trip it: a startAt/endAt pair would be written as
+     start_at/end_at, which do not exist on this table. Both directions are
+     translated here so a block looks like every other dated row to callers
+     — the demo adapter already speaks startAt/endAt (rule 12). */
   async listBlocks({ unitId } = {}) {
-    return selectAllAsStaff('blocks', (q) => (unitId ? q.eq('unit_id', unitId) : q));
+    const rows = await selectAllAsStaff('blocks', (q) => (unitId ? q.eq('unit_id', unitId) : q));
+    return rows.map(blockToModel);
   },
   async createBlock(data) {
     const sb = await writeClient();
-    const { reason, ...rest } = data;
+    const { reason, startAt, endAt, ...rest } = data;
     const { data: row, error } = await sb
       .from('blocks')
-      .insert(modelToRow({ ...rest, reason }))
+      .insert({ ...modelToRow({ ...rest, reason }), period: rangeLiteral(startAt, endAt) })
       .select()
       .single();
     if (error) {
@@ -333,7 +365,7 @@ export const supabaseAdapter = {
       }
       fail(error);
     }
-    return rowToModel(row);
+    return blockToModel(rowToModel(row));
   },
   async deleteBlock(id) {
     return remove('blocks', id);
@@ -398,8 +430,12 @@ export const supabaseAdapter = {
     return data;
   },
 
-  async bookVehicle(payload) {
-    const sb = await readClient();
+  async bookVehicle(payload, { asStaff = false } = {}) {
+    /* A counter booking goes through the SESSION client so the audit trigger
+       records WHICH member of staff created it. The public funnel stays
+       anonymous by design — create_reservation() is SECURITY DEFINER and does
+       not need a logged-in caller. */
+    const sb = asStaff ? await writeClient() : await readClient();
     const { data, error } = await sb.rpc('create_reservation', { payload });
     if (error) fail(error);
     return data;
@@ -407,10 +443,102 @@ export const supabaseAdapter = {
 
   /* The activity log (plan 7.1 "Journal"). Staff-scoped: audit_log carries
      before/after snapshots of rows that include customer data. */
-  async listAuditLog({ table, actorId, since, until, limit = 100 } = {}) {
+  /* ---------------------------------------------------------------- operations
+     Every one of these is a single RPC, because the audit reason is a
+     transaction-local setting: "set the reason, then write" from the app would
+     be two transactions and the reason would never reach the trigger
+     (supabase/migrations/0010). They go through the SESSION client so the
+     functions see the caller's role. */
+
+  async setReservationStatus({ id, status, reason }) {
+    const sb = await writeClient();
+    const { data, error } = await sb.rpc('set_reservation_status', { p_id: id, p_status: status, p_reason: reason || null });
+    if (error) fail(error);
+    return data;
+  },
+
+  async assignReservationUnit({ id, unitId, reason }) {
+    const sb = await writeClient();
+    const { data, error } = await sb.rpc('assign_reservation_unit', { p_id: id, p_unit: unitId || null, p_reason: reason || null });
+    if (error) fail(error);
+    return data;
+  },
+
+  async moveReservation({ id, startAt, endAt, reason }) {
+    const sb = await writeClient();
+    const { data, error } = await sb.rpc('move_reservation', { p_id: id, p_start: startAt, p_end: endAt, p_reason: reason || null });
+    if (error) fail(error);
+    return data;
+  },
+
+  async overrideReservationPrice({ id, total, reason }) {
+    const sb = await writeClient();
+    const { data, error } = await sb.rpc('override_reservation_price', { p_id: id, p_total: total, p_reason: reason });
+    if (error) fail(error);
+    return data;
+  },
+
+  async unitsFreeForReservation(id) {
+    const sb = await writeClient();
+    const { data, error } = await sb.rpc('units_free_for_reservation', { p_id: id });
+    if (error) fail(error);
+    return (data || []).map(rowToModel);
+  },
+
+  async getCalendar({ from, to }) {
+    const sb = await writeClient();
+    const { data, error } = await sb.rpc('calendar_rows', { p_from: from, p_to: to });
+    if (error) fail(error);
+    return data || { units: [], reservations: [], blocks: [] };
+  },
+
+  /* ---------------------------------------------------------------- customers
+     Profile, duplicates and the merge are RPCs (supabase/migrations/0011) for
+     the same reason the reservation operations are: the totals must be one
+     answer from one snapshot, and the merge has to move reservations and drop
+     a row inside a single transaction that carries the operator's reason. */
+
+  async getCustomerProfile(id) {
+    const sb = await writeClient();
+    const { data, error } = await sb.rpc('customer_profile', { p_id: id });
+    if (error) fail(error);
+    return data || null;
+  },
+
+  async listCustomerDuplicates() {
+    const sb = await writeClient();
+    const { data, error } = await sb.rpc('customer_duplicates');
+    if (error) fail(error);
+    return data || [];
+  },
+
+  async mergeCustomers({ keepId, dropId, reason }) {
+    const sb = await writeClient();
+    const { data, error } = await sb.rpc('merge_customers', { p_keep: keepId, p_drop: dropId, p_reason: reason });
+    if (error) fail(error);
+    return data;
+  },
+
+  async setCustomerNotes({ id, notes }) {
+    const sb = await writeClient();
+    const { data, error } = await sb.rpc('set_customer_notes', { p_id: id, p_notes: notes ?? null });
+    if (error) fail(error);
+    return data;
+  },
+
+  async listAuditLog({ table, rowId, actorId, since, until, limit = 100 } = {}) {
     return selectAllAsStaff('audit_log', (q) => {
       let b = q.order('at', { ascending: false }).limit(limit);
       if (table) b = b.eq('table_name', table);
+      /* row_key carries the text pk for the tables that are NOT uuid-keyed
+         (settings.id is an int), so match whichever column can hold this key
+         — supabase/migrations/0003. The uuid test is not cosmetic: `.or()`
+         takes a raw PostgREST filter string, so an unvalidated value would be
+         injected into the query, and a non-uuid compared against row_id would
+         fail the request outright. */
+      if (rowId) {
+        b = UUID_RE.test(String(rowId)) ? b.or(`row_id.eq.${rowId},row_key.eq.${rowId}`) : b.eq('row_key', String(rowId));
+      }
       if (actorId) b = b.eq('actor_id', actorId);
       if (since) b = b.gte('at', since);
       if (until) b = b.lte('at', until);
