@@ -212,6 +212,44 @@ A read-only audit (5 parallel agents) ran before any code was written. It found 
 
 ---
 
+## Final sweep — what was checked, and what could not be (2026-09-08)
+
+**The adversarial bug-hunt workflow did not run. Three attempts, three failures on the session /
+model limit** — 6 reviewers each time, 0 started. Its result reads `confirmed: []`, and that means
+**zero reviewers ran, not zero bugs**. It is recorded here so nobody mistakes an empty list for a
+clean bill of health. Worth re-running after 19:20 Africa/Casablanca.
+
+The audit was therefore done by hand, plus one new permanent guard.
+
+**New: `npm run check:i18n`** (`scripts/check-i18n-keys.mjs`). `check:messages` proves the four
+locales AGREE; it never reads the code, so it cannot prove the code only asks for keys that exist.
+That gap put a raw `faqPage.categories.documents` heading on the live FAQ page while four suites
+were green. The new check walks `src/app`, `src/components` and `src/lib`, resolves each translator
+to its namespace and verifies every literal key. **491 keys, all present.**
+
+It found its own bug first: the initial version reported 11 missing keys that all exist, because
+`const t` is legitimately rebound per function — `seo.faq` inside `generateMetadata`, `faqPage`
+inside the component — and it was resolving against the LAST declaration in the file rather than the
+nearest preceding one. Fixed, then proved on a planted key.
+
+**Checked by hand, nothing found:**
+
+| Check | Result |
+|---|---|
+| Every static route × 4 locales, on a live dev server | **56/56 return 200** |
+| i18n errors during that sweep | **zero** (the 18-per-page flood is gone) |
+| Rule 3, physical CSS in public components | clean — the one hit, `left-1/2` with `-translate-x-1/2`, is the correct direction-safe centring idiom; `start-1/2` would actually break it in RTL |
+| Rule 2, raw hex | clean — the remaining three are `themeColor`/manifest metadata, which cannot take a CSS variable, and the Google brand mark, which must keep its own colours |
+| `toCamel` and column names containing digits | only `is_24h` was ever broken (fixed); `airport_service24h` has no underscore before the digit and always mapped correctly. `toSnake` stays asymmetric on purpose — every write carrying that key goes through an RPC that reads it by name |
+
+**Suites:** build pass · lint at the 10-error baseline · 99/99 unit · contrast, messages (833 × 4),
+css and i18n-keys all pass · **106/108 e2e with 2 flaky, both green on retry**.
+
+**Known flakes, named rather than hidden:** the `/es` homepage sub-resource 404, and the closed-loop
+test — which books a window starting thirty minutes out, so it is genuinely timing-sensitive. Both
+pass on retry; neither has ever failed twice in a row.
+
+---
 ## Per-car booking sheet — owner's revision (2026-09-08)
 
 The owner sent screenshots of a competing flow and asked for the same shape: pick a CAR, see a

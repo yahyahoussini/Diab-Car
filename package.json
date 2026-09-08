@@ -11,6 +11,7 @@
     "test:e2e": "playwright test",
     "check:contrast": "node scripts/check-contrast.mjs",
     "check:css": "node scripts/check-css.mjs",
+    "check:i18n": "node scripts/check-i18n-keys.mjs",
     "check:messages": "node scripts/check-messages.mjs",
     "lh": "node scripts/lh.mjs",
     "images": "node scripts/images.mjs",
