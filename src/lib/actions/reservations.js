@@ -34,26 +34,55 @@ import { toISO } from '@/lib/format';
 
 const REVALIDATE = ['/admin/reservations', '/admin/calendrier', '/admin'];
 
+/* Rule 1: zod at the boundary. The RPCs cast their arguments, so a bad uuid
+   or status would be refused anyway — but refused as a Postgres error, not as
+   a sentence the operator can act on. */
+const idish = z.uuid().or(z.string().min(1).max(64));
+const isoish = z.string().refine((v) => !Number.isNaN(Date.parse(v)), 'not a date');
+const statusSchema = z.object({
+  id: idish,
+  status: z.enum(['pending', 'confirmed', 'ready', 'active', 'returned', 'closed', 'cancelled', 'no_show']),
+  reason: z.string().trim().max(200).optional().default(''),
+});
+const unitSchema = z.object({ id: idish, unitId: idish.nullable().optional().default(null), reason: z.string().trim().max(200).optional().default('') });
+const moveSchema = z.object({ id: idish, startAt: isoish, endAt: isoish, reason: z.string().trim().max(200).optional().default('') });
+const priceSchema = z.object({ id: idish, total: z.coerce.number().min(0).max(1000000), reason: z.string().trim().min(1).max(200) });
+
+function invalid(parsed) {
+  const fieldErrors = {};
+  for (const issue of parsed.error.issues) fieldErrors[issue.path[0] || 'form'] = issue.code;
+  return { ok: false, error: 'VALIDATION', fieldErrors };
+}
+
 function done() {
   for (const path of REVALIDATE) revalidatePath(path);
 }
 
-export async function changeStatus({ id, status, reason }) {
+export async function changeStatus(input) {
   await requireAdmin();
+  const parsed = statusSchema.safeParse(input);
+  if (!parsed.success) return invalid(parsed);
+  const { id, status, reason } = parsed.data;
   const result = await setReservationStatus({ id, status, reason });
   if (result?.ok) done();
   return result;
 }
 
-export async function assignUnit({ id, unitId, reason }) {
+export async function assignUnit(input) {
   await requireAdmin();
+  const parsed = unitSchema.safeParse(input);
+  if (!parsed.success) return invalid(parsed);
+  const { id, unitId, reason } = parsed.data;
   const result = await assignReservationUnit({ id, unitId, reason });
   if (result?.ok) done();
   return result;
 }
 
-export async function moveDates({ id, startAt, endAt, reason }) {
+export async function moveDates(input) {
   await requireAdmin();
+  const parsed = moveSchema.safeParse(input);
+  if (!parsed.success) return invalid(parsed);
+  const { id, startAt, endAt, reason } = parsed.data;
   const result = await moveReservation({ id, startAt, endAt, reason });
   if (result?.ok) done();
   return result;
@@ -65,9 +94,12 @@ export async function moveDates({ id, startAt, endAt, reason }) {
  * function — the UI guard is convenience, the database guard is the rule
  * (plan 7.2).
  */
-export async function overridePrice({ id, total, reason }) {
+export async function overridePrice(input) {
   await requireRole(['owner', 'manager']);
-  const result = await overrideReservationPrice({ id, total: Number(total), reason });
+  const parsed = priceSchema.safeParse(input);
+  if (!parsed.success) return invalid(parsed);
+  const { id, total, reason } = parsed.data;
+  const result = await overrideReservationPrice({ id, total, reason });
   if (result?.ok) done();
   return result;
 }

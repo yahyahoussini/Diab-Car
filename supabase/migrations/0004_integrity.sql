@@ -164,10 +164,23 @@ create trigger units_log_status after update on units
 
 -- ---------------------------------------------------------------- pickup / return events
 -- A reservation entering `active` is a pickup; entering `returned` is a return.
+-- The checklists in 0012 write their OWN PICKUP and RETURN events, carrying
+-- the mileage, the fuel, the condition map, the photos and the signature. This
+-- trigger writes the bare fact. Both firing produced two PICKUP rows for one
+-- handover — a duplicate history, which for an append-only evidence table is
+-- not a cosmetic problem.
+--
+-- So the checklists raise a transaction-local flag and this trigger stands
+-- aside. It still fires for every OTHER path (a status flipped from the
+-- reservation page, a script, a future client), so the fact is never lost —
+-- it is only skipped where something richer is already being written.
 create or replace function log_reservation_transition() returns trigger
 language plpgsql security definer set search_path = public as $$
 declare v_type event_type;
 begin
+  if coalesce(current_setting('app.skip_transition_event', true), '') = 'on' then
+    return new;
+  end if;
   if tg_op <> 'UPDATE' or new.status is not distinct from old.status then
     return new;
   end if;

@@ -244,6 +244,59 @@ async function pickModelWithAlternatives(startAt, endAt) {
   return null;
 }
 
+/** One unit as the database has it — the oracle for the cleaning loop. */
+async function unitById(id) {
+  if (!available) return null;
+  const rows = await get(`units?id=eq.${id}&select=id,plate,status,mileage_km,fuel_pct,vehicle_id`);
+  return rows[0] || null;
+}
+
+/** Live blocks on a unit — what actually keeps a car off sale. */
+async function blocksFor(unitId) {
+  if (!available) return [];
+  return get(`blocks?unit_id=eq.${unitId}&select=id,kind,period,reason`);
+}
+
+/** How many units of one model are free for a window, straight from the RPC. */
+async function freeUnits(slug, startAt, endAt) {
+  if (!available) return 0;
+  const rows = await searchAvailability(startAt, endAt);
+  return rows.find((r) => r.slug === slug)?.units_free ?? 0;
+}
+
+/** Put a reservation into a given status without going through the UI. */
+async function setStatus(reservationId, status) {
+  if (!available) return null;
+  const res = await fetch(`${URL_}/rest/v1/reservations?id=eq.${reservationId}`, {
+    method: 'PATCH',
+    headers: { ...headers(), Prefer: 'return=representation' },
+    body: JSON.stringify({ status }),
+  });
+  if (!res.ok) throw new Error(`set status -> ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  return (await res.json())[0] || null;
+}
+
+/** The reservation the funnel just made, found by the reference it showed. */
+async function reservationByReference(reference) {
+  if (!available) return null;
+  const rows = await get(`reservations?reference=eq.${encodeURIComponent(reference)}&select=id,reference,start_at,end_at,unit_id,status,vehicle_id`);
+  return rows[0] || null;
+}
+
+/**
+ * Put a unit back where a failed loop test left it: available, no cleaning
+ * block. Without this a red test leaves a car off sale for two hours.
+ */
+async function resetUnit(unitId) {
+  if (!available || !unitId) return;
+  await fetch(`${URL_}/rest/v1/blocks?unit_id=eq.${unitId}&kind=eq.cleaning`, { method: 'DELETE', headers: headers() });
+  await fetch(`${URL_}/rest/v1/units?id=eq.${unitId}`, {
+    method: 'PATCH',
+    headers: headers(),
+    body: JSON.stringify({ status: 'available' }),
+  });
+}
+
 module.exports = {
   available,
   bookOut,
@@ -257,4 +310,10 @@ module.exports = {
   makeReservation,
   alternativesFor,
   pickModelWithAlternatives,
+  unitById,
+  blocksFor,
+  freeUnits,
+  setStatus,
+  reservationByReference,
+  resetUnit,
 };

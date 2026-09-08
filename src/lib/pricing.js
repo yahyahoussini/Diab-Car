@@ -40,8 +40,9 @@ export function tierDiscount(days, tiers = []) {
 export function quote({ vehicle, startAt, endAt, seasons = [], extras = [], selectedExtras = [], settings = {}, pickupKey = 'agency', dropoffKey }) {
   const days = countDays(startAt, endAt);
   const basePerDay = Number(vehicle?.pricePerDay) || 0;
+  const deposit = depositFor(vehicle, settings);
   if (!days || !basePerDay) {
-    return { days, basePerDay, subtotal: 0, discountPct: 0, discountAmount: 0, seasonAdjustment: 0, extrasTotal: 0, extras: [], deliveryFee: 0, oneWayFee: 0, total: 0, deposit: Number(vehicle?.deposit) || 0, perDayEffective: 0 };
+    return { days, basePerDay, subtotal: 0, discountPct: 0, discountAmount: 0, seasonAdjustment: 0, extrasTotal: 0, extras: [], deliveryFee: 0, oneWayFee: 0, total: 0, deposit, perDayEffective: 0 };
   }
 
   // Season-adjusted subtotal, day by day.
@@ -84,9 +85,28 @@ export function quote({ vehicle, startAt, endAt, seasons = [], extras = [], sele
     deliveryFee,
     oneWayFee,
     total,
-    deposit: Number(vehicle?.deposit) || 0,
+    deposit,
     perDayEffective: Math.round(total / days),
   };
+}
+
+/**
+ * The deposit for one car.
+ *
+ * The car's own figure wins; a category default only fills a gap. Diab Car
+ * sets deposits by class ("all the SUVs, 5000") and then overrides the one
+ * car that is worth more — so the per-vehicle value has to be the one that
+ * decides, or editing the class silently rewrites a price a customer already
+ * agreed to (rule 4).
+ *
+ * `|| 0` at the end rather than a made-up number: no deposit configured means
+ * no deposit shown, not an invented one (rule 11).
+ */
+export function depositFor(vehicle, settings = {}) {
+  const own = Number(vehicle?.deposit);
+  if (Number.isFinite(own) && own > 0) return own;
+  const byCategory = settings?.depositByCategory || {};
+  return Number(byCategory[vehicle?.category]) || 0;
 }
 
 /** Booking reference: DC-YYMMDD-XXXX (unambiguous alphabet). */

@@ -327,3 +327,31 @@ describe('order of operations', () => {
     assert.notEqual(q.perDayEffective * q.days, q.total, '361 x 7 = 2527, not 2525 — an average, not a rate');
   });
 });
+
+describe('deposit by category (plan 7.1 Tarifs)', () => {
+  const suv = { pricePerDay: 500, category: 'suv' };
+
+  test('falls back to the category default when the car has none', () => {
+    const q = quote({ vehicle: suv, startAt: '2026-06-01T10:00:00Z', endAt: '2026-06-03T10:00:00Z',
+      settings: { depositByCategory: { suv: 5000, economy: 2000 } } });
+    assert.equal(q.deposit, 5000);
+  });
+
+  test("the car's own deposit always wins — a class change must not rewrite it", () => {
+    const q = quote({ vehicle: { ...suv, deposit: 8000 }, startAt: '2026-06-01T10:00:00Z', endAt: '2026-06-03T10:00:00Z',
+      settings: { depositByCategory: { suv: 5000 } } });
+    assert.equal(q.deposit, 8000);
+  });
+
+  test('no deposit configured anywhere shows 0, never an invented figure', () => {
+    const q = quote({ vehicle: suv, startAt: '2026-06-01T10:00:00Z', endAt: '2026-06-03T10:00:00Z', settings: {} });
+    assert.equal(q.deposit, 0);
+  });
+
+  test('the zero-day early return carries the same deposit as a real quote', () => {
+    const settings = { depositByCategory: { suv: 5000 } };
+    const bad = quote({ vehicle: suv, startAt: '2026-06-01T10:00:00Z', endAt: '2026-06-01T10:00:00Z', settings });
+    assert.equal(bad.days, 0);
+    assert.equal(bad.deposit, 5000);
+  });
+});

@@ -7,7 +7,8 @@ import { CtaBand } from '@/components/site/HomeSections';
 import Button from '@/components/ui/Button';
 import Reveal, { Stagger, StaggerItem } from '@/components/ui/Reveal';
 import { ArrowIcon } from '@/components/site/icons';
-import { getSettings, listFaqs, listVehicles } from '@/lib/data';
+import { getSettings, listFaqs, listVehiclePhotos, listVehicles } from '@/lib/data';
+import { photosByVehicle, photosFor } from '@/components/site/vehiclePhotos';
 import { formatMAD } from '@/lib/format';
 import { absoluteUrl, faqJsonLd, localizedMetadata, serviceJsonLd } from '@/lib/seo';
 
@@ -24,7 +25,10 @@ export default async function AirportPage({ params }) {
   const t = await getTranslations({ locale, namespace: 'airport' });
   const tn = await getTranslations({ locale, namespace: 'nav' });
   const tseo = await getTranslations({ locale, namespace: 'seo.airport' });
-  const [settings, vehicles, faqs] = await Promise.all([getSettings(), listVehicles({ published: true }), listFaqs({ published: true })]);
+  const [settings, vehicles, faqs, photoRows] = await Promise.all([getSettings(), listVehicles({ published: true }), listFaqs({ published: true }), listVehiclePhotos({})]);
+  /* One read for the page, then a lookup per card — never a query inside the
+     map (plan 7.1). */
+  const byVehicle = photosByVehicle(photoRows);
   const minPrice = Math.min(...vehicles.map((v) => v.pricePerDay));
   const url = absoluteUrl(locale, '/aeroport');
   const airportFaqs = faqs.filter((f) => ['delivery', 'conditions', 'payment'].includes(f.category)).slice(0, 6);
@@ -84,7 +88,7 @@ export default async function AirportPage({ params }) {
           <h2 className="text-display-3 text-text">{tn('fleet')}</h2>
           <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {vehicles.filter((v) => v.featured).slice(0, 3).map((v) => (
-              <VehicleCard key={v.id} vehicle={v} query={{ pickup: 'airport' }} />
+              <VehicleCard key={v.id} vehicle={v} photos={photosFor(byVehicle, v)} query={{ pickup: 'airport' }} />
             ))}
           </div>
         </div>

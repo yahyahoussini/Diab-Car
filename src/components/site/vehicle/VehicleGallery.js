@@ -18,8 +18,8 @@ import { cn } from '@/lib/cn';
  * (CLAUDE.md rule 11). Drop side/rear/interior/dash into
  * docs/inputs/photos/<slug>/ and both appear with no code change.
  *
- * Images arrive as plain records from the server ({ widths, width, height,
- * src, alt }) — the photo manifest must not reach the browser.
+ * Images arrive as plain records from the server ({ src, widths, formats,
+ * width, height, alt }) — the photo manifest must not reach the browser.
  *
  * @param {{
  *   exterior: object[], interior: object[],
@@ -196,18 +196,30 @@ function NavButton({ side, label, onClick }) {
   );
 }
 
+/* The build pipeline writes this pair, best first; a record from before
+   uploads existed carries no list of its own. */
+const MANIFEST_FORMATS = ['avif', 'webp'];
+
 /**
  * A <picture> built from the compact record the server sent. Same reasoning as
  * the results card: the manifest stays on the server.
+ *
+ * The formats come from the record instead of being hardcoded: an
+ * admin-uploaded photo is WebP + JPEG (encoded in the operator's browser, plan
+ * 2.5), and an `image/avif` <source> it cannot honour would still be chosen by
+ * an AVIF-capable browser and then 404 — <picture> falls back on an
+ * unsupported type, never on a failed request.
  */
 function Shot({ shot, className, sizes, priority = false, contain = false }) {
+  const formats = shot.formats?.length ? shot.formats : MANIFEST_FORMATS;
   const largest = shot.widths[shot.widths.length - 1];
   return (
     <picture className={cn('block', className)}>
-      <source type="image/avif" srcSet={shot.widths.map((w) => `${shot.src}-${w}.avif ${w}w`).join(', ')} sizes={sizes} />
-      <source type="image/webp" srcSet={shot.widths.map((w) => `${shot.src}-${w}.webp ${w}w`).join(', ')} sizes={sizes} />
+      {formats.map((fmt) => (
+        <source key={fmt} type={`image/${fmt === 'jpg' ? 'jpeg' : fmt}`} srcSet={shot.widths.map((w) => `${shot.src}-${w}.${fmt} ${w}w`).join(', ')} sizes={sizes} />
+      ))}
       <img
-        src={`${shot.src}-${largest}.webp`}
+        src={`${shot.src}-${largest}.${formats[formats.length - 1]}`}
         alt={shot.alt}
         width={shot.width}
         height={shot.height}

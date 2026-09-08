@@ -11,7 +11,7 @@ export default async function NewReservationPage() {
   const base = await getAdminBase();
 
   const [vehicles, locations, extras] = await Promise.all([
-    listVehicles({ published: true }).catch(() => []),
+    listVehicles({ asStaff: true, published: true }).catch(() => []),
     listLocations().catch(() => []),
     listExtras().catch(() => []),
   ]);

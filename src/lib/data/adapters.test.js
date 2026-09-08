@@ -25,6 +25,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { demoAdapter } from './demo-adapter.js';
+import { getStore } from './demo-store.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const supabaseSource = readFileSync(path.join(HERE, 'supabase-adapter.js'), 'utf8');
@@ -81,6 +82,33 @@ describe('settings: public vs internal', () => {
     }
   });
 
+  /* Rule 11 with teeth. In Postgres the public_settings VIEW nulls any claim
+     that is not ticked as verified (0012), so no component can leak one even
+     by accident. The demo adapter mirrors that gate; if it ever stops, dev
+     would show a rating production hides. */
+  test('an unverified claim never reaches a public read', async () => {
+    const s = await demoAdapter.getSettings();
+    assert.equal(s.googleRating, null, 'a rating nobody verified must not render');
+    assert.equal(s.googleReviewCount, null, 'a review count nobody verified must not render');
+    assert.equal(s.foundedYear, null, '« depuis 2013 » is a claim until someone checks it (plan 12.10)');
+    assert.ok(!('verifiedClaims' in s), 'the flags themselves are internal');
+  });
+
+  test('ticking the box is what publishes the number', async () => {
+    const store = getStore();
+    const before = store.settings.verifiedClaims;
+    store.settings.verifiedClaims = { googleRating: true, reviewCount: true, foundedYear: false };
+    store.settings.googleRating = 4.8;
+    store.settings.googleReviewCount = 214;
+    try {
+      const s = await demoAdapter.getSettings();
+      assert.equal(s.googleRating, 4.8);
+      assert.equal(s.googleReviewCount, 214);
+      assert.equal(s.foundedYear, null, 'one verified claim must not carry the others');
+    } finally {
+      store.settings.verifiedClaims = before;
+    }
+  });
   test('public settings still carry what the site actually renders', async () => {
     const s = await demoAdapter.getSettings();
     /* Read by the header, the footer and the trust section. If the view ever

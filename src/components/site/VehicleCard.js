@@ -2,6 +2,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import CarImage, { hasCarShot } from '@/components/site/CarImage';
 import CarSwap from '@/components/site/CarSwap';
+import { uploadedAlt } from '@/components/site/vehiclePhotos';
 import { formatDate, formatMAD } from '@/lib/format';
 import { cn } from '@/lib/cn';
 
@@ -33,6 +34,10 @@ export function pickBadge(vehicle, fleet = []) {
  *   is no truthful state to show (CLAUDE.md rule 5 - Postgres decides).
  * - Price object: per day always; total + day count when `dates` is given -
  *   never a total the caller did not compute (rule 4).
+ * - Photos: whatever the page passes in `photos` (rows from `vehicle_photos`)
+ *   outranks the build-time manifest, so a photo swapped in the admin shows up
+ *   here with no deploy (plan 7.1). The card never reads them itself - it is
+ *   rendered once per vehicle and a query per card would be a query per card.
  * - Motion: lift 6 px, crossfade front -> rear when a rear shot exists,
  *   scanline sweep, specs lift, arrow slide - transforms/opacity only; tap
  *   flips the image on touch (CarSwap).
@@ -40,6 +45,7 @@ export function pickBadge(vehicle, fleet = []) {
  * @param {{
  *   vehicle: object,
  *   fleet?: object[],
+ *   photos?: object[],
  *   query?: object,
  *   dates?: { from: string, to: string, days: number, total: number } | null,
  *   availability?: 'available'|'last'|'unavailable'|'high' | null,
@@ -48,7 +54,7 @@ export function pickBadge(vehicle, fleet = []) {
  *   className?: string,
  * }} props
  */
-export default async function VehicleCard({ vehicle, fleet = [], query, dates = null, availability = null, nextAvailable = null, priority = false, className }) {
+export default async function VehicleCard({ vehicle, photos = [], fleet = [], query, dates = null, availability = null, nextAvailable = null, priority = false, className }) {
   const t = await getTranslations('card');
   const tc = await getTranslations('common');
   const locale = await getLocale();
@@ -56,9 +62,11 @@ export default async function VehicleCard({ vehicle, fleet = [], query, dates = 
   const name = `${v.brand} ${v.model}`;
   const href = { pathname: '/vehicules/[slug]', params: { slug: v.slug }, ...(query ? { query } : {}) };
   const badge = pickBadge(v, fleet);
-  const rear = hasCarShot(v, 'rear');
+  const rear = hasCarShot(v, 'rear', photos);
   const unavailable = availability === 'unavailable';
-  const angleAlt = (angle) => t('photoAlt', { name, angle: t(`angles.${angle}`) });
+  /* Rule 8: an alt the operator wrote for this language beats the generated
+     one, which only knows the car's name. Empty falls back. */
+  const angleAlt = (angle) => uploadedAlt(photos, angle, locale) || t('photoAlt', { name, angle: t(`angles.${angle}`) });
 
   /* Max 3 specs; luggage joins on desktop only (plan 4.5). */
   const specs = [tc(`transmission.${v.transmission}`), t('seats', { count: v.seats }), tc(`fuel.${v.fuel}`)];
@@ -76,6 +84,7 @@ export default async function VehicleCard({ vehicle, fleet = [], query, dates = 
       <div className="chamfer relative aspect-[4/3] overflow-hidden bg-surface-1">
         <CarImage
           vehicle={v}
+          photos={photos}
           angle="front"
           alt={angleAlt('front')}
           priority={priority}
@@ -83,7 +92,7 @@ export default async function VehicleCard({ vehicle, fleet = [], query, dates = 
           className={cn('vcard-front absolute inset-0', unavailable && 'grayscale')}
           imgClassName="p-4"
         />
-        {rear ? <CarImage vehicle={v} angle="rear" alt="" aria-hidden="true" className="vcard-rear absolute inset-0" imgClassName="p-4" /> : null}
+        {rear ? <CarImage vehicle={v} photos={photos} angle="rear" alt="" aria-hidden="true" className="vcard-rear absolute inset-0" imgClassName="p-4" /> : null}
         <span className="vcard-scan" aria-hidden="true" />
 
         {/* meta row over the image: badge (max one) and the availability state */}

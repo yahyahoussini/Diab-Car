@@ -3,7 +3,11 @@ import { summarise } from './summarise';
 
 /* camelCase <-> snake_case mapping between the app model and Postgres columns */
 const toSnake = (s) => s.replace(/[A-Z]/g, (m) => `_${m.toLowerCase()}`);
-const toCamel = (s) => s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+/* `[a-z0-9]`, not `[a-z]`: `is_24h` has a digit after the underscore and used
+   to come through as the literal key `is_24h`, so nothing reading `is24h` ever
+   saw a value. toSnake is deliberately NOT made symmetric — writes go through
+   the save_* RPCs, which read their JSON keys explicitly. */
+const toCamel = (s) => s.replace(/_([a-z0-9])/g, (_, c) => c.toUpperCase());
 const rowToModel = (row) => (row ? Object.fromEntries(Object.entries(row).map(([k, v]) => [toCamel(k), v])) : row);
 const modelToRow = (m) => Object.fromEntries(Object.entries(m).filter(([, v]) => v !== undefined).map(([k, v]) => [toSnake(k), v]));
 
@@ -61,6 +65,51 @@ function blockToModel(row) {
   if (!period) return rest;
   const m = String(period).match(/^[[(]"?([^",]*)"?,"?([^",]*)"?[\])]$/);
   return { ...rest, startAt: m ? isoFromPg(m[1]) : null, endAt: m ? isoFromPg(m[2]) : null };
+}
+
+/**
+ * Call a write RPC and hand back the row it made.
+ *
+ * The rule this encodes: a write that can be REFUSED FOR A BUSINESS REASON —
+ * a conflict, an incomplete checklist, an illegal transition — returns its
+ * outcome so the operator can act on it (those methods use rpcOutcome below
+ * and pass the payload through untouched). A write that can only fail on BAD
+ * INPUT — a taken slug, a missing key — throws, because there is nothing for
+ * the operator to decide: the form is wrong and the action says so.
+ */
+async function rpcRow(fn, args, key) {
+  const sb = await writeClient();
+  const { data, error } = await sb.rpc(fn, args);
+  if (error) fail(error);
+  if (!data?.ok) {
+    const err = new Error(data?.error || 'RPC_FAILED');
+    err.code = data?.error || 'RPC_FAILED';
+    err.detail = data?.detail || null;
+    throw err;
+  }
+  return key ? rowToModel(data[key]) : data;
+}
+
+/** Same call, for the RPCs whose refusals are information rather than faults. */
+async function rpcOutcome(fn, args) {
+  const sb = await writeClient();
+  const { data, error } = await sb.rpc(fn, args);
+  if (error) fail(error);
+  return data;
+}
+
+/**
+ * Public content read, or the staff one.
+ *
+ * The RLS policies on faqs, reviews and posts all read
+ * `published = true OR is_staff()`. Through the ANON client `is_staff()` is
+ * false, so the admin listing its own drafts would see none of them — the
+ * same class of silent-empty bug the staff read helpers above were written
+ * for. `asStaff` picks the session client so the admin sees the unpublished
+ * rows it is there to edit.
+ */
+async function selectContent(table, build, asStaff) {
+  return asStaff ? selectAllAsStaff(table, build) : selectAll(table, build);
 }
 
 async function selectAllAsStaff(table, build) {
@@ -131,12 +180,20 @@ export const supabaseAdapter = {
     return rowToModel(data);
   },
 
-  async updateSettings(patch) {
-    return upsert('settings', { ...patch, id: 1, updatedAt: new Date().toISOString() });
+  /* Column-by-column patch inside save_settings(), so a form that edits the
+     opening hours cannot blank the ICE number, and the change carries a
+     reason into audit_log. */
+  async updateSettings(patch, reason) {
+    return rpcRow('save_settings', { p: patch, p_reason: reason || 'paramètres' }, 'settings');
   },
 
-  async listVehicles({ published, category, transmission, seats, fuel, minPrice, maxPrice, featured, sort } = {}) {
-    return selectAll('vehicles', (q) => {
+  /* `asStaff` reads through the session client. The RLS policy on vehicles
+     is `is_published = true or is_staff()`, and through the ANON client
+     is_staff() is false — so an admin listing its own drafts, or opening one
+     to publish it, would get nothing and a 404. The public site never passes
+     it; the admin always does. */
+  async listVehicles({ published, category, transmission, seats, fuel, minPrice, maxPrice, featured, sort, asStaff = false } = {}) {
+    return (asStaff ? selectAllAsStaff : selectAll)('vehicles', (q) => {
       if (published !== undefined) q = q.eq('published', published);
       if (featured !== undefined) q = q.eq('featured', featured);
       if (category) q = Array.isArray(category) ? q.in('category', category) : q.eq('category', category);
@@ -158,14 +215,14 @@ export const supabaseAdapter = {
     if (error) fail(error);
     return rowToModel(data);
   },
-  async getVehicleById(id) {
-    const sb = await readClient();
+  async getVehicleById(id, { asStaff = false } = {}) {
+    const sb = asStaff ? await writeClient() : await readClient();
     const { data, error } = await sb.from('vehicles').select('*').eq('id', id).maybeSingle();
     if (error) fail(error);
     return rowToModel(data);
   },
-  async upsertVehicle(data) {
-    return upsert('vehicles', { ...data, updatedAt: new Date().toISOString() });
+  async upsertVehicle(data, reason) {
+    return rpcRow('save_vehicle', { p: data, p_reason: reason || null }, 'vehicle');
   },
   async deleteVehicle(id) {
     return remove('vehicles', id);
@@ -174,43 +231,63 @@ export const supabaseAdapter = {
   async listSeasons() {
     return selectAll('seasons', (q) => q.order('start_date'));
   },
-  async upsertSeason(data) {
-    return upsert('seasons', data);
+  async upsertSeason(data, reason) {
+    return rpcRow('save_season', { p: data, p_reason: reason || 'tarifs' }, 'season');
   },
-  async deleteSeason(id) {
-    return remove('seasons', id);
+  async deleteSeason(id, reason) {
+    return rpcRow('admin_delete', { p_table: 'seasons', p_id: id, p_reason: reason || 'suppression saison' });
   },
   async listExtras() {
     return selectAll('extras', (q) => q.order('key'));
   },
-  async upsertExtra(data) {
-    return upsert('extras', data);
+  async upsertExtra(data, reason) {
+    return rpcRow('save_extra', { p: data, p_reason: reason || 'tarifs' }, 'extra');
   },
-  async deleteExtra(id) {
-    return remove('extras', id);
+  async deleteExtra(id, reason) {
+    return rpcRow('admin_delete', { p_table: 'extras', p_id: id, p_reason: reason || 'suppression option' });
   },
-  async listLocations() {
-    return selectAll('locations', (q) => q.eq('active', true).order('key'));
+  /* Public reads see only live places. The admin needs the disabled ones too,
+     or a place switched off can never be switched back on. */
+  async listLocations({ all = false } = {}) {
+    const rows = all
+      ? await selectAllAsStaff('locations', (q) => q.order('sort').order('key'))
+      : await selectAll('locations', (q) => q.eq('active', true).order('sort').order('key'));
+    /* The booking module and the demo seed call it `deliveryFee`; the column
+       is `delivery_fee_mad` (plan 6.2) with the starter's `fee` still behind
+       it. Without this alias every place rendered « sur devis » in production
+       while working in demo — the exact class of bug rule 12 exists to catch. */
+    return rows.map((l) => ({ ...l, deliveryFee: l.deliveryFeeMad ?? l.fee ?? null }));
+  },
+  async upsertLocation(data, reason) {
+    return rpcRow('save_location', { p: data, p_reason: reason || 'lieu' }, 'location');
+  },
+  async deleteLocation(id, reason) {
+    return rpcRow('admin_delete', { p_table: 'locations', p_id: id, p_reason: reason || 'suppression lieu' });
   },
 
-  async listFaqs({ published } = {}) {
-    return selectAll('faqs', (q) => {
-      if (published !== undefined) q = q.eq('published', published);
-      return q.order('sort_order');
-    });
+  async listFaqs({ published, category, citySlug, vehicleId, asStaff = false } = {}) {
+    return selectContent('faqs', (q) => {
+      let b = q;
+      if (published !== undefined) b = b.eq('published', published);
+      if (category) b = b.eq('category', category);
+      if (citySlug) b = b.eq('city_slug', citySlug);
+      if (vehicleId) b = b.eq('vehicle_id', vehicleId);
+      return b.order('sort_order');
+    }, asStaff);
   },
   async upsertFaq(data) {
-    return upsert('faqs', data);
+    return rpcRow('save_faq', { p: data }, 'faq');
   },
   async deleteFaq(id) {
-    return remove('faqs', id);
+    return rpcRow('admin_delete', { p_table: 'faqs', p_id: id, p_reason: 'suppression FAQ' });
   },
 
-  async listPosts({ published } = {}) {
-    return selectAll('posts', (q) => {
-      if (published !== undefined) q = q.eq('published', published);
-      return q.order('published_at', { ascending: false });
-    });
+  async listPosts({ published, asStaff = false } = {}) {
+    return selectContent('posts', (q) => {
+      let b = q;
+      if (published !== undefined) b = b.eq('published', published);
+      return b.order('published_at', { ascending: false });
+    }, asStaff);
   },
   async getPostBySlug(slug) {
     const sb = await readClient();
@@ -228,20 +305,21 @@ export const supabaseAdapter = {
     return upsert('posts', { ...data, updatedAt: new Date().toISOString() });
   },
   async deletePost(id) {
-    return remove('posts', id);
+    return rpcRow('admin_delete', { p_table: 'posts', p_id: id, p_reason: 'suppression article' });
   },
 
-  async listReviews({ published } = {}) {
-    return selectAll('reviews', (q) => {
-      if (published !== undefined) q = q.eq('published', published);
-      return q.order('created_at', { ascending: false });
-    });
+  async listReviews({ published, asStaff = false } = {}) {
+    return selectContent('reviews', (q) => {
+      let b = q;
+      if (published !== undefined) b = b.eq('published', published);
+      return b.order('created_at', { ascending: false });
+    }, asStaff);
   },
   async upsertReview(data) {
-    return upsert('reviews', data);
+    return rpcRow('save_review', { p: data }, 'review');
   },
   async deleteReview(id) {
-    return remove('reviews', id);
+    return rpcRow('admin_delete', { p_table: 'reviews', p_id: id, p_reason: 'suppression avis' });
   },
 
   async createBooking(data) {
@@ -291,8 +369,8 @@ export const supabaseAdapter = {
   async getUnit(id) {
     return selectOneAsStaff('units', (q) => q.eq('id', id));
   },
-  async upsertUnit(data) {
-    return upsert('units', data);
+  async upsertUnit(data, reason) {
+    return rpcRow('save_unit', { p: data, p_reason: reason || null }, 'unit');
   },
 
   async listCustomers() {
@@ -524,6 +602,71 @@ export const supabaseAdapter = {
     const { data, error } = await sb.rpc('set_customer_notes', { p_id: id, p_notes: notes ?? null });
     if (error) fail(error);
     return data;
+  },
+
+  /* ------------------------------------------------------------------ fleet */
+
+  /* Public read on purpose: the fleet page renders these to anonymous
+     visitors, and there is nothing private in a photo of a car for hire. */
+  async listVehiclePhotos({ vehicleId } = {}) {
+    return selectAll('vehicle_photos', (q) => {
+      let b = q.order('sort').order('created_at');
+      if (vehicleId) b = b.eq('vehicle_id', vehicleId);
+      return b;
+    });
+  },
+  async saveVehiclePhoto(data) {
+    return rpcRow('save_vehicle_photo', { p: data }, 'photo');
+  },
+  async deleteVehiclePhoto(id) {
+    return rpcOutcome('delete_vehicle_photo', { p_id: id });
+  },
+  async reorderVehiclePhotos({ vehicleId, ids }) {
+    return rpcOutcome('reorder_vehicle_photos', { p_vehicle: vehicleId, p_ids: ids });
+  },
+  async setUnitStatus({ unitId, status, reason }) {
+    return rpcOutcome('set_unit_status', { p_unit: unitId, p_status: status, p_reason: reason || '' });
+  },
+  async getUnitDossier(id) {
+    return rpcOutcome('unit_dossier', { p_unit: id });
+  },
+
+  /* -------------------------------------------------------------- operations */
+
+  async getOperationsDay(day) {
+    return rpcOutcome('operations_day', { p_day: day });
+  },
+  async completePickup({ id, payload }) {
+    return rpcOutcome('complete_pickup', { p_id: id, p: payload });
+  },
+  async completeReturn({ id, payload }) {
+    return rpcOutcome('complete_return', { p_id: id, p: payload });
+  },
+  async markUnitReady({ unitId, reason }) {
+    return rpcOutcome('mark_unit_ready', { p_unit: unitId, p_reason: reason || null });
+  },
+
+  /* ------------------------------------------------------------ observability */
+
+  async getSystemMetrics() {
+    return rpcOutcome('system_metrics', {});
+  },
+
+  /* Swept by the CRON_SECRET routes, exactly like expireHolds: the service
+     client is the only one these two RPCs are granted to. */
+  async expireUnconfirmedReservations() {
+    const sb = createServiceClient();
+    if (!sb) return { ok: false, error: 'NO_SERVICE_KEY' };
+    const { data, error } = await sb.rpc('expire_unconfirmed_reservations');
+    if (error) fail(error);
+    return data;
+  },
+  async refreshCleaningBlocks() {
+    const sb = createServiceClient();
+    if (!sb) return { ok: false, error: 'NO_SERVICE_KEY' };
+    const { data, error } = await sb.rpc('refresh_cleaning_blocks');
+    if (error) fail(error);
+    return { ok: true, refreshed: data ?? 0 };
   },
 
   async listAuditLog({ table, rowId, actorId, since, until, limit = 100 } = {}) {

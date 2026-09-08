@@ -38,7 +38,8 @@ const NAV = [
   {
     group: 'Flotte',
     items: [
-      { href: '/vehicules', label: 'Modèles', icon: 'M5 17h14M6 17l1-6h10l1 6M4 11l2-5h12l2 5' },
+      { href: '/flotte', label: 'Modèles', icon: 'M5 17h14M6 17l1-6h10l1 6M4 11l2-5h12l2 5', roles: PRICING_ROLES },
+      { href: '/flotte/unites', label: 'Unités', icon: 'M4 7h16v10H4zM8 17v2M16 17v2M7 11h2M15 11h2' },
       { href: '/blocs', label: 'Blocs', icon: 'M4 4h16v16H4zM4 9h16M9 4v16' },
       { href: '/clients', label: 'Clients', icon: 'M16 20v-2a4 4 0 0 0-8 0v2M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z' },
     ],
@@ -48,7 +49,7 @@ const NAV = [
     items: [
       { href: '/contenu/faq', label: 'FAQ', icon: 'M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0z' },
       { href: '/contenu/blog', label: 'Blog', icon: 'M4 4h16v16H4zM8 8h8M8 12h8M8 16h5' },
-      { href: '/avis', label: 'Avis', icon: 'M12 2l3 7 7 .8-5.2 4.8L18 22l-6-3.5L6 22l1.2-7.4L2 9.8 9 9z' },
+      { href: '/contenu/avis', label: 'Avis', icon: 'M12 2l3 7 7 .8-5.2 4.8L18 22l-6-3.5L6 22l1.2-7.4L2 9.8 9 9z' },
     ],
   },
   {
@@ -59,13 +60,13 @@ const NAV = [
       { href: '/parametres', label: 'Paramètres', icon: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 12h2m12 0h2M12 4v2m0 12v2', roles: PRICING_ROLES },
       { href: '/seo', label: 'SEO', icon: 'M21 21l-4.3-4.3M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14z', roles: PRICING_ROLES },
       { href: '/journal', label: 'Journal', icon: 'M4 4h16v16H4zM8 9h8M8 13h8M8 17h4' },
-      { href: '/systeme', label: 'Système', icon: 'M9 3h6v3h4v12H5V6h4zM9 12h6' },
+      { href: '/systeme', label: 'Système', icon: 'M9 3h6v3h4v12H5V6h4zM9 12h6', roles: PRICING_ROLES },
     ],
   },
 ];
 
 /** g d / g r / g c — the sequences plan 7.3 asks for. */
-const GOTO = { d: '/', r: '/reservations', c: '/calendrier', f: '/vehicules', j: '/journal' };
+const GOTO = { d: '/', r: '/reservations', c: '/calendrier', f: '/flotte', j: '/journal' };
 
 export default function AdminShell({ base, session, mode, siteUrl, children, logoutAction, unreadCount = 0 }) {
   const pathname = usePathname();

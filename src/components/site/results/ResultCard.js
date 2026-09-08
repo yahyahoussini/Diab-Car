@@ -2,6 +2,11 @@
 
 import { cn } from '@/lib/cn';
 
+/* A record built from the build-time manifest carries no format list; that
+   pipeline always writes the same pair, best first. */
+const MANIFEST_FORMATS = ['avif', 'webp'];
+const CARD_SIZES = '(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw';
+
 /**
  * A results card (plan 4.4 / 4.5), rendered on the CLIENT.
  *
@@ -12,18 +17,24 @@ import { cn } from '@/lib/cn';
  * the browser would ship every blur data-URI on the site to every visitor.
  *
  * So this card takes plain, already-localized props, and its `<picture>` is
- * built from a compact per-vehicle photo record ({ widths, width, height })
- * the server passes down: about a kilobyte for the whole fleet instead of the
- * manifest. The blur placeholder is deliberately absent — these cards are
- * lazy-loaded below the fold, where a flat surface reads better than a
- * low-resolution smear anyway.
+ * built from a compact per-vehicle photo record ({ src, widths, formats,
+ * width, height }) the server passes down: about a kilobyte for the whole fleet
+ * instead of the manifest. The base path and the format list travel WITH the
+ * record rather than being rebuilt from the slug, because an admin-uploaded
+ * photo lives in Storage under a hashed base and has no AVIF variant — the
+ * admin encodes WebP + JPEG in the browser (plan 2.5 / 7.1).
+ *
+ * The blur placeholder is deliberately absent — these cards are lazy-loaded
+ * below the fold, where a flat surface reads better than a low-resolution
+ * smear anyway.
  *
  * What it shows that the homepage card does not: per-day AND total for the
  * chosen dates, together, because rule 4 says once dates are known both appear
  * and nothing may show up later that was not shown here.
  *
  * @param {{
- *   v: object, photo: {widths:number[], width:number, height:number}|null,
+ *   v: object,
+ *   photo: {src:string, widths:number[], formats:string[], width:number, height:number, alt?:string}|null,
  *   href: string, selected: boolean, onSelect: () => void,
  *   index: number, stagger: boolean, labels: Record<string,string>,
  *   money: (n:number) => string,
@@ -31,6 +42,12 @@ import { cn } from '@/lib/cn';
  */
 export default function ResultCard({ v, photo, href, selected, onSelect, index, stagger, labels, money }) {
   const unavailable = !v.available;
+
+  /* A hardcoded `image/avif` <source> would be chosen by any browser that
+     supports AVIF and then 404 on an uploaded photo — <picture> does not fall
+     back on a failed request, only on an unsupported type. */
+  const formats = photo?.formats?.length ? photo.formats : MANIFEST_FORMATS;
+  const base = photo?.src || `/images/cars/${v.photoFolder}/front`;
 
   return (
     <article
@@ -58,11 +75,12 @@ export default function ResultCard({ v, photo, href, selected, onSelect, index, 
       <div className="chamfer relative aspect-[16/10] overflow-hidden bg-surface-2">
         {photo ? (
           <picture>
-            <source type="image/avif" srcSet={photo.widths.map((w) => `/images/cars/${v.photoFolder}/front-${w}.avif ${w}w`).join(', ')} sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" />
-            <source type="image/webp" srcSet={photo.widths.map((w) => `/images/cars/${v.photoFolder}/front-${w}.webp ${w}w`).join(', ')} sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" />
+            {formats.map((fmt) => (
+              <source key={fmt} type={`image/${fmt === 'jpg' ? 'jpeg' : fmt}`} srcSet={photo.widths.map((w) => `${base}-${w}.${fmt} ${w}w`).join(', ')} sizes={CARD_SIZES} />
+            ))}
             <img
-              src={`/images/cars/${v.photoFolder}/front-${photo.widths[photo.widths.length - 1]}.webp`}
-              alt={`${v.brand} ${v.model}`}
+              src={`${base}-${photo.widths[photo.widths.length - 1]}.${formats[formats.length - 1]}`}
+              alt={photo.alt || `${v.brand} ${v.model}`}
               width={photo.width}
               height={photo.height}
               loading="lazy"

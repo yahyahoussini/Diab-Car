@@ -19,7 +19,7 @@ export default async function AdminDashboard() {
     getFleetSnapshot().catch(() => null),
     getSettings().catch(() => null),
     listReservations({ limit: 200 }).catch(() => []),
-    listVehicles({ published: true }).catch(() => []),
+    listVehicles({ asStaff: true, published: true }).catch(() => []),
     listNotifications({ unreadOnly: true, limit: 20 }).catch(() => []),
   ]);
 

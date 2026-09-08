@@ -4,7 +4,8 @@ import VehicleCard from '@/components/site/VehicleCard';
 import { carShot } from '@/components/site/CarImage';
 import JsonLd from '@/components/site/JsonLd';
 import ResultsClient from '@/components/site/results/ResultsClient';
-import { getSettings, listLocations, listVehicles } from '@/lib/data';
+import { photosByVehicle, photosFor, uploadedAlt } from '@/components/site/vehiclePhotos';
+import { getSettings, listLocations, listVehiclePhotos, listVehicles } from '@/lib/data';
 import { formatMAD } from '@/lib/format';
 import { absoluteUrl, localizedMetadata, webPageJsonLd } from '@/lib/seo';
 import { whatsappLink } from '@/lib/whatsapp';
@@ -46,22 +47,43 @@ export default async function FleetPage({ params }) {
   const tn = await getTranslations({ locale, namespace: 'nav' });
   const tseo = await getTranslations({ locale, namespace: 'seo.fleet' });
 
-  const [all, locations, settings] = await Promise.all([
+  const [all, locations, settings, photoRows] = await Promise.all([
     listVehicles({ published: true }),
     listLocations(),
     getSettings(),
+    /* Public-read table, no cookies, no searchParams: the page stays static
+       and an admin-uploaded photo still reaches it (plan 7.1). One read for
+       the whole grid — a query per card would be a query per card. */
+    listVehiclePhotos({}),
   ]);
+  const byVehicle = photosByVehicle(photoRows);
 
   const minPrice = all.length ? Math.min(...all.map((v) => v.pricePerDay)) : 0;
   const url = absoluteUrl(locale, '/vehicules');
 
-  /* A compact photo record per vehicle — widths and intrinsic size only.
-     The island cannot import the manifest itself: it is a client component,
-     and the manifest carries a blur data-URI for every angle of every car. */
+  /* A compact photo record per vehicle — base path, widths, formats and
+     intrinsic size. The island cannot import the manifest itself: it is a
+     client component, and the manifest carries a blur data-URI for every angle
+     of every car.
+
+     `src` and `formats` travel with the record because an uploaded photo is
+     not where the manifest would put it and has no AVIF variant (the admin
+     encodes WebP + JPEG in the browser), so the card can no longer rebuild
+     either from the slug. `alt` only when the operator wrote one (rule 8). */
   const photos = {};
   for (const v of all) {
-    const shot = carShot(v, 'front');
-    if (shot) photos[v.photoFolder || v.slug] = { widths: shot.widths, width: shot.width, height: shot.height };
+    const rows = photosFor(byVehicle, v);
+    const shot = carShot(v, 'front', rows);
+    if (!shot) continue;
+    const alt = uploadedAlt(rows, 'front', locale);
+    photos[v.photoFolder || v.slug] = {
+      src: shot.src,
+      widths: shot.widths,
+      formats: shot.formats,
+      width: shot.width,
+      height: shot.height,
+      ...(alt ? { alt } : {}),
+    };
   }
 
   /* The plain rows the island falls back to before any dates are chosen. */
@@ -184,7 +206,7 @@ export default async function FleetPage({ params }) {
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {all.map((v, i) => (
                 <div key={v.id} data-vehicle="" data-slug={v.slug}>
-                  <VehicleCard vehicle={v} fleet={all} priority={i < 3} className="h-full" />
+                  <VehicleCard vehicle={v} photos={photosFor(byVehicle, v)} fleet={all} priority={i < 3} className="h-full" />
                 </div>
               ))}
             </div>

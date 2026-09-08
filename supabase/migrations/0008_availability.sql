@@ -509,16 +509,35 @@ create table if not exists availability_ping (
   updated_at timestamptz not null default now()
 );
 
+-- One function, three tables with different columns.
+--
+-- The first version wrote this as a single CASE expression over
+-- `new.vehicle_id` / `new.unit_id`. plpgsql compiles the whole assignment into
+-- ONE SQL query and resolves every field reference in it up front, whichever
+-- branch will actually run — so on `blocks`, which has no vehicle_id, the
+-- expression failed to plan and the trigger raised
+-- `record "new" has no field "vehicle_id"`.
+--
+-- Because this is an AFTER trigger inside the writing statement, that error
+-- aborted the write: from prompt 06 until this fix, EVERY insert, update and
+-- delete on `blocks` was rejected — maintenance, cleaning and transfer blocks
+-- alike. Nothing in the app reported it, because the only caller wrapped the
+-- insert in an exception handler.
+--
+-- Rewritten through jsonb so no field is resolved against the wrong row type.
 create or replace function touch_availability_ping() returns trigger
 language plpgsql security definer set search_path = public, pg_temp as $$
-declare v_id uuid;
+declare
+  v_row jsonb;
+  v_id  uuid;
 begin
-  v_id := case tg_table_name
-            when 'holds'        then coalesce(new.vehicle_id, old.vehicle_id)
-            when 'reservations' then coalesce(new.vehicle_id, old.vehicle_id)
-            when 'blocks'       then (select u.vehicle_id from units u
-                                       where u.id = coalesce(new.unit_id, old.unit_id))
-          end;
+  v_row := to_jsonb(case when tg_op = 'DELETE' then old else new end);
+
+  if tg_table_name = 'blocks' then
+    select u.vehicle_id into v_id from units u where u.id = (v_row ->> 'unit_id')::uuid;
+  else
+    v_id := nullif(v_row ->> 'vehicle_id', '')::uuid;
+  end if;
   if v_id is not null then
     insert into availability_ping (vehicle_id, updated_at) values (v_id, now())
     on conflict (vehicle_id) do update set updated_at = now();

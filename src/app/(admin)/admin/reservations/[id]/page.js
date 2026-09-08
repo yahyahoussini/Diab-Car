@@ -24,7 +24,7 @@ export default async function ReservationDetail({ params }) {
   if (!reservation) notFound();
 
   const [vehicle, customers, units, locations, freeUnits, audit, events] = await Promise.all([
-    reservation.vehicleId ? getVehicleById(reservation.vehicleId).catch(() => null) : null,
+    reservation.vehicleId ? getVehicleById(reservation.vehicleId, { asStaff: true }).catch(() => null) : null,
     listCustomers().catch(() => []),
     listUnits({ vehicleId: reservation.vehicleId }).catch(() => []),
     listLocations().catch(() => []),

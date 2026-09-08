@@ -43,7 +43,6 @@ export const getBooking = async (id) => (await db()).getBooking(id);
    never branches on which one is live. */
 export const listUnits = async (f) => (await db()).listUnits(f);
 export const getUnit = async (id) => (await db()).getUnit(id);
-export const upsertUnit = async (d) => (await db()).upsertUnit(d);
 export const listCustomers = async () => (await db()).listCustomers();
 export const upsertCustomer = async (d) => (await db()).upsertCustomer(d);
 export const listReservations = async (f) => (await db()).listReservations(f);
@@ -80,6 +79,45 @@ export const getCustomerProfile = async (id) => (await db()).getCustomerProfile(
 export const listCustomerDuplicates = async () => (await db()).listCustomerDuplicates();
 export const mergeCustomers = async (a) => (await db()).mergeCustomers(a);
 export const setCustomerNotes = async (a) => (await db()).setCustomerNotes(a);
+
+/* ---------------------------------------------------------------- prompt 12 */
+/* Fleet */
+export const upsertVehicle = async (d, reason) => (await db()).upsertVehicle(d, reason);
+export const deleteVehicle = async (id) => (await db()).deleteVehicle(id);
+export const listVehiclePhotos = async (f) => (await db()).listVehiclePhotos(f);
+export const saveVehiclePhoto = async (d) => (await db()).saveVehiclePhoto(d);
+export const deleteVehiclePhoto = async (id) => (await db()).deleteVehiclePhoto(id);
+export const reorderVehiclePhotos = async (a) => (await db()).reorderVehiclePhotos(a);
+export const upsertUnit = async (d, reason) => (await db()).upsertUnit(d, reason);
+export const setUnitStatus = async (a) => (await db()).setUnitStatus(a);
+export const getUnitDossier = async (id) => (await db()).getUnitDossier(id);
+
+/* Operations */
+export const getOperationsDay = async (day) => (await db()).getOperationsDay(day);
+export const completePickup = async (a) => (await db()).completePickup(a);
+export const completeReturn = async (a) => (await db()).completeReturn(a);
+export const markUnitReady = async (a) => (await db()).markUnitReady(a);
+
+/* Content, prices, places */
+export const upsertFaq = async (d) => (await db()).upsertFaq(d);
+export const deleteFaq = async (id) => (await db()).deleteFaq(id);
+export const upsertPost = async (d) => (await db()).upsertPost(d);
+export const deletePost = async (id) => (await db()).deletePost(id);
+export const getPostById = async (id) => (await db()).getPostById(id);
+export const upsertReview = async (d) => (await db()).upsertReview(d);
+export const deleteReview = async (id) => (await db()).deleteReview(id);
+export const upsertSeason = async (d, reason) => (await db()).upsertSeason(d, reason);
+export const deleteSeason = async (id, reason) => (await db()).deleteSeason(id, reason);
+export const upsertExtra = async (d, reason) => (await db()).upsertExtra(d, reason);
+export const deleteExtra = async (id, reason) => (await db()).deleteExtra(id, reason);
+export const upsertLocation = async (d, reason) => (await db()).upsertLocation(d, reason);
+export const deleteLocation = async (id, reason) => (await db()).deleteLocation(id, reason);
+export const updateSettings = async (patch, reason) => (await db()).updateSettings(patch, reason);
+
+/* Système */
+export const getSystemMetrics = async () => (await db()).getSystemMetrics();
+export const expireUnconfirmedReservations = async () => (await db()).expireUnconfirmedReservations();
+export const refreshCleaningBlocks = async () => (await db()).refreshCleaningBlocks();
 
 /* Availability (plan 6.3/6.4). Postgres decides; these only ask.
    The adapters share one shape so the funnel never branches on the backend. */

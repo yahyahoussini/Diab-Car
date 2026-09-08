@@ -10,7 +10,7 @@ import DriveMorocco from '@/components/site/home/DriveMorocco';
 import FaqSection from '@/components/site/home/FaqSection';
 import CtaBand from '@/components/site/home/CtaBand';
 import JsonLd from '@/components/site/JsonLd';
-import { getSettings, listFaqs, listLocations, listReviews, listVehicles } from '@/lib/data';
+import { getSettings, listFaqs, listLocations, listReviews, listVehiclePhotos, listVehicles } from '@/lib/data';
 import { absoluteUrl, localizedMetadata, webPageJsonLd } from '@/lib/seo';
 
 export const revalidate = 300;
@@ -36,12 +36,17 @@ export async function generateMetadata({ params }) {
  */
 export default async function HomePage({ params }) {
   const { locale } = await params;
-  const [settings, vehicles, locations, faqs, reviews] = await Promise.all([
+  /* `vehicle_photos` has a public read policy, so this extra read costs the
+     page nothing it cannot cache — and it is what lets a photo swapped in the
+     admin reach the fleet block with no deploy (plan 7.1). Read once here,
+     grouped once inside FleetSection. */
+  const [settings, vehicles, locations, faqs, reviews, vehiclePhotos] = await Promise.all([
     getSettings(),
     listVehicles({ published: true }),
     listLocations(),
     listFaqs({ published: true }),
     listReviews({ published: true }),
+    listVehiclePhotos({}),
   ]);
   const t = await getTranslations({ locale, namespace: 'seo.home' });
 
@@ -49,7 +54,7 @@ export default async function HomePage({ params }) {
     <>
       <Hero settings={settings} locations={locations} fleetCount={vehicles.length} />
       <Divider />
-      <FleetSection vehicles={vehicles} />
+      <FleetSection vehicles={vehicles} photos={vehiclePhotos} />
       <Divider />
       <AirportBanner settings={settings} />
       <Divider />

@@ -7,7 +7,8 @@ import { carShot } from '@/components/site/CarImage';
 import VehicleGallery from '@/components/site/vehicle/VehicleGallery';
 import VehicleBooking from '@/components/site/vehicle/VehicleBooking';
 import { Link } from '@/i18n/navigation';
-import { getSettings, getVehicleBySlug, listFaqs, listLocations, listVehicles, t as pick } from '@/lib/data';
+import { photosByVehicle, photosFor, uploadedAlt } from '@/components/site/vehiclePhotos';
+import { getSettings, getVehicleBySlug, listFaqs, listLocations, listVehiclePhotos, listVehicles, t as pick } from '@/lib/data';
 import { formatMAD } from '@/lib/format';
 import { absoluteUrl, breadcrumbJsonLd, faqJsonLd, localizedMetadata, ogImageUrl, vehicleJsonLd } from '@/lib/seo';
 
@@ -80,12 +81,19 @@ export default async function VehiclePage({ params }) {
   const v = await getVehicleBySlug(slug);
   if (!v || v.published === false) notFound();
 
-  const [settings, locations, all, faqs] = await Promise.all([
+  const [settings, locations, all, faqs, photoRows] = await Promise.all([
     getSettings(),
     listLocations(),
     listVehicles({ published: true }),
     listFaqs({ published: true }),
+    /* The whole table rather than `{ vehicleId }`: the gallery needs this
+       car's photos and the "similar" row below needs three other cars', so one
+       unfiltered read beats four filtered ones. Public read, no cookies — the
+       route stays statically rendered (plan 7.1). */
+    listVehiclePhotos({}),
   ]);
+  const byVehicle = photosByVehicle(photoRows);
+  const ownPhotos = photosFor(byVehicle, v);
 
   const t = await getTranslations({ locale, namespace: 'vehicle' });
   const tc = await getTranslations({ locale, namespace: 'common' });
@@ -98,12 +106,15 @@ export default async function VehiclePage({ params }) {
   const mileage = v.mileageLimit ? tc('kmPerDay', { km: v.mileageLimit }) : tc('unlimitedKm');
 
   /* ---- gallery ------------------------------------------------------
-     Descriptive alt per language (rule 8). Angles that do not exist are
-     simply absent — the gallery hides its toggle and strip accordingly. */
+     Descriptive alt per language (rule 8), and an alt the operator typed on
+     the upload wins over the template — they saw the frame. Angles that do not
+     exist are simply absent, whether they were never shot or never uploaded —
+     the gallery hides its toggle and strip accordingly. */
   const shotFor = (angle, altKey) => {
-    const shot = carShot(v, angle);
+    const shot = carShot(v, angle, ownPhotos);
     if (!shot) return null;
-    return { ...shot, alt: t(`alt.${altKey}`, { name, category: tc(`categories.${v.category}`) }) };
+    const alt = uploadedAlt(ownPhotos, angle, locale) || t(`alt.${altKey}`, { name, category: tc(`categories.${v.category}`) });
+    return { ...shot, alt };
   };
   const exterior = [shotFor('front', 'front'), shotFor('side', 'side'), shotFor('rear', 'rear')].filter(Boolean);
   const interior = [shotFor('interior', 'interior'), shotFor('dash', 'dash')].filter(Boolean);
@@ -282,7 +293,7 @@ export default async function VehiclePage({ params }) {
             <h2 className="text-h2 text-text">{t('similar')}</h2>
             <div className="mt-8 grid gap-5 pb-28 sm:grid-cols-2 lg:grid-cols-3">
               {similar.map((s) => (
-                <VehicleCard key={s.id} vehicle={s} fleet={all} className="h-full" />
+                <VehicleCard key={s.id} vehicle={s} photos={photosFor(byVehicle, s)} fleet={all} className="h-full" />
               ))}
             </div>
           </section>

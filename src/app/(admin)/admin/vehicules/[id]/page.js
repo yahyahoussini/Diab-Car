@@ -1,40 +1,15 @@
-import { notFound } from 'next/navigation';
-import { db } from '@/lib/data';
+import { redirect } from 'next/navigation';
 import { getAdminBase } from '@/lib/auth/server';
-import { deleteVehicle } from '@/lib/actions/admin';
-import VehicleForm from '@/components/admin/VehicleForm';
-import { AdminLink, PageTitle, SubmitButton } from '@/components/admin/ui';
 
 export const dynamic = 'force-dynamic';
 
-export default async function VehicleEditPage({ params, searchParams }) {
-  const { id } = await params;
-  const { saved } = await searchParams;
+/**
+ * The old model editor. Same id, new address (plan 7.1) — including the
+ * `new` sentinel the previous form used, which is `nouveau` in French now
+ * that every other admin route is.
+ */
+export default async function VehicleRedirect({ params }) {
   const base = await getAdminBase();
-  const isNew = id === 'new';
-  const vehicle = isNew ? {} : await (await db()).getVehicleById(id);
-  if (!vehicle) notFound();
-
-  return (
-    <>
-      <PageTitle
-        title={isNew ? 'Nouveau véhicule' : `${vehicle.brand} ${vehicle.model} ${vehicle.year}`}
-        description={isNew ? 'Renseignez la fiche ; elle apparaît dans les 4 langues.' : `/${vehicle.slug}`}
-        actions={
-          <>
-            <AdminLink href={`${base}/vehicules`} variant="secondary">
-              ← Flotte
-            </AdminLink>
-            {!isNew ? (
-              <form action={deleteVehicle}>
-                <input type="hidden" name="id" value={vehicle.id} />
-                <SubmitButton variant="danger">Supprimer</SubmitButton>
-              </form>
-            ) : null}
-          </>
-        }
-      />
-      <VehicleForm vehicle={vehicle} saved={saved === '1'} />
-    </>
-  );
+  const { id } = await params;
+  redirect(`${base}/flotte/${id === 'new' ? 'nouveau' : id}`);
 }

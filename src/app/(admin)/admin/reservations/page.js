@@ -34,7 +34,7 @@ export default async function ReservationsPage({ searchParams }) {
 
   const [all, vehicles, customers] = await Promise.all([
     listReservations({ status, limit: 500 }).catch(() => []),
-    listVehicles({}).catch(() => []),
+    listVehicles({ asStaff: true,  asStaff: true }).catch(() => []),
     listCustomers().catch(() => []),
   ]);
 

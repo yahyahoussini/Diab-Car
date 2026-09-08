@@ -65,6 +65,22 @@ export const seedSettings = {
     { minDays: 30, discountPct: 25 },
   ],
   monthlyFrom: { economy: 6500, suv: 9500, premium: 19000 },
+
+  /* Prompt 12. A car's own deposit always wins; these only fill a gap. */
+  depositByCategory: { economy: 3000, compact: 3000, sedan: 5000, suv: 5000, premium: 10000, luxury: 15000, van: 8000 },
+  /* An unconfirmed request holds a car hostage; after this many hours it is
+     cancelled with the reason « non confirmée » and the car is released. */
+  autoExpireHours: 12,
+  /* How long a returned car stays blocked before it would drift back on sale
+     if nobody pressed « Marquer prête ». Matches the default prep buffer. */
+  cleaningMinutes: 120,
+  paymentMethods: ['cash', 'card'],
+  sla: {},
+  lastBackupAt: null,
+  /* Rule 11, and the DATABASE enforces it too: public_settings NULLs any
+     claim not flagged here, so an unverified rating cannot reach a visitor.
+     Nothing is ticked, because nothing has been checked against its source. */
+  verifiedClaims: { googleRating: false, reviewCount: false, foundedYear: false },
   // CNDP receipt number (plan 9.4). Empty until Diab Car files the declaration;
   // the footer legal row hides the line while it is empty (CLAUDE.md rule 11).
   cndpReceipt: '',

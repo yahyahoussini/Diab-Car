@@ -1,6 +1,6 @@
 # Diab Car — build status
 
-**Updated:** 2026-09-08 · **Branch:** `build/v1` · **Last prompt:** PROMPT 11 — admin reservations and calendar (Sprint 4b). State machine, unit assignment, counter booking, fleet Gantt, client files and the duplicate merge. **Web Push transport still NOT done (PROMPT 10 carry-over).**
+**Updated:** 2026-09-08 · **Branch:** `build/v1` · **Last prompt:** PROMPT 12 — admin fleet, operations, content, settings (Sprint 4c). The closed loop retour → nettoyage → prête → disponibilité publique works end to end and is tested. **Web Push transport still NOT done (PROMPT 10 carry-over). Hosting: Vercel Pro (owner, PROMPT 17).**
 
 This file is the running state of the build. It is rewritten at the end of **every** prompt in `docs/PROMPTS.md`.
 Decisions in the *Plan §10* column come from `docs/MASTER-PLAN.md` §10 (keep / rebuild / extend / delete); where §10 is
@@ -30,7 +30,7 @@ not *never touched again*.
 | 09 | 3c | Booking funnel, confirmation, WhatsApp, email | **done** |
 | 10 | 4a | Admin foundation: auth, roles, shell, dashboard | **partial — see PROMPT 10 notes; Web Push transport and 8 routes outstanding** |
 | 11 | 4b | Admin reservations, state machine, calendar | **done — 0010 + 0011 applied; 86 unit tests, 2 new e2e green** |
-| 12 | 4c | Admin fleet, operations, content, prices, settings | todo |
+| 12 | 4c | Admin fleet, operations, content, prices, settings | **done — 0012 applied; closed loop measured; two pre-existing trigger bugs fixed; e2e loop green** |
 | 13 | 5 | SEO / GEO / AEO pages and content | todo |
 | 14 | 6a | WOW motion, view transitions, RTL motion | todo |
 | 15 | 6b | QA: a11y, RTL, performance CI, content freeze | todo |
@@ -209,6 +209,63 @@ A read-only audit (5 parallel agents) ran before any code was written. It found 
 | 8 of plan 3's routes | `/calendrier`, `/blocs`, `/clients`, `/operations/departs`, `/operations/retours`, `/systeme` now render an honest "pas encore disponible" panel naming the prompt that builds them and what to use meanwhile — the nav links to them, and a 404 would read as a broken admin. `/operations/checklist/[id]` and `/flotte/unites/[id]` have no link and no page |
 | Global search | The input, the `/` shortcut and the submit exist; it routes to `/reservations?q=`. The reservations page does not yet interpret `q`, so searching currently filters nothing |
 | Admin still reads the LEGACY `bookings` table | `/admin/reservations` lists `bookings`, not `reservations`. The dashboard reads the real `reservations`. Migrating that page is PROMPT 11 |
+
+---
+
+## PROMPT 12 notes — 2026-09-08
+
+**The closed loop, measured on the live database, not assumed.** `free_units()` for one model across the loop:
+
+| Step | free units | unit | reservation |
+|---|---|---|---|
+| before | 2 | available | — |
+| booked + confirmed | 1 | available | confirmed |
+| **complete_pickup** | 1 | **rented** | **active** |
+| **complete_return** | held by the cleaning block | **cleaning** | **returned** |
+| **mark_unit_ready** | **back on sale** | **available** | returned |
+
+Why a block and not the status: `unit_is_bookable()` (0008) is period-blind — it excludes maintenance | blocked | out_of_service for EVERY window, past and future. Adding `cleaning` there would take a car being wiped down this afternoon off sale for next month too. Availability is a question about a PERIOD, so the answer is period-shaped: `complete_return` writes a `blocks` row of kind `cleaning` for `[now, now + settings.cleaning_minutes)`, `mark_unit_ready` deletes it, and `refresh_cleaning_blocks()` (pg_cron every 10 min, or `/api/cron/expire-reservations`) re-extends it while the status is still `cleaning`. If the cron never runs, the exposure is bounded by the same prep buffer the whole engine already trusts — stated, not hidden.
+
+**Two pre-existing bugs found by the loop test, both real, both fixed in the file that owns them.**
+
+1. **Every write to `blocks` had been failing since PROMPT 06.** `touch_availability_ping()` (0008) resolved `new.vehicle_id` inside a `CASE`; plpgsql plans the whole expression up front, `blocks` has no such column, and the AFTER trigger raised `record "new" has no field "vehicle_id"` — aborting the write. Prompt 11's « + Bloc » never worked; its only caller wrapped the insert in a `catch`. Rewritten through `to_jsonb()`.
+2. **PROMPT 04's `log_reservation_transition()` already writes PICKUP/RETURN events**, so the checklists were producing two rows per handover in an append-only evidence table. The checklists now raise a transaction-local flag (`app.skip_transition_event`) and the trigger stands aside; it still fires for every other path.
+
+**Migration `0012_fleet_ops_content.sql`** (applied): `vehicle_photos` table (public read, staff write); `settings.{auto_expire_hours, cleaning_minutes, deposit_by_category, sla, last_backup_at, payment_methods, verified_claims}`; `reservations.payment` (what was actually taken at the counter, audited); RPCs `save_vehicle`, `save_unit`, `set_unit_status`, `save_vehicle_photo`, `delete_vehicle_photo`, `reorder_vehicle_photos`, `unit_dossier`, `operations_day`, `complete_pickup`, `complete_return`, `mark_unit_ready`, `refresh_cleaning_blocks`, `expire_unconfirmed_reservations`, `save_season`, `save_extra`, `save_location`, `save_settings`, `save_faq`, `save_review`, `admin_delete` (literal whitelist), `system_metrics`. Audit triggers extended to seasons, extras, locations, faqs, reviews, posts, vehicle_photos. Verified as anon: every guarded function answers FORBIDDEN / `[]` / `null`.
+
+**Rule 11 with teeth.** `public_settings` now NULLs `google_rating`, `google_review_count` and `founded_year` unless `verified_claims` marks them true — enforced in the VIEW, so no component can leak an unverified number even by asking for it. Consequence: « depuis 2013 » and the Google rating are OFF the public site until someone ticks « vérifié » in Paramètres. Plan §12.10 lists that claim as unconfirmed; this is the rule working. The demo adapter mirrors the gate (tested).
+
+**`save_vehicle` / `save_unit` PATCH rather than overwrite** (proved: a partial save keeps `minDays`, `prepBufferMinutes`, `purposeTags`, mileage and fuel). Without this an older form would have reset the prep buffer — the thing that stops the same car being promised thirty minutes after a return — every time somebody fixed a typo.
+
+**Images: no server processing anywhere.** `src/lib/images/browser.js` decodes, resizes on a canvas, encodes WebP at 480/768/1080/1600/2000 (never upscaling) plus a JPEG fallback and a 24 px blur, then uploads straight to the `vehicles` bucket. Inspection photos and signatures go to the private `inspections` bucket, read back through 15-minute signed URLs. `CarImage` renders a build-time manifest photo and an uploaded row with identical markup; the fleet, results, vehicle and airport pages now thread `vehicle_photos` through, one query per page.
+
+**Admin routes now real:** `/flotte`, `/flotte/[id]` (content ×4, specs, purpose tags, prices, publish, photo manager), `/flotte/unites`, `/flotte/unites/[id]` (Aperçu · Timeline with evidence thumbnails · Réservations · Blocs · Documents placeholder), `/operations/departs`, `/operations/retours` (with overdue and à préparer), `/operations/checklist/[id]?mode=pickup|return` (three ticks, SVG condition map with 19 keyboard-reachable zones, photos, signature canvas, payment record), `/contenu/faq` (×4 languages, short + long answer, category/city/vehicle), `/contenu/avis` (first name + initial, sample flag explained), `/contenu/blog` list, `/tarifs` (seasons, unlimited tiers, extras, deposit by category, delivery per place, misc fees — every write with a reason), `/parametres` (agency, repeatable hour bands, legal/CNDP, trust numbers with « vérifié », SLA ×4, auto-expiry, cleaning minutes, backup date), `/systeme` (DB and storage against the free limits, counts, honest « not readable from here » for Workers requests and Resend quota), `/seo` (+ OG regeneration instructions). `/vehicules*` and `/avis` redirect.
+
+**Fixed after the agents' cross-review** (each flagged in a file it did not own): `toCamel` never converted `is_24h`; `listLocations` returned `deliveryFeeMad` while the booking module read `deliveryFee`, so **every place rendered « sur devis » in production** while working in demo; `listVehicles`/`getVehicleById` read as anon so the admin could not see drafts; `save_settings` skipped `lat`/`lng`; `payment_methods` missing from `public_settings`; `unit_dossier` key naming; nav shortcut and role gating; a duplicate `upsertUnit` export that broke the build. Prompt 11's four reservation actions and the block delete gained zod (rule 1). Deleted as orphans: `VehicleForm.js`, `SettingsForm.js`, `BookingStatusForm.js` and twelve dead FormData actions in `actions/admin.js`.
+
+**Checks**
+
+| Command | Result |
+|---|---|
+| `npm run build` | pass — every new route registered |
+| `npm run lint` | 10 errors, 1 warning — the pre-existing baseline; **zero raw hex in 65 changed files** |
+| `npm test` | **92 / 92** (+6: deposit by category, verified-claims gate) |
+| `npm run check:contrast` / `check:messages` | pass / pass (764 keys × 4) |
+| live DB: closed loop, 22-RPC surface, anon refusals, patch semantics | all verified, fixtures removed |
+| `tests/e2e/loop.spec.js` | **1 passed (16.1 s)** — site booking → assign → confirm → départ → retour → prête → bookable again |
+| `npm run test:e2e` | **62 passed · 1 flaky (the /en homepage sub-resource 404, green on retry) · 0 failed** — including the new closed-loop test |
+
+**NOT DONE / open — stated plainly**
+
+| Item | Status |
+|---|---|
+| Adversarial audit workflow | **Did not run** — all six reviewers hit the session limit before starting. The security pass was done by hand instead (every action gated + zod, no secret in a client bundle, no raw hex, ConditionMap keyboard-reachable). Re-run the workflow when the limit resets |
+| A location's own `delivery_fee_mad` | Not charged by `quote()` yet — it still derives delivery from the settings fee by category. Zero customer impact today (no `city` places exist), but Rabat at 400 MAD will need `quote()` to take the resolved place's fee. Prompt 13 or 15 |
+| Numeric settings cannot be CLEARED | `save_settings` keeps the old value on a blank numeric; the supported way to remove a trust number is to untick « vérifié » |
+| Public FAQ still reads the legacy `answer` | `save_faq` mirrors the long answer into it so nothing breaks; the short AEO answer reaches the FAQ page and JSON-LD in prompt 13 |
+| Web Push transport | unchanged from PROMPT 10 |
+| Lighthouse | not re-measured; one extra public-read query on four ISR pages — check in prompt 15 |
+| Cron for the new sweeps | `expire_unconfirmed_reservations` and `refresh_cleaning_blocks` are scheduled in pg_cron by 0012 and exposed at `/api/cron/expire-reservations`; the Vercel Cron entry lands with the deploy prompt |
 
 ---
 

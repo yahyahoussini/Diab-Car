@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import Button from '@/components/ui/Button';
 import VehicleCard from '@/components/site/VehicleCard';
+import { photosByVehicle, photosFor } from '@/components/site/vehiclePhotos';
 import PurposeTiles from './PurposeTiles';
 import FleetGrid from './FleetGrid';
 import { PURPOSES } from './purposes';
@@ -15,11 +16,16 @@ import { PURPOSES } from './purposes';
  * No `availability` is passed: without dates there is no truthful state to
  * show, and the UI never invents one (CLAUDE.md rule 5).
  *
- * @param {{ vehicles: object[] }} props
+ * Photos uploaded from the admin arrive as one flat array from the page and
+ * are grouped here, once, before any card renders (plan 7.1).
+ *
+ * @param {{ vehicles: object[], photos?: object[] }} props
  */
-export default async function FleetSection({ vehicles = [] }) {
+export default async function FleetSection({ vehicles = [], photos = [] }) {
   const t = await getTranslations('home.fleet');
   const tp = await getTranslations('home.purpose');
+
+  const byVehicle = photosByVehicle(photos);
 
   const published = vehicles
     .filter((v) => v.published !== false)
@@ -46,7 +52,7 @@ export default async function FleetSection({ vehicles = [] }) {
             {published.map((v, i) => (
               <div key={v.id} data-vehicle="" data-category={v.category} data-seats={v.seats} hidden={i >= 6 ? true : undefined}>
                 {/* The first three are above the fold on desktop; the rest lazy-load. */}
-                <VehicleCard vehicle={v} fleet={published} priority={i < 3} className="h-full" />
+                <VehicleCard vehicle={v} photos={photosFor(byVehicle, v)} fleet={published} priority={i < 3} className="h-full" />
               </div>
             ))}
           </FleetGrid>

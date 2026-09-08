@@ -64,7 +64,7 @@ export async function createBlockAction(input) {
 
 export async function deleteBlockAction(id) {
   await requireAdmin();
-  if (typeof id !== 'string' || !id) return { ok: false, error: 'VALIDATION' };
+  if (!z.uuid().or(z.string().min(1).max(64)).safeParse(id).success) return { ok: false, error: 'VALIDATION' };
   await deleteBlock(id);
   revalidatePath('/admin/calendrier');
   revalidatePath('/admin/blocs');

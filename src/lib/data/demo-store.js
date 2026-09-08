@@ -39,6 +39,10 @@ function createStore() {
     blocks: [],
     holds: [],
     events: [],
+    /* Uploaded from the admin in the real thing; empty here, so CarImage falls
+       back to the build-time manifest and then to the silhouette. */
+    vehiclePhotos: [],
+    notifications: [],
   };
 }
 

@@ -5,6 +5,20 @@ import { NEEDS_REASON, NEXT_STATES, OCCUPYING_STATUSES as OCCUPYING_ST } from '.
 
 const clone = (v) => JSON.parse(JSON.stringify(v));
 
+/** One DAMAGE_REPORTED event per entry, mirroring log_damages() in 0012. */
+function logDemoDamages(store, reservation, damages) {
+  if (!Array.isArray(damages)) return 0;
+  for (const d of damages) {
+    store.events.push({
+      id: newId('e'), unitId: reservation.unitId, reservationId: reservation.id,
+      type: 'DAMAGE_REPORTED', at: new Date().toISOString(),
+      condition: { zone: d.zone, type: d.type, severity: d.severity },
+      notes: d.notes || null, photos: d.photos || [], data: d,
+    });
+  }
+  return damages.length;
+}
+
 const rangesOverlap = (a, b) => new Date(a.startAt) < new Date(b.endAt) && new Date(b.startAt) < new Date(a.endAt);
 const now = () => new Date().toISOString();
 
@@ -56,13 +70,31 @@ export const demoAdapter = {
   async getSettings() {
     const s = clone(getStore().settings);
     for (const k of INTERNAL_SETTINGS) delete s[k];
+    /* The same gate the public_settings VIEW applies in Postgres (0012): a
+       claim nobody has ticked as verified does not reach a visitor. Mirrored
+       here so `npm run dev` cannot show a number production would hide —
+       a demo that is more generous than the real thing teaches the wrong
+       lesson about rule 11. */
+    const verified = s.verifiedClaims || {};
+    if (verified.googleRating !== true) s.googleRating = null;
+    if (verified.reviewCount !== true) s.googleReviewCount = null;
+    if (verified.foundedYear !== true) s.foundedYear = null;
+    delete s.verifiedClaims;
     return s;
   },
   /** Full row, mirroring the staff-only read in the Supabase adapter. */
   async getSettingsAdmin() {
     return clone(getStore().settings);
   },
-  async updateSettings(patch) {
+  async updateSettings(patch, reason) {
+    /* Same refusal as save_settings() in 0012, thrown the way rpcRow() throws
+       it, so a form that forgets the motif fails in dev exactly as it would in
+       production instead of quietly saving. */
+    if (!String(reason || '').trim()) {
+      const err = new Error('REASON_REQUIRED');
+      err.code = 'REASON_REQUIRED';
+      throw err;
+    }
     const s = getStore();
     s.settings = { ...s.settings, ...patch, updatedAt: now() };
     return clone(s.settings);
@@ -118,8 +150,10 @@ export const demoAdapter = {
   },
   async deleteSeason(id) {
     const s = getStore();
+    const before = s.seasons.length;
     s.seasons = s.seasons.filter((x) => x.id !== id);
-    return true;
+    const deleted = before - s.seasons.length;
+    return { ok: deleted > 0, deleted, error: deleted ? null : 'NOT_FOUND' };
   },
   async listExtras() {
     return clone(getStore().extras);
@@ -139,11 +173,30 @@ export const demoAdapter = {
   },
   async deleteExtra(id) {
     const s = getStore();
+    const before = s.extras.length;
     s.extras = s.extras.filter((x) => x.id !== id);
-    return true;
+    const deleted = before - s.extras.length;
+    return { ok: deleted > 0, deleted, error: deleted ? null : 'NOT_FOUND' };
   },
-  async listLocations() {
-    return clone(getStore().locations);
+  async listLocations({ all = false } = {}) {
+    const rows = getStore().locations;
+    return clone(all ? rows : rows.filter((l) => l.active !== false));
+  },
+  async upsertLocation(data) {
+    const s = getStore();
+    const i = data.id ? s.locations.findIndex((x) => x.id === data.id) : -1;
+    if (i >= 0) {
+      s.locations[i] = { ...s.locations[i], ...data };
+      return clone(s.locations[i]);
+    }
+    const row = { active: true, kind: 'custom', sort: 100, ...data, id: data.id || newId('l') };
+    s.locations.push(row);
+    return clone(row);
+  },
+  async deleteLocation(id) {
+    const s = getStore();
+    s.locations = s.locations.filter((x) => x.id !== id);
+    return { ok: true, deleted: 1 };
   },
 
   /* FAQ */
@@ -167,8 +220,10 @@ export const demoAdapter = {
   },
   async deleteFaq(id) {
     const s = getStore();
+    const before = s.faqs.length;
     s.faqs = s.faqs.filter((x) => x.id !== id);
-    return true;
+    const deleted = before - s.faqs.length;
+    return { ok: deleted > 0, deleted, error: deleted ? null : 'NOT_FOUND' };
   },
 
   /* Posts */
@@ -200,8 +255,10 @@ export const demoAdapter = {
   },
   async deletePost(id) {
     const s = getStore();
+    const before = s.posts.length;
     s.posts = s.posts.filter((x) => x.id !== id);
-    return true;
+    const deleted = before - s.posts.length;
+    return { ok: deleted > 0, deleted, error: deleted ? null : 'NOT_FOUND' };
   },
 
   /* Reviews */
@@ -225,8 +282,10 @@ export const demoAdapter = {
   },
   async deleteReview(id) {
     const s = getStore();
+    const before = s.reviews.length;
     s.reviews = s.reviews.filter((x) => x.id !== id);
-    return true;
+    const deleted = before - s.reviews.length;
+    return { ok: deleted > 0, deleted, error: deleted ? null : 'NOT_FOUND' };
   },
 
   /* Bookings */
@@ -677,6 +736,289 @@ export const demoAdapter = {
     c.notes = String(notes || '').trim() || null;
     c.updatedAt = now();
     return { ok: true };
+  },
+
+  /* ------------------------------------------------------------------ fleet
+     Mirrors supabase/migrations/0012. The demo has no roles, so the FORBIDDEN
+     branches cannot occur; everything else behaves the same way, including the
+     part that matters most — a returned car leaves public availability until
+     somebody marks it ready. */
+
+  async listVehiclePhotos({ vehicleId } = {}) {
+    const rows = getStore().vehiclePhotos || [];
+    return clone(
+      (vehicleId ? rows.filter((p) => p.vehicleId === vehicleId) : rows).sort((a, b) => (a.sort || 0) - (b.sort || 0)),
+    );
+  },
+  async saveVehiclePhoto(data) {
+    const s = getStore();
+    s.vehiclePhotos = s.vehiclePhotos || [];
+    const i = data.id ? s.vehiclePhotos.findIndex((p) => p.id === data.id) : -1;
+    if (i >= 0) {
+      s.vehiclePhotos[i] = { ...s.vehiclePhotos[i], ...data };
+      return clone(s.vehiclePhotos[i]);
+    }
+    const row = { angle: 'front', widths: [], formats: ['webp', 'jpg'], sort: 100, ...data, id: data.id || newId('ph'), createdAt: now() };
+    s.vehiclePhotos.push(row);
+    return clone(row);
+  },
+  async deleteVehiclePhoto(id) {
+    const s = getStore();
+    s.vehiclePhotos = s.vehiclePhotos || [];
+    const row = s.vehiclePhotos.find((p) => p.id === id);
+    s.vehiclePhotos = s.vehiclePhotos.filter((p) => p.id !== id);
+    return row ? { ok: true, basePath: row.basePath, widths: row.widths, formats: row.formats } : { ok: false, error: 'NOT_FOUND' };
+  },
+  async reorderVehiclePhotos({ vehicleId, ids }) {
+    const s = getStore();
+    s.vehiclePhotos = s.vehiclePhotos || [];
+    let moved = 0;
+    (ids || []).forEach((id, index) => {
+      const row = s.vehiclePhotos.find((p) => p.id === id && p.vehicleId === vehicleId);
+      if (row) {
+        row.sort = (index + 1) * 10;
+        moved += 1;
+      }
+    });
+    return { ok: true, moved };
+  },
+  async setUnitStatus({ unitId, status, reason }) {
+    const s = getStore();
+    const u = s.units.find((x) => x.id === unitId);
+    if (!u) return { ok: false, error: 'NOT_FOUND' };
+    if (!String(reason || '').trim()) return { ok: false, error: 'REASON_REQUIRED' };
+    if (u.status === 'rented' && ['maintenance', 'blocked', 'out_of_service'].includes(status)) {
+      return { ok: false, error: 'UNIT_OUT', status: u.status };
+    }
+    const from = u.status;
+    u.status = status;
+    u.updatedAt = now();
+    s.events.push({ id: newId('e'), unitId, type: 'STATUS_CHANGED', at: now(), data: { from, to: status }, reason });
+    return { ok: true, from, to: status };
+  },
+  async getUnitDossier(id) {
+    const s = getStore();
+    const u = s.units.find((x) => x.id === id);
+    if (!u) return null;
+    const v = s.vehicles.find((x) => x.id === u.vehicleId);
+    const loc = s.locations.find((x) => x.id === u.currentLocationId);
+    return clone({
+      unit: {
+        ...u,
+        vehicle: v ? `${v.brand} ${v.model}` : '\u2014',
+        slug: v?.slug || null,
+        location: loc ? loc.name?.fr || loc.key : null,
+      },
+      events: [...s.events.filter((e) => e.unitId === id)].sort((a, b) => String(b.at).localeCompare(String(a.at))),
+      reservations: s.reservations
+        .filter((r) => r.unitId === id)
+        .map((r) => ({ id: r.id, reference: r.reference, status: r.status, startAt: r.startAt, endAt: r.endAt, total: r.quote?.total ?? null }))
+        .sort((a, b) => String(b.startAt).localeCompare(String(a.startAt))),
+      blocks: s.blocks.filter((b) => b.unitId === id),
+    });
+  },
+
+  /* -------------------------------------------------------------- operations */
+
+  async getOperationsDay(day) {
+    const s = getStore();
+    const d0 = new Date(`${day}T00:00:00+01:00`);
+    const d1 = new Date(d0.getTime() + 86400000);
+    const inDay = (iso) => {
+      const t = new Date(iso);
+      return t >= d0 && t < d1;
+    };
+    const decorate = (r) => {
+      const v = s.vehicles.find((x) => x.id === r.vehicleId);
+      const u = s.units.find((x) => x.id === r.unitId);
+      const c = s.customers.find((x) => x.id === r.customerId);
+      return {
+        id: r.id, reference: r.reference, status: r.status,
+        start_at: r.startAt, end_at: r.endAt, unit_id: r.unitId,
+        vehicle: v ? `${v.brand} ${v.model}` : '\u2014',
+        plate: u?.plate || null,
+        customer: c ? `${c.firstName} ${c.lastName}`.trim() : null,
+        phone: c?.phone || null, locale: c?.locale || 'fr',
+        total: r.quote?.total ?? null,
+        picked_up: s.events.some((e) => e.reservationId === r.id && e.type === 'PICKUP'),
+        returned: s.events.some((e) => e.reservationId === r.id && e.type === 'RETURN'),
+      };
+    };
+    const live = s.reservations.filter((r) => !['cancelled', 'no_show'].includes(r.status));
+    return clone({
+      day,
+      departures: live.filter((r) => inDay(r.startAt)).map(decorate),
+      returns: live.filter((r) => inDay(r.endAt)).map(decorate),
+      overdue: live.filter((r) => r.status === 'active' && new Date(r.endAt) < new Date()).map(decorate),
+      toPrepare: s.units
+        .filter((u) => ['cleaning', 'returned'].includes(u.status))
+        .map((u) => {
+          const v = s.vehicles.find((x) => x.id === u.vehicleId);
+          return { unitId: u.id, plate: u.plate, status: u.status, vehicle: v ? `${v.brand} ${v.model}` : '\u2014', since: u.updatedAt };
+        }),
+    });
+  },
+
+  async completePickup({ id, payload = {} }) {
+    const s = getStore();
+    const r = s.reservations.find((x) => x.id === id);
+    if (!r) return { ok: false, error: 'NOT_FOUND' };
+    if (!['confirmed', 'ready'].includes(r.status)) {
+      return { ok: false, error: 'ILLEGAL_TRANSITION', from: r.status, allowed: NEXT_STATES[r.status] || [] };
+    }
+    if (!r.unitId) return { ok: false, error: 'UNIT_REQUIRED' };
+    if (!(payload.identityChecked && payload.documentsChecked && payload.unitChecked)) {
+      return { ok: false, error: 'CHECKS_INCOMPLETE' };
+    }
+    const eventId = newId('e');
+    s.events.push({
+      id: eventId, unitId: r.unitId, reservationId: r.id, type: 'PICKUP', at: now(),
+      mileageKm: payload.mileageKm ?? null, fuelPct: payload.fuelPct ?? null,
+      condition: payload.condition || {}, notes: payload.notes || null,
+      photos: payload.photos || [], signaturePath: payload.signaturePath || null,
+      data: { identityChecked: true, documentsChecked: true, unitChecked: true, payment: payload.payment || {} },
+      reason: payload.reason || 'départ (remise des clés)',
+    });
+    logDemoDamages(s, r, payload.damages);
+    r.status = 'active';
+    if (payload.payment) r.payment = payload.payment;
+    r.updatedAt = now();
+    const u = s.units.find((x) => x.id === r.unitId);
+    if (u) {
+      u.status = 'rented';
+      if (payload.mileageKm != null) u.mileageKm = payload.mileageKm;
+      if (payload.fuelPct != null) u.fuelPct = payload.fuelPct;
+      if (payload.locationId) u.currentLocationId = payload.locationId;
+      u.updatedAt = now();
+    }
+    return { ok: true, eventId, reference: r.reference, status: 'active' };
+  },
+
+  async completeReturn({ id, payload = {} }) {
+    const s = getStore();
+    const r = s.reservations.find((x) => x.id === id);
+    if (!r) return { ok: false, error: 'NOT_FOUND' };
+    if (r.status !== 'active') {
+      return { ok: false, error: 'ILLEGAL_TRANSITION', from: r.status, allowed: NEXT_STATES[r.status] || [] };
+    }
+    if (!r.unitId) return { ok: false, error: 'UNIT_REQUIRED' };
+
+    const minutes = Number(s.settings?.cleaningMinutes) || 120;
+    const eventId = newId('e');
+    s.events.push({
+      id: eventId, unitId: r.unitId, reservationId: r.id, type: 'RETURN', at: now(),
+      mileageKm: payload.mileageKm ?? null, fuelPct: payload.fuelPct ?? null,
+      condition: payload.condition || {}, notes: payload.notes || null,
+      photos: payload.photos || [], signaturePath: payload.signaturePath || null,
+      data: payload.data || {}, reason: payload.reason || 'retour du véhicule',
+    });
+    const damages = logDemoDamages(s, r, payload.damages);
+    r.status = 'returned';
+    r.updatedAt = now();
+    const u = s.units.find((x) => x.id === r.unitId);
+    if (u) {
+      u.status = 'cleaning';
+      if (payload.mileageKm != null) u.mileageKm = payload.mileageKm;
+      if (payload.fuelPct != null) u.fuelPct = payload.fuelPct;
+      if (payload.locationId) u.currentLocationId = payload.locationId;
+      u.updatedAt = now();
+    }
+    /* The block, not the status, is what removes the car from availability. */
+    s.blocks.push({
+      id: newId('b'), unitId: r.unitId, kind: 'cleaning',
+      startAt: now(), endAt: new Date(Date.now() + minutes * 60000).toISOString(),
+      reason: `nettoyage après ${r.reference}`,
+    });
+    s.notifications = s.notifications || [];
+    s.notifications.push({
+      id: newId('n'), level: 'action', title: 'Véhicule à préparer',
+      body: `${u?.plate || 'Unité'} — retour ${r.reference}`,
+      href: `/flotte/unites/${r.unitId}`, createdAt: now(), readAt: null,
+    });
+    return { ok: true, eventId, reference: r.reference, status: 'returned', damages, cleaningBlock: true, cleaningMinutes: minutes };
+  },
+
+  async markUnitReady({ unitId, reason }) {
+    const s = getStore();
+    const u = s.units.find((x) => x.id === unitId);
+    if (!u) return { ok: false, error: 'NOT_FOUND' };
+    if (u.status === 'rented') return { ok: false, error: 'UNIT_OUT' };
+    const from = u.status;
+    s.events.push({
+      id: newId('e'), unitId, type: 'CLEANING_COMPLETED', at: now(),
+      mileageKm: u.mileageKm ?? null, fuelPct: u.fuelPct ?? null,
+      reason: reason || 'véhicule prêt',
+    });
+    u.status = 'available';
+    u.updatedAt = now();
+    const before = s.blocks.length;
+    s.blocks = s.blocks.filter(
+      (b) => !(b.unitId === unitId && ['cleaning', 'transfer'].includes(b.kind) && new Date(b.endAt) > new Date()),
+    );
+    return { ok: true, from, blocksClosed: before - s.blocks.length };
+  },
+
+  /* ------------------------------------------------------------ observability */
+
+  async getSystemMetrics() {
+    const s = getStore();
+    return clone({
+      demo: true,
+      databaseBytes: null,
+      tables: [],
+      storage: [],
+      counts: {
+        vehicles: s.vehicles.length, units: s.units.length,
+        reservations: s.reservations.length, customers: s.customers.length,
+        events: s.events.length, auditRows: (s.auditLog || []).length,
+        unreadNotifications: (s.notifications || []).filter((n) => !n.readAt).length,
+        pushSubscriptions: 0,
+      },
+      reservationsToday: s.reservations.filter((r) => String(r.createdAt || '').slice(0, 10) === new Date().toISOString().slice(0, 10)).length,
+      lastBackupAt: s.settings?.lastBackupAt || null,
+      now: now(),
+    });
+  },
+  async expireUnconfirmedReservations() {
+    const s = getStore();
+    const hours = Number(s.settings?.autoExpireHours ?? 12);
+    if (hours <= 0) return { ok: true, disabled: true, expired: 0 };
+    const cutoff = Date.now() - hours * 3600000;
+    let expired = 0;
+    for (const r of s.reservations) {
+      if (r.status === 'pending' && new Date(r.createdAt || 0).getTime() < cutoff) {
+        r.status = 'cancelled';
+        r.updatedAt = now();
+        expired += 1;
+      }
+    }
+    if (expired > 0) {
+      s.notifications = s.notifications || [];
+      s.notifications.push({
+        id: newId('n'), level: 'info', title: 'Réservations expirées',
+        body: `${expired} demande(s) non confirmée(s) annulée(s) après ${hours} h`,
+        href: '/reservations?status=cancelled', createdAt: now(), readAt: null,
+      });
+    }
+    return { ok: true, expired, hours };
+  },
+  async refreshCleaningBlocks() {
+    const s = getStore();
+    const minutes = Number(s.settings?.cleaningMinutes) || 120;
+    let refreshed = 0;
+    for (const u of s.units) {
+      if (u.status !== 'cleaning') continue;
+      const live = s.blocks.some((b) => b.unitId === u.id && b.kind === 'cleaning' && new Date(b.endAt) > new Date());
+      if (!live) {
+        s.blocks.push({
+          id: newId('b'), unitId: u.id, kind: 'cleaning',
+          startAt: now(), endAt: new Date(Date.now() + minutes * 60000).toISOString(),
+          reason: 'nettoyage en cours',
+        });
+        refreshed += 1;
+      }
+    }
+    return { ok: true, refreshed };
   },
 
   async listAuditLog({ table, rowId, actorId, since, until, limit = 100 } = {}) {

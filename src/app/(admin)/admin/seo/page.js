@@ -3,6 +3,10 @@ import { db } from '@/lib/data';
 import { SITE_URL } from '@/lib/seo';
 import SeoTools from '@/components/admin/SeoTools';
 import { Card, PageTitle } from '@/components/admin/ui';
+/* Which OG cards `npm run og` has already written. Static import, exactly as
+   src/lib/seo.js does it — the count is read from the manifest at build time,
+   so nothing here touches the filesystem at runtime (rule 9). */
+import ogManifest from '../../../../../public/og/manifest.json';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +30,10 @@ export default async function SeoPage() {
      or settings. Hiding the nav link is courtesy; this is the guard. */
   await requirePricingRole();
   const s = await (await db()).getSettingsAdmin();
+
+  const ogLocales = Object.keys(ogManifest?.vehicles || {});
+  const ogCards = ogLocales.reduce((sum, l) => sum + (ogManifest.vehicles[l]?.length || 0), 0);
+
   const links = [
     ['Sitemap (hreflang ×4)', `${SITE_URL}/sitemap.xml`],
     ['robots.txt (moteurs IA autorisés)', `${SITE_URL}/robots.txt`],
@@ -37,10 +45,9 @@ export default async function SeoPage() {
   return (
     <>
       <PageTitle title="SEO & moteurs IA" description="Outils de diffusion et checklist des actions hors site qui font la différence à Casablanca." />
-      <Card title="Actions" className="mb-5">
-        <SeoTools hasIndexNowKey={Boolean(s.indexNowKey || process.env.INDEXNOW_KEY)} />
-        {!s.indexNowKey && !process.env.INDEXNOW_KEY ? <p className="mt-3 text-xs text-text-muted">Ajoutez une clé IndexNow dans Paramètres pour activer le ping Bing.</p> : null}
-      </Card>
+      <div className="mb-5">
+        <SeoTools hasIndexNowKey={Boolean(s.indexNowKey || process.env.INDEXNOW_KEY)} ogCards={ogCards} ogLocales={ogLocales.length} />
+      </div>
       <div className="grid gap-5 lg:grid-cols-2">
         <Card title="Fichiers techniques">
           <ul className="space-y-2 text-sm">

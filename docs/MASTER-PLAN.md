@@ -430,6 +430,29 @@ Localized routes with hreflang/x-default, canonical per language, `sitemap.js`, 
 
 The code stays portable: no host-specific APIs in app code; cron jobs are plain route handlers triggered by Cloudflare Cron Triggers (or Vercel Cron); images are pre-sized at upload; caching uses standard Next.js APIs. Moving A → C later is a config change, not a rewrite.
 
+> **DECIDED (owner, PROMPT 17): option C — Vercel Pro, region `cdg1` (Paris).**
+> This overrides the recommendation above, and the portability clause is what
+> makes it a config change rather than a rewrite: `@opennextjs/cloudflare`,
+> `wrangler.jsonc`, the R2 incremental cache and the Durable Object ISR queue
+> are **not** added, and the Cloudflare cron triggers become Vercel Cron entries
+> in `vercel.json`.
+>
+> What the decision buys, concretely: the **10 ms CPU per invocation** ceiling
+> disappears. That ceiling was the one real risk hanging over the fleet page,
+> which Lighthouse already scores 66–73 on CPU rather than bytes, and which
+> Sprint 6 adds GSAP and view transitions to. It also removes the Hobby plan's
+> non-commercial clause, which ruled option B out for a client's business site.
+>
+> What it costs: $20/month, so "everything free except the domain" is no longer
+> true and §13's cost line is updated accordingly. Supabase Free, Resend Free,
+> GA4, Cloudflare Web Analytics and UptimeRobot are unaffected — only the host
+> changes.
+>
+> Images stay `unoptimized` with pre-sized variants (plan §2.5, prompt 12's
+> browser uploader): Vercel's image optimisation is billed per source image and
+> would re-introduce a per-request image service the architecture deliberately
+> does without — and keeping it off is what preserves the option to move back.
+
 ### 9.2 Runtime layout
 - **Next.js 16** App Router, JavaScript, Turbopack, `proxy.js` (exists: admin host rewrite, geo language, bots), next-intl 4 routing (exists), Tailwind 4 tokens (rebuilt), Motion 13, GSAP (desktop home only), react-aria-components (calendar only), zod 4.
 - Rendering strategy: every indexable page is **static/ISR** (`generateStaticParams` for locales, vehicles, neighbourhoods); availability, quotes, holds and bookings run through **thin route handlers / server actions** that call Postgres RPCs; admin pages are dynamic (auth) but light.
