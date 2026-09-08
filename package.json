@@ -10,6 +10,7 @@
     "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./scripts/test-register.mjs --test \"src/**/*.test.js\"",
     "test:e2e": "playwright test",
     "check:contrast": "node scripts/check-contrast.mjs",
+    "check:css": "node scripts/check-css.mjs",
     "check:messages": "node scripts/check-messages.mjs",
     "lh": "node scripts/lh.mjs",
     "images": "node scripts/images.mjs",

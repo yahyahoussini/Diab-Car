@@ -29,7 +29,7 @@ const sizes = {
 function LoadingLine() {
   return (
     <span className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 overflow-hidden" aria-hidden="true">
-      <span className="block h-full w-1/3 bg-on-red/80 motion-safe:animate-[button-sweep_1.1s_var(--ease-inout)_infinite]" />
+      <span className="btn-sweep block h-full w-1/3 bg-on-red/80" />
     </span>
   );
 }

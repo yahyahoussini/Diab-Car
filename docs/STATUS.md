@@ -212,6 +212,50 @@ A read-only audit (5 parallel agents) ran before any code was written. It found 
 
 ---
 
+## Fix — the button sweep never reversed in Arabic (2026-09-08)
+
+**Symptom** (reported from `npm run dev`, any URL, any locale): the dev overlay refused
+`src/styles/globals.css` outright — *Parsing CSS source code failed … Unexpected token in
+attribute selector: Dimension { value: 0.1, unit: "s_var" }* at line 3832 of the generated
+stylesheet. `npm run build` had never failed on it; it printed *Found 2 warnings while
+optimizing generated CSS* and carried on.
+
+**Cause.** One line of `globals.css` targeted a Tailwind arbitrary-value utility by writing
+the class name straight into a selector, unescaped:
+
+```css
+[dir="rtl"] .motion-safe:animate-[button-sweep_1.1s_var(--ease-inout)_infinite] { … }
+```
+
+CSS reads `:animate-` as a pseudo-class and `[button-sweep_1.1s…]` as an attribute selector,
+so this is not a wrong rule — it is not a rule. Lightning CSS (what Turbopack parses CSS with)
+dropped it and warned; `next dev` refused the sheet. **The consequence nobody had noticed: the
+RTL mirroring it existed to perform had never once applied.** Plan §4.12 requires motion
+direction to reverse in Arabic; the sweep inside every busy button ran left-to-right in all
+four languages since the rule was written.
+
+**Fix.** A real class, which is what the other three RTL reversals in the same file already use
+(`.road-dash`, `.vcard-scan`, `.redline-loading`):
+
+```css
+.btn-sweep { animation: button-sweep 1.1s var(--ease-inout) infinite; }
+[dir="rtl"] .btn-sweep { animation-direction: reverse; }
+```
+
+`Button.js` and `BookingWidget.js` now use `btn-sweep`. The `motion-safe:` variant is dropped
+because the global `prefers-reduced-motion` block already zeroes every duration and iteration
+count (rule 6) — the same thing `.road-dash` relies on, and its comment says so.
+
+**Guard.** `npm run check:css` (new, `scripts/check-css.mjs`) parses every stylesheet with
+Lightning CSS — already inside Tailwind v4, so no new dependency — and fails on any warning
+that is not one of Tailwind's own at-rules. It exits 1 on the old file and 0 on the new one.
+Added to the definition of done.
+
+**Verified:** the built CSS now contains `[dir=rtl] .btn-sweep{animation-direction:reverse}`;
+before the fix that rule was absent from the output entirely. build pass · lint at the 10-error
+baseline · 92/92 unit · contrast, messages and css all pass · **101/101 e2e**.
+
+---
 ## PROMPT 12 notes — 2026-09-08
 
 **The closed loop, measured on the live database, not assumed.** `free_units()` for one model across the loop:

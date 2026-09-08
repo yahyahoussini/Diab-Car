@@ -60,7 +60,7 @@ function CalendarSkeleton() {
   return (
     <div className="h-64 w-full pt-2" aria-hidden="true">
       <span className="relative block h-0.5 w-full overflow-hidden bg-surface-2">
-        <span className="absolute inset-y-0 start-0 w-1/3 bg-red-signal motion-safe:animate-[button-sweep_1.1s_var(--ease-inout)_infinite]" />
+        <span className="btn-sweep absolute inset-y-0 start-0 w-1/3 bg-red-signal" />
       </span>
     </div>
   );
