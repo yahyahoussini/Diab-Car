@@ -27,3 +27,13 @@ Next.js 16 App Router · **JavaScript only** (no TypeScript, JSDoc allowed) · T
 
 ## Definition of done for every prompt
 Build passes · lint passes · `check:contrast` and `check:messages` pass · relevant tests pass · the prompt's own acceptance criteria are demonstrated (paste numbers/outputs in the report) · `docs/STATUS.md` updated · one commit on branch `build/v1` with a conventional message (`feat:`, `fix:`, `chore:`) · a short report: done / not done / decisions / questions for Yahya.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

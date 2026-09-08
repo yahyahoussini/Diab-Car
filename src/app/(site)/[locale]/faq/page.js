@@ -25,6 +25,15 @@ export default async function FaqPage({ params }) {
   const url = absoluteUrl(locale, '/faq');
   const categories = [...new Set(faqs.map((f) => f.category || 'general'))];
 
+  /* The category is DATABASE content and the admin lets staff invent one
+     (Contenu -> FAQ), while these labels are static. An unlabelled category
+     used to render its own translation key as the <h2> of a public section -
+     `faqPage.categories.documents` was live on /fr/faq. A missing label now
+     falls back to the humanised slug: imperfect wording beats a key, and the
+     page can never again show a customer something only a developer reads. */
+  const categoryLabel = (c) =>
+    (t.has(`categories.${c}`) ? t(`categories.${c}`) : c.replace(/[-_]+/g, ' ').replace(/^./, (m) => m.toUpperCase()));
+
   return (
     <>
       <PageHero crumbs={[{ name: tn('home'), href: '/', url: absoluteUrl(locale, '/') }, { name: tn('faq'), url }]} eyebrow={t('eyebrow')} title={t('title')} answer={t('intro')} />
@@ -33,7 +42,7 @@ export default async function FaqPage({ params }) {
           <div className="space-y-10 lg:col-span-8">
             {categories.map((c) => (
               <Reveal key={c}>
-                <h2 className="mb-4 font-display text-2xl text-text">{t(`categories.${c}`)}</h2>
+                <h2 className="mb-4 font-display text-2xl text-text">{categoryLabel(c)}</h2>
                 <FaqAccordion faqs={faqs.filter((f) => (f.category || 'general') === c)} locale={locale} name={`faq-${c}`} defaultOpen={-1} />
               </Reveal>
             ))}

@@ -759,6 +759,7 @@
     "eyebrow": "FAQ",
     "intro": "Documentos, edad mínima, fianza, seguro, aeropuerto, fronteras: las respuestas claras que buscas antes de reservar.",
     "categories": {
+      "documents": "Documentos",
       "conditions": "Condiciones",
       "payment": "Pago y fianza",
       "delivery": "Entrega y devolución",

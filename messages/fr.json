@@ -759,6 +759,7 @@
     "eyebrow": "FAQ",
     "intro": "Documents, âge minimum, caution, assurance, aéroport, frontières : les réponses claires que vous cherchez avant de réserver.",
     "categories": {
+      "documents": "Documents",
       "conditions": "Conditions",
       "payment": "Paiement & caution",
       "delivery": "Livraison & restitution",

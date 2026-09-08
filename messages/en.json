@@ -759,6 +759,7 @@
     "eyebrow": "FAQ",
     "intro": "Documents, minimum age, deposit, insurance, airport, borders: the clear answers you need before booking.",
     "categories": {
+      "documents": "Documents",
       "conditions": "Conditions",
       "payment": "Payment & deposit",
       "delivery": "Delivery & return",

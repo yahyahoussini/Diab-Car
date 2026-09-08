@@ -212,6 +212,43 @@ A read-only audit (5 parallel agents) ran before any code was written. It found 
 
 ---
 
+## Fix — two bugs `npm run dev` reported and every suite missed (2026-09-08)
+
+Running the dev server after the CSS fixes produced 18 i18n errors per page view and one
+missing message. Build, lint, 92 unit tests, three checks and 101 e2e tests were all green
+at the time.
+
+**1. The FAQ page rendered a raw translation key to customers.** `/fr/faq` shipped
+`<h2>faqPage.categories.documents</h2>` — the key itself, as the heading of the only section
+on the page. Cause: `t(\`categories.${c}\`)` builds a translation key out of DATABASE content,
+and prompt 12's FAQ editor lets staff type any category they like, while the message files are
+static and shipped six. `check:messages` could not catch it — it proves the four locales agree,
+not that the code only asks for keys that exist. Fixed at the root: an unlabelled category now
+falls back to its humanised slug, so a category invented tomorrow reads « Carburant » rather
+than a key; and `documents` — which the live data actually uses, and which plan §8.5 lists — got
+a real label in all four locales. The full §8.5 vocabulary lands with the FAQ import in prompt 13;
+the fallback covers it until then.
+
+**2. Every fleet page logged 18 formatting errors.** The results page hands label TEMPLATES to a
+client island, which interpolates them itself — `labels.showMore.replace('{n}', …)`. Fetching
+them with `t()` asks next-intl to format a message whose values are deliberately absent, so it
+logged `FORMATTING_ERROR` for each and fell back to returning the raw string. The UI was correct
+the whole time, resting on an error path. Nine call sites now use `t.raw()`, which is the
+documented way to ask for an unformatted message. The dev log for those pages is silent.
+
+The second one is worth stating plainly: **that noise is how a real bug hides.** The CSS parse
+failure fixed earlier the same day sat in the same log.
+
+**Also committed:** the `<!-- BEGIN:nextjs-agent-rules -->` block Next.js 16 writes into
+CLAUDE.md on every `next dev`. It re-creates itself if deleted, so committing it once is what
+keeps the tree clean; the alternative is `agentRules: false` in next.config.mjs, which would
+also suppress a true warning about Next 16 differing from training data.
+
+**Verified:** `/fr/faq` renders « Documents » and `/ar/faq` « الوثائق »; zero i18n errors in the dev
+log across four page loads; build pass · lint at the 10-error baseline · 92/92 unit · contrast,
+messages (765 keys × 4) and css pass · 100/101 e2e with one known homepage flake.
+
+---
 ## Fix — the button sweep never reversed in Arabic (2026-09-08)
 
 **Symptom** (reported from `npm run dev`, any URL, any locale): the dev overlay refused
