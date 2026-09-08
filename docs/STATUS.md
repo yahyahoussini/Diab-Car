@@ -223,9 +223,12 @@ optimizing generated CSS* and carried on.
 **Cause.** One line of `globals.css` targeted a Tailwind arbitrary-value utility by writing
 the class name straight into a selector, unescaped:
 
-```css
-[dir="rtl"] .motion-safe:animate-[button-sweep_1.1s_var(--ease-inout)_infinite] { … }
+```text
+[dir="rtl"] .motion-safe<COLON>animate-<the animation shorthand in brackets> { … }
 ```
+
+(written here with the colon and the brackets spelled out on purpose — see the
+second fix below for why a real class name in a comment is itself a bug)
 
 CSS reads `:animate-` as a pseudo-class and `[button-sweep_1.1s…]` as an attribute selector,
 so this is not a wrong rule — it is not a rule. Lightning CSS (what Turbopack parses CSS with)
@@ -245,6 +248,24 @@ four languages since the rule was written.
 `Button.js` and `BookingWidget.js` now use `btn-sweep`. The `motion-safe:` variant is dropped
 because the global `prefers-reduced-motion` block already zeroes every duration and iteration
 count (rule 6) — the same thing `.road-dash` relies on, and its comment says so.
+
+**Second fix, same day: the guard was checking the wrong file.** The first version of
+`scripts/check-css.mjs` parsed the stylesheet *as written*. That is not where Tailwind bugs
+live. Tailwind v4 scans EVERY file in the project for anything that looks like a class name -
+including code comments, including that script's own header, where the broken selector had been
+pasted as an illustration with `var(...)` abbreviated. Tailwind dutifully generated a utility
+for it, `animation: button-sweep 1.1s var(...)`, which is not valid CSS, and the build failed
+on a rule no human wrote at a line in a file that does not exist on disk. The source-only guard
+passed the whole time.
+
+`check:css` now runs in two stages: the sheet as written, then the sheet **after the real
+PostCSS + Tailwind pipeline has generated it**. Proved by re-introducing the exact string in a
+scratch file: the guard fails with the build's own message (`Unexpected token Delim('.')` at
+generated line 2898) and passes when it is removed. The remaining illustrations in this file and
+in `globals.css` are now written in prose for the same reason.
+
+The lesson, which is the actual finding: **a comment in this repo is executable.** A plausible
+class name written anywhere - a `.js`, a `.mjs`, a `.md` - becomes CSS.
 
 **Guard.** `npm run check:css` (new, `scripts/check-css.mjs`) parses every stylesheet with
 Lightning CSS — already inside Tailwind v4, so no new dependency — and fails on any warning

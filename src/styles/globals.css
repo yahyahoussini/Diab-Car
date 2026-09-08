@@ -612,15 +612,19 @@
 html[data-currency="EUR"] .price-eur { display: inline; }
 html[data-currency="EUR"] .price-eur.block { display: block; }
 
-/* Busy-button sweep (plan 5.3). A real class, like every other animation
-   in this section, because the RTL rule below has to NAME it: the arbitrary
-   utility it replaces could only be targeted by writing
-   `.motion-safe:animate-[button-sweep_1.1s_var(--ease-inout)_infinite]`
-   unescaped, which is not a valid selector at all - CSS reads `:animate-`
-   as a pseudo-class and the brackets as an attribute selector. The build
-   dropped the rule with a warning and dev refused the whole stylesheet, so
-   the sweep never once reversed in Arabic (plan 4.12). Reduced motion is
-   handled by the global rule below, as it is for .road-dash and .vcard-scan. */
+/* Busy-button sweep (plan 5.3). A real class, like every other animation in
+   this section, because the RTL rule below has to NAME it.
+   What it replaces: the sweep used to be a Tailwind arbitrary-animation
+   utility, and the only way to target one of those from here is to write the
+   whole class name into the selector. Unescaped, that is not a valid selector
+   at all - CSS reads the colon as a pseudo-class and the square brackets as an
+   attribute selector - so the build dropped the rule with a warning and dev
+   refused the entire stylesheet. The sweep therefore never once reversed in
+   Arabic (plan 4.12). Escaping it would have worked and stayed unreadable, and
+   would have silently stopped matching the day somebody changed the duration.
+   Reduced motion is handled by the global rule below, as it is for .road-dash
+   and .vcard-scan. Do not paste a Tailwind class name into a comment: the
+   scanner reads every file in the project and generates a utility for it. */
 @keyframes button-sweep { 0% { transform: translateX(-100%); } 100% { transform: translateX(400%); } }
 .btn-sweep { animation: button-sweep 1.1s var(--ease-inout) infinite; }
 [dir="rtl"] .btn-sweep { animation-direction: reverse; }
