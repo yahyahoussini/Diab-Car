@@ -1,6 +1,6 @@
 # Diab Car — build status
 
-**Updated:** 2026-09-08 · **Branch:** `build/v1` · **Last prompt:** PROMPT 09 — booking funnel and confirmation (Sprint 3c). The site can now take a real reservation end to end.
+**Updated:** 2026-09-08 · **Branch:** `build/v1` · **Last prompt:** PROMPT 10 — admin foundation (Sprint 4a). Roles, shell, dashboard, journal and the live bell. **Web Push transport NOT done.**
 
 This file is the running state of the build. It is rewritten at the end of **every** prompt in `docs/PROMPTS.md`.
 Decisions in the *Plan §10* column come from `docs/MASTER-PLAN.md` §10 (keep / rebuild / extend / delete); where §10 is
@@ -28,7 +28,7 @@ not *never touched again*.
 | 07 | 3a | Results / fleet page with live availability | **done (a11y 100; Lighthouse perf 73, short of the >=90 target)** |
 | 08 | 3b | Vehicle page | **done (a11y/BP/SEO 100; Lighthouse perf 66, short of the >=90 target)** |
 | 09 | 3c | Booking funnel, confirmation, WhatsApp, email | **done** |
-| 10 | 4a | Admin foundation: auth, roles, shell, dashboard | todo |
+| 10 | 4a | Admin foundation: auth, roles, shell, dashboard | **partial — see PROMPT 10 notes; Web Push transport and 8 routes outstanding** |
 | 11 | 4b | Admin reservations, state machine, calendar | todo |
 | 12 | 4c | Admin fleet, operations, content, prices, settings | todo |
 | 13 | 5 | SEO / GEO / AEO pages and content | todo |
@@ -184,6 +184,31 @@ The homepage drops its Reviews section in Supabase mode and keeps it in demo —
 Two of my own test assertions were wrong rather than the code: `toContainText('MAD')` fails in Arabic because `formatMAD` renders **درهم**, and `not.toContain('MAD')` on the confirmation matched the footer's `aria-label="MAD / EUR"` currency toggle — site chrome, not data.
 
 **Verified after a full e2e run: 0 reservations, 0 customers, 0 live holds, 0 notifications** — the database is exactly as it was before.
+
+---
+
+## PROMPT 10 notes — 2026-09-08
+
+A read-only audit (5 parallel agents) ran before any code was written. It found two things that would have made the whole rebuild look finished while doing nothing.
+
+**BLOCKER 1 — the admin was reading with an anonymous client.** `selectAll`/`selectOne` in the Supabase adapter use `createPublicClient()`. Every staff-only table — reservations, units, customers, blocks, holds, events, notifications, audit_log — denies anon under the 0005 policies, and PostgREST answers with an **empty array and no error**. The admin would have rendered "0 réservations" over a full database. Fixed with `selectAllAsStaff`/`selectOneAsStaff` on the session client, and an e2e test asserts the fleet total is non-zero precisely to catch a regression.
+
+**BLOCKER 2 — the role claim was ignored.** `claimsAreAdmin` checked `app_metadata.role === 'admin'` or an ADMIN_EMAILS allowlist, but the access-token hook enabled in PROMPT 05 emits **`user_role`** from `profiles.role`. The owner account would have been rejected unless its address happened to be on the list. `roleFromClaims` now reads `user_role` first and keeps both old paths as compatibility, mapping them to `owner`.
+
+**Roles (plan 7.2).** `requireRole()` for actions (throws), `requirePageRole()` / `requirePricingRole()` for pages (redirect). `/tarifs`, `/parametres` and `/seo` are guarded server-side AND hidden from the nav for an agent — hiding alone is decoration, since typing the URL would still work.
+
+**Notifications are real now (0009).** Triggers on reservation insert, on the status changes worth interrupting someone for (cancelled, no-show, returned — `confirmed`/`ready` stay quiet on purpose), and on a unit going to maintenance. `notifications` added to the realtime publication; the missing INSERT policy added. `operations_due()` defines "late" next to the data, and `/api/cron/reminders` turns it into rows — **idempotently**, verified: run 1 created 1, run 2 created 0 for the same overdue return.
+
+**Bug found by the test, then fixed properly.** The bell did not move over Realtime. `postgres_changes` is RLS-filtered, and the socket was connecting before the session was attached, so the subscription was accepted and silently delivered nothing. `realtime.setAuth(access_token)` before `subscribe()`. The bell now reports `data-live` so it degrades honestly and the test waits for SUBSCRIBED instead of racing it — a missed INSERT is never redelivered, which is why it was intermittent.
+
+**NOT DONE — stated plainly**
+
+| Item | Status |
+|---|---|
+| Web Push transport | **Not built.** VAPID keys are generated (`npm run vapid`, Web Crypto, no dependency) and stored in `.env.local`; `.env.example` documents them. The service worker, the aes128gcm sender, the subscribe button in Système, `push_subscriptions` CRUD and the admin-scoped PWA manifest are all outstanding. The in-app bell works today; nothing reaches a phone that is not looking at the page |
+| 8 of plan 3's routes | `/calendrier`, `/blocs`, `/clients`, `/operations/departs`, `/operations/retours`, `/systeme` now render an honest "pas encore disponible" panel naming the prompt that builds them and what to use meanwhile — the nav links to them, and a 404 would read as a broken admin. `/operations/checklist/[id]` and `/flotte/unites/[id]` have no link and no page |
+| Global search | The input, the `/` shortcut and the submit exist; it routes to `/reservations?q=`. The reservations page does not yet interpret `q`, so searching currently filters nothing |
+| Admin still reads the LEGACY `bookings` table | `/admin/reservations` lists `bookings`, not `reservations`. The dashboard reads the real `reservations`. Migrating that page is PROMPT 11 |
 
 ---
 

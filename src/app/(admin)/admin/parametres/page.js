@@ -1,3 +1,4 @@
+import { requirePricingRole } from '@/lib/auth/server';
 import { db } from '@/lib/data';
 import SettingsForm from '@/components/admin/SettingsForm';
 import { PageTitle } from '@/components/admin/ui';
@@ -5,6 +6,9 @@ import { PageTitle } from '@/components/admin/ui';
 export const dynamic = 'force-dynamic';
 
 export default async function SettingsPage() {
+  /* Plan 7.2: an agent may work reservations and checklists, never prices
+     or settings. Hiding the nav link is courtesy; this is the guard. */
+  await requirePricingRole();
   const settings = await (await db()).getSettingsAdmin();
   return (
     <>

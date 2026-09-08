@@ -34,6 +34,7 @@ const FILES = [
   'supabase/migrations/0005_roles_rls.sql',
   'supabase/migrations/0006_storage.sql',
   'supabase/migrations/0008_availability.sql',
+  'supabase/migrations/0009_notifications.sql',
 ];
 
 const argv = process.argv.slice(2);

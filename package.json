@@ -16,7 +16,8 @@
     "db:seed": "node scripts/seed.mjs",
     "db:sql": "node scripts/build-sql.mjs",
     "test:concurrency": "node scripts/test-concurrency.mjs",
-    "og": "node scripts/og.mjs"
+    "og": "node scripts/og.mjs",
+    "vapid": "node scripts/vapid.mjs"
   },
   "dependencies": {
     "@internationalized/date": "^3.12.4",

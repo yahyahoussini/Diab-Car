@@ -1,3 +1,4 @@
+import { requirePricingRole } from '@/lib/auth/server';
 import { db } from '@/lib/data';
 import { LOCALES } from '@/lib/constants';
 import { deleteExtra, deleteSeason, saveExtra, saveSeason, saveTiers } from '@/lib/actions/admin';
@@ -7,6 +8,9 @@ import { Card, LOCALE_LABEL, Notice, PageTitle, SubmitButton, Table } from '@/co
 export const dynamic = 'force-dynamic';
 
 export default async function PricingPage({ searchParams }) {
+  /* Plan 7.2: an agent may work reservations and checklists, never prices
+     or settings. Hiding the nav link is courtesy; this is the guard. */
+  await requirePricingRole();
   const { saved } = await searchParams;
   const d = await db();
   const [settings, seasons, extras] = await Promise.all([d.getSettings(), d.listSeasons(), d.listExtras()]);

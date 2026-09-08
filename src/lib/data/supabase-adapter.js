@@ -1,4 +1,5 @@
 import { createPublicClient, createServiceClient, createSessionClient } from '@/lib/supabase/server';
+import { summarise } from './summarise';
 
 /* camelCase <-> snake_case mapping between the app model and Postgres columns */
 const toSnake = (s) => s.replace(/[A-Z]/g, (m) => `_${m.toLowerCase()}`);
@@ -24,6 +25,32 @@ async function selectAll(table, build) {
   const { data, error } = await q;
   if (error) fail(error);
   return (data || []).map(rowToModel);
+}
+
+/**
+ * Staff-scoped read: goes through the SESSION client so RLS sees the
+ * signed-in role.
+ *
+ * This distinction is not cosmetic. `selectAll` uses the anonymous client, and
+ * every staff-only table — reservations, units, customers, blocks, holds,
+ * events, notifications, audit_log — denies anon under the policies in 0005.
+ * Reading them with the public client returns an EMPTY ARRAY and no error, so
+ * the admin would have rendered "0 réservations" on a database full of them.
+ */
+async function selectAllAsStaff(table, build) {
+  const sb = await writeClient();
+  let q = sb.from(table).select('*');
+  if (build) q = build(q);
+  const { data, error } = await q;
+  if (error) fail(error);
+  return (data || []).map(rowToModel);
+}
+
+async function selectOneAsStaff(table, build) {
+  const sb = await writeClient();
+  const { data, error } = await (build ? build(sb.from(table).select('*')) : sb.from(table).select('*')).maybeSingle();
+  if (error) fail(error);
+  return rowToModel(data);
 }
 
 async function selectOne(table, build) {
@@ -228,7 +255,7 @@ export const supabaseAdapter = {
      made here — they belong to the Postgres RPCs (plan 6.3, prompt 06). */
 
   async listUnits({ vehicleId, status } = {}) {
-    return selectAll('units', (q) => {
+    return selectAllAsStaff('units', (q) => {
       let b = q.order('plate');
       if (vehicleId) b = b.eq('vehicle_id', vehicleId);
       if (status) b = b.eq('status', status);
@@ -236,14 +263,14 @@ export const supabaseAdapter = {
     });
   },
   async getUnit(id) {
-    return selectOne('units', (q) => q.eq('id', id));
+    return selectOneAsStaff('units', (q) => q.eq('id', id));
   },
   async upsertUnit(data) {
     return upsert('units', data);
   },
 
   async listCustomers() {
-    return selectAll('customers', (q) => q.order('created_at', { ascending: false }));
+    return selectAllAsStaff('customers', (q) => q.order('created_at', { ascending: false }));
   },
   async upsertCustomer(data) {
     const sb = await writeClient();
@@ -253,7 +280,7 @@ export const supabaseAdapter = {
   },
 
   async listReservations({ status, vehicleId, limit } = {}) {
-    return selectAll('reservations', (q) => {
+    return selectAllAsStaff('reservations', (q) => {
       let b = q.order('created_at', { ascending: false });
       if (status) b = b.eq('status', status);
       if (vehicleId) b = b.eq('vehicle_id', vehicleId);
@@ -262,7 +289,8 @@ export const supabaseAdapter = {
     });
   },
   async getReservation(idOrRef) {
-    const sb = await readClient();
+    /* Session client: reservations are staff-only under RLS. */
+    const sb = await writeClient();
     const column = /^[0-9a-f-]{36}$/i.test(idOrRef) ? 'id' : 'reference';
     const { data, error } = await sb.from('reservations').select('*').eq(column, idOrRef).maybeSingle();
     if (error) fail(error);
@@ -283,7 +311,7 @@ export const supabaseAdapter = {
   },
 
   async listBlocks({ unitId } = {}) {
-    return selectAll('blocks', (q) => (unitId ? q.eq('unit_id', unitId) : q));
+    return selectAllAsStaff('blocks', (q) => (unitId ? q.eq('unit_id', unitId) : q));
   },
   async createBlock(data) {
     const sb = await writeClient();
@@ -312,7 +340,7 @@ export const supabaseAdapter = {
   },
 
   async listHolds({ vehicleId, live = true } = {}) {
-    return selectAll('holds', (q) => {
+    return selectAllAsStaff('holds', (q) => {
       let b = q;
       if (vehicleId) b = b.eq('vehicle_id', vehicleId);
       if (live) b = b.is('released_at', null).gt('expires_at', new Date().toISOString());
@@ -377,8 +405,42 @@ export const supabaseAdapter = {
     return data;
   },
 
+  /* The activity log (plan 7.1 "Journal"). Staff-scoped: audit_log carries
+     before/after snapshots of rows that include customer data. */
+  async listAuditLog({ table, actorId, since, until, limit = 100 } = {}) {
+    return selectAllAsStaff('audit_log', (q) => {
+      let b = q.order('at', { ascending: false }).limit(limit);
+      if (table) b = b.eq('table_name', table);
+      if (actorId) b = b.eq('actor_id', actorId);
+      if (since) b = b.gte('at', since);
+      if (until) b = b.lte('at', until);
+      return b;
+    });
+  },
+
+  async markNotificationRead(id) {
+    const sb = await writeClient();
+    const { error } = await sb.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', id);
+    if (error) fail(error);
+    return true;
+  },
+
+  /* One round trip for the dashboard strip. Counts only — no rows — so the
+     numbers cost almost nothing even as the fleet grows. */
+  async getFleetSnapshot() {
+    const sb = await writeClient();
+    const [units, reservations, notifications] = await Promise.all([
+      sb.from('units').select('status'),
+      sb.from('reservations').select('status,start_at,end_at'),
+      sb.from('notifications').select('id', { count: 'exact', head: true }).is('read_at', null),
+    ]);
+    if (units.error) fail(units.error);
+    if (reservations.error) fail(reservations.error);
+    return summarise(units.data || [], reservations.data || [], notifications.count || 0);
+  },
+
   async listNotifications({ unreadOnly = false, limit = 50 } = {}) {
-    return selectAll('notifications', (q) => {
+    return selectAllAsStaff('notifications', (q) => {
       let b = q.order('created_at', { ascending: false }).limit(limit);
       if (unreadOnly) b = b.is('read_at', null);
       return b;
@@ -407,7 +469,7 @@ export const supabaseAdapter = {
   },
 
   async listEvents({ unitId, reservationId, limit = 50 } = {}) {
-    return selectAll('vehicle_events', (q) => {
+    return selectAllAsStaff('vehicle_events', (q) => {
       let b = q.order('at', { ascending: false }).limit(limit);
       if (unitId) b = b.eq('unit_id', unitId);
       if (reservationId) b = b.eq('reservation_id', reservationId);

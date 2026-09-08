@@ -195,7 +195,10 @@ export async function submitBooking(input) {
       level: 'action',
       title: `Nouvelle réservation ${reference}`,
       body: `${vehicle.brand} ${vehicle.model} · ${q.days} j · ${q.total} MAD`,
-      href: `/admin/reservations/${result.reservation.id}`,
+      /* Host-agnostic: the admin runs at '' on admin.diabcar.ma and at
+         '/admin' on localhost, and the notifications page prefixes whichever
+         applies. Baking '/admin' in here produced links that 404 in production. */
+      href: `/reservations/${result.reservation.id}`,
     }),
   ]);
 

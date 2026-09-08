@@ -62,6 +62,11 @@ export const createEvent = async (d) => (await db()).createEvent(d);
 /* Notifications (plan 7.4) — the admin bell. */
 export const listNotifications = async (f) => (await db()).listNotifications(f);
 export const createNotification = async (d) => (await db()).createNotification(d);
+export const markNotificationRead = async (id) => (await db()).markNotificationRead(id);
+
+/* Journal (plan 7.1) and the dashboard strip. */
+export const listAuditLog = async (f) => (await db()).listAuditLog(f);
+export const getFleetSnapshot = async () => (await db()).getFleetSnapshot();
 
 /* Availability (plan 6.3/6.4). Postgres decides; these only ask.
    The adapters share one shape so the funnel never branches on the backend. */

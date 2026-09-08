@@ -143,7 +143,10 @@ async function cleanup() {
   const notes = notesRes.ok ? await notesRes.json() : [];
   const orphans = [];
   for (const n of notes) {
-    const id = String(n.href || '').match(/\/admin\/reservations\/([0-9a-f-]{36})/)?.[1];
+    /* Both shapes: the booking action once wrote "/admin/reservations/<id>"
+       and the 0009 trigger writes the host-agnostic "/reservations/<id>".
+       Matching only the first left 16 orphans behind. */
+    const id = String(n.href || '').match(/\/reservations\/([0-9a-f-]{36})/)?.[1];
     if (!id) continue;
     const check = await fetch(`${URL_}/rest/v1/reservations?id=eq.${id}&select=id`, { headers });
     const found = check.ok ? await check.json() : [];

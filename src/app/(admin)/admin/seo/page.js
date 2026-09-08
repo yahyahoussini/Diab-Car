@@ -1,3 +1,4 @@
+import { requirePricingRole } from '@/lib/auth/server';
 import { db } from '@/lib/data';
 import { SITE_URL } from '@/lib/seo';
 import SeoTools from '@/components/admin/SeoTools';
@@ -21,6 +22,9 @@ const CHECKS = [
 ];
 
 export default async function SeoPage() {
+  /* Plan 7.2: an agent may work reservations and checklists, never prices
+     or settings. Hiding the nav link is courtesy; this is the guard. */
+  await requirePricingRole();
   const s = await (await db()).getSettingsAdmin();
   const links = [
     ['Sitemap (hreflang ×4)', `${SITE_URL}/sitemap.xml`],

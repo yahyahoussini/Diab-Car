@@ -26,13 +26,58 @@ export function adminEmails() {
     .filter(Boolean);
 }
 
-/** Is this Supabase user allowed into the admin? */
-export function claimsAreAdmin(claims) {
-  if (!claims) return false;
-  const role = claims.app_metadata?.role || claims.user_metadata?.role;
-  if (role === 'admin') return true;
+/**
+ * The staff roles, most powerful first (plan 7.2).
+ *
+ * `driver` is Phase 3 but exists in the enum and here so policies written now
+ * never have to change when it arrives.
+ */
+export const ROLES = ['owner', 'manager', 'agent', 'driver'];
+
+/** Roles allowed to see or change money: prices, tiers, settings (plan 7.2). */
+export const PRICING_ROLES = ['owner', 'manager'];
+
+/**
+ * The role carried by a Supabase session.
+ *
+ * `user_role` is the claim written by `custom_access_token_hook`
+ * (supabase/migrations/0005) from `profiles.role`. It is the authority — the
+ * same claim the RLS policies read — so the UI and the database can never
+ * disagree about who someone is.
+ *
+ * The two fallbacks are compatibility, not policy: the starter shipped
+ * `app_metadata.role === 'admin'`, and ADMIN_EMAILS is the break-glass list
+ * for an account whose profile row has not been created yet. Both map to
+ * `owner` because that is what "admin" meant before roles existed.
+ */
+export function roleFromClaims(claims) {
+  if (!claims) return null;
+
+  const claimed = claims.user_role;
+  if (ROLES.includes(claimed)) return claimed;
+
+  const legacy = claims.app_metadata?.role || claims.user_metadata?.role;
+  if (legacy === 'admin') return 'owner';
+
   const email = (claims.email || '').toLowerCase();
-  return email ? adminEmails().includes(email) : false;
+  if (email && adminEmails().includes(email)) return 'owner';
+
+  return null;
+}
+
+/** Is this Supabase user allowed into the admin at all? */
+export function claimsAreAdmin(claims) {
+  return roleFromClaims(claims) !== null;
+}
+
+/** Does this role clear one of `allowed`? */
+export function roleAllows(role, allowed) {
+  return Boolean(role) && allowed.includes(role);
+}
+
+/** Plan 7.2: an agent works reservations and checklists, never prices or settings. */
+export function canManagePricing(role) {
+  return roleAllows(role, PRICING_ROLES);
 }
 
 function b64url(bytes) {

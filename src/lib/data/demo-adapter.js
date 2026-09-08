@@ -1,5 +1,6 @@
 import { getStore, newId } from './demo-store';
 import { availabilityRow, freeUnits, nextAvailable, soldOut } from './demo-availability';
+import { summarise } from './summarise';
 
 const clone = (v) => JSON.parse(JSON.stringify(v));
 const now = () => new Date().toISOString();
@@ -494,6 +495,31 @@ export const demoAdapter = {
       reservation: { id: row.id, reference: row.reference, status: row.status, startAt, endAt },
       unitsFree: free - 1,
     };
+  },
+
+  async listAuditLog({ table, actorId, since, until, limit = 100 } = {}) {
+    const s = getStore();
+    s.auditLog = s.auditLog || [];
+    let rows = s.auditLog;
+    if (table) rows = rows.filter((r) => r.tableName === table);
+    if (actorId) rows = rows.filter((r) => r.actorId === actorId);
+    if (since) rows = rows.filter((r) => r.at >= since);
+    if (until) rows = rows.filter((r) => r.at <= until);
+    return clone([...rows].sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, limit));
+  },
+
+  async markNotificationRead(id) {
+    const s = getStore();
+    s.notifications = s.notifications || [];
+    const n = s.notifications.find((x) => x.id === id);
+    if (n) n.readAt = now();
+    return Boolean(n);
+  },
+
+  async getFleetSnapshot() {
+    const s = getStore();
+    s.notifications = s.notifications || [];
+    return summarise(s.units, s.reservations, s.notifications.filter((n) => !n.readAt).length);
   },
 
   /* Notifications (plan 7.4): the bell in the admin. Written by the booking
