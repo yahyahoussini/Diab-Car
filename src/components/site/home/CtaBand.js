@@ -25,7 +25,7 @@ export default async function CtaBand({ settings }) {
         <p className="mt-6 max-w-xl text-text-2">{t('text')}</p>
 
         <div className="mt-10 flex flex-wrap gap-3">
-          <Button href="/reservation" size="xl">
+          <Button href="/vehicules" size="xl">
             {t('primary')}
             <svg viewBox="0 0 24 24" className="h-4 w-4 rtl:-scale-x-100" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M5 12h14M13 5l7 7-7 7" />

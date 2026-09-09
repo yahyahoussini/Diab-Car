@@ -1,7 +1,7 @@
 /* ------------------------------------------------------------------ */
-/* The closed loop (plan 7.1, 6.3): a booking made on the public site  */
-/* is confirmed, handed over, returned, cleaned and sold again — and    */
-/* public availability follows every step by itself.                    */
+/* The closed loop (plan 7.1, 6.3): a booking is confirmed, handed      */
+/* over, returned, cleaned and sold again — and public availability      */
+/* follows every step by itself, with nothing pressed to publish it.     */
 /* CommonJS: package.json has no "type": "module".                     */
 /*                                                                     */
 /* The window deliberately STARTS IN HALF AN HOUR. The cleaning block  */
@@ -17,7 +17,6 @@ const db = require('./helpers/db');
 
 const OWNER_EMAIL = process.env.E2E_ADMIN_EMAIL || 'yahyahoussini366@gmail.com';
 const OWNER_PASSWORD = process.env.E2E_ADMIN_PASSWORD || '';
-const TEST_EMAIL = 'e2e-loop@example.invalid';
 
 async function login(page) {
   await page.goto('/admin/login');
@@ -60,32 +59,31 @@ test.describe('the closed loop', () => {
     await db.cleanup();
   });
 
-  test('site booking → confirm → départ → retour → prête → bookable again', async ({ page, request }) => {
+  test('booking → confirm → départ → retour → prête → bookable again', async ({ page, request }) => {
     const w = soonWindow();
 
-    /* ---------------- 1. book on the public site, like a customer ------ */
-    await page.goto(`/fr/reservation?${new URLSearchParams({ step: '2', from: w.from, to: w.to, pickup: 'agence-zerktouni' })}`);
-    const firstCar = page.locator('[data-testid="step-vehicles"] button[data-slug]').first();
-    await firstCar.waitFor({ timeout: 20000 });
-    const slug = await firstCar.getAttribute('data-slug');
+    /* ---------------- 1. a customer booking exists ---------------------
+       Created through `create_reservation()` — the same RPC any front end
+       calls — rather than by driving a funnel, because the public booking flow
+       was removed pending its redesign (owner, Sept 2026) and this test is
+       about the OPERATIONAL loop that follows a booking, not about the screen
+       that made it. When the new flow lands, drive it here instead. */
+    const rows = await db.searchAvailability(w.from, w.to);
+    const row = rows.find((r) => r.units_free > 0);
+    test.skip(!row, 'no free model for the fixture window');
+    const slug = row.slug;
+
     const freeBefore = await db.freeUnits(slug, w.from, w.to);
     expect(freeBefore, 'the fixture model must have a free unit').toBeGreaterThan(0);
 
-    await firstCar.click();
-    await expect(page.getByTestId('step-extras')).toBeVisible({ timeout: 20000 });
-    await page.getByTestId('extras-next').click();
-    await page.getByTestId('first-name').fill('E2E');
-    await page.getByTestId('last-name').fill('Loop');
-    await page.getByTestId('phone').fill('+212699005500');
-    await page.getByTestId('email').fill(TEST_EMAIL);
-    await page.getByTestId('consent').check();
-    await page.getByTestId('funnel-submit').click();
-
-    const reference = (await page.getByTestId('booking-reference').innerText({ timeout: 30000 })).trim();
-    expect(reference).toMatch(/^DC-/);
-
-    const created = await db.reservationByReference(reference);
-    expect(created, 'the booking must exist in Postgres').toBeTruthy();
+    const created = await db.makeReservation({
+      vehicleId: row.vehicle_id,
+      startAt: w.from,
+      endAt: w.to,
+      phone: '+212699005500',
+      lastName: 'Loop',
+    });
+    expect(created?.reference, 'the booking must exist in Postgres').toMatch(/^DC-/);
     expect(await db.freeUnits(slug, w.from, w.to), 'a pending booking already holds a car').toBe(freeBefore - 1);
 
     /* ---------------- 2. assign a unit and confirm, from the admin ------ */

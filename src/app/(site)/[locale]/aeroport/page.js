@@ -43,7 +43,7 @@ export default async function AirportPage({ params }) {
         image="berline"
       >
         <div className="mt-6 flex flex-wrap gap-3">
-          <Button href={{ pathname: '/reservation', query: { pickup: 'airport', dropoff: 'airport' } }} size="lg">
+          <Button href={{ pathname: '/vehicules', query: { pickup: 'aeroport-mohammed-v' } }} size="lg">
             {t('cta')}
             <ArrowIcon />
           </Button>

@@ -138,7 +138,19 @@ export default function VehicleBooking({ vehicle, locations = [], labels, locale
       )
     : null;
 
-  const href = hasDates ? `${bookHref}${bookHref.includes('?') ? '&' : '?'}${new URLSearchParams({ from: search.from, to: search.to, ...(search.pickup ? { pickup: search.pickup } : {}) })}` : bookHref;
+  /* The booking flow was removed (owner, Sept 2026) pending a redesign, so
+     `bookHref` is absent and the primary button opens the same WhatsApp thread
+     the panel already prepares — car, dates and price prefilled. A dead button
+     would be worse than a conversation.
+     The dates are only appended to an INTERNAL href: a wa.me URL already
+     carries them inside its `text` parameter, and bolting `&from=` onto it
+     would just be junk in the address bar. */
+  const internal = typeof bookHref === 'string' && bookHref.startsWith('/');
+  const href = internal
+    ? (hasDates
+        ? `${bookHref}${bookHref.includes('?') ? '&' : '?'}${new URLSearchParams({ from: search.from, to: search.to, ...(search.pickup ? { pickup: search.pickup } : {}) })}`
+        : bookHref)
+    : waHref;
 
   return (
     <>

@@ -19,7 +19,7 @@ const OWNER_PASSWORD = process.env.E2E_ADMIN_PASSWORD || '';
 /** Noise that is not a bug: a lazily loaded asset the sandbox never had. */
 const IGNORED_CONSOLE = [/favicon/i, /the server responded with a status of 404/i, /ResizeObserver loop/i];
 
-const PUBLIC = ['/', '/location-voiture-casablanca', '/location-voiture-aeroport-casablanca', '/faq', '/contact', '/a-propos', '/blog', '/location-voiture-longue-duree-casablanca', '/reservation'];
+const PUBLIC = ['/', '/location-voiture-casablanca', '/location-voiture-aeroport-casablanca', '/faq', '/contact', '/a-propos', '/blog', '/location-voiture-longue-duree-casablanca'];
 const ADMIN = [
   '/admin', '/admin/reservations', '/admin/reservations/nouvelle', '/admin/calendrier', '/admin/clients',
   '/admin/flotte', '/admin/flotte/unites', '/admin/operations/departs', '/admin/operations/retours',
@@ -32,7 +32,6 @@ const LOCALIZED = {
   '/location-voiture-casablanca': { en: '/car-rental-casablanca', ar: '/car-rental-casablanca' },
   '/location-voiture-aeroport-casablanca': { en: '/car-rental-casablanca-airport', ar: '/car-rental-casablanca-airport' },
   '/location-voiture-longue-duree-casablanca': { en: '/long-term-car-rental-casablanca', ar: '/long-term-car-rental-casablanca' },
-  '/reservation': { en: '/booking', ar: '/booking' },
   '/a-propos': { en: '/about', ar: '/about' },
 };
 const localized = (path, locale) => (locale === 'fr' ? path : (LOCALIZED[path] || {})[locale] || path);

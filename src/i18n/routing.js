@@ -74,18 +74,6 @@ export const routing = defineRouting({
       ar: '/car-rental-with-driver-casablanca',
       es: '/coche-con-conductor-casablanca',
     },
-    '/reservation': {
-      fr: '/reservation',
-      en: '/booking',
-      ar: '/booking',
-      es: '/reserva',
-    },
-    '/reservation/confirmation': {
-      fr: '/reservation/confirmation',
-      en: '/booking/confirmation',
-      ar: '/booking/confirmation',
-      es: '/reserva/confirmacion',
-    },
     '/a-propos': {
       fr: '/a-propos',
       en: '/about',

@@ -24,7 +24,6 @@ const NAVIGATION_LINKS = [
 const SERVICE_LINKS = [
   { key: 'longTerm', href: '/longue-duree' },
   { key: 'chauffeur', href: '/avec-chauffeur' },
-  { key: 'book', href: '/reservation' },
 ];
 
 const LINK_CLASS =

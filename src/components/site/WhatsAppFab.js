@@ -10,7 +10,9 @@ export default function WhatsAppFab({ number }) {
   const locale = useLocale();
   const t = useTranslations('common');
   const pathname = usePathname();
-  if (!number || pathname.startsWith('/reservation') || pathname.startsWith('/vehicules/')) return null;
+  /* The /reservation funnel it used to hide behind was removed with the old
+     booking flow; only the vehicle page still has its own WhatsApp button. */
+  if (!number || pathname.startsWith('/vehicules/')) return null;
   return (
     <a
       href={whatsappLink(number, genericMessage(locale))}

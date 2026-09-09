@@ -1,12 +1,11 @@
 import { notFound } from 'next/navigation';
-import { getMessages, getTranslations } from 'next-intl/server';
+import { getTranslations } from 'next-intl/server';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import JsonLd from '@/components/site/JsonLd';
 import VehicleCard from '@/components/site/VehicleCard';
 import { carShot } from '@/components/site/CarImage';
 import VehicleGallery from '@/components/site/vehicle/VehicleGallery';
 import VehicleBooking from '@/components/site/vehicle/VehicleBooking';
-import QuickBookButton from '@/components/site/quickbook/QuickBookButton';
 import { Link } from '@/i18n/navigation';
 import { photosByVehicle, photosFor, uploadedAlt } from '@/components/site/vehiclePhotos';
 import { getSettings, getVehicleBySlug, listExtras, listFaqs, listLocations, listVehiclePhotos, listVehicles, t as pick } from '@/lib/data';
@@ -173,12 +172,6 @@ export default async function VehiclePage({ params }) {
     close: t('booking.close'),
   };
 
-  /* The RAW namespace, not 68 t() calls. The sheet interpolates its own
-     placeholders — it is a client island and the values are only known there —
-     so asking next-intl to format them here would log a FORMATTING_ERROR for
-     every templated string and return the raw message anyway. */
-  const messages = await getMessages({ locale });
-  const quickBookLabels = messages.quickBook;
 
   return (
     <div className="pt-[calc(var(--header-h)+1.5rem)]">
@@ -285,27 +278,12 @@ export default async function VehiclePage({ params }) {
 
           {/* ---------------------------------------------- right column */}
           <aside className="lg:col-span-4">
-            {/* The per-car sheet is the primary way to book (owner's revision,
-                Sept 2026): dates, places and options for THIS car without
-                leaving the page. The panel below keeps the live availability
-                readout and the WhatsApp route, and /reservation stays reachable
-                for a deep link or a browser with no JavaScript. */}
-            <QuickBookButton
-              vehicle={{ id: v.id, slug: v.slug, brand: v.brand, model: v.model, year: v.year, minAge: v.minAge }}
-              locations={locations}
-              extras={extras}
-              settings={{ minAge: settings?.minAge }}
-              locale={locale}
-              labels={quickBookLabels}
-              className="mb-4 w-full"
-            />
             <VehicleBooking
               vehicle={{ slug: v.slug, name, basePerDay: v.pricePerDay, category: v.category }}
               locations={locations}
               labels={bookingLabels}
               locale={locale}
               whatsappNumber={settings?.whatsapp || null}
-              bookHref={`/${locale}/reservation?vehicle=${v.slug}`}
             />
           </aside>
         </div>

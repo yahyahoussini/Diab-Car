@@ -398,7 +398,7 @@ export async function CtaBand({ settings }) {
             <h2 className="text-display-2 text-text">{t('title')}</h2>
             <p className="mt-4 text-lg text-text-2">{t('text')}</p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Button href="/reservation" size="xl">
+              <Button href="/vehicules" size="xl">
                 {t('primary')}
                 <ArrowIcon />
               </Button>

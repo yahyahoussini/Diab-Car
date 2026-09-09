@@ -419,7 +419,7 @@ export default function Header({ phone, whatsapp, transparent = false }) {
                 <span className="hidden xl:inline">{tc('whatsapp')}</span>
               </Button>
             ) : null}
-            <Button href="/reservation" size="md">
+            <Button href="/vehicules" size="md">
               {t('book')}
             </Button>
           </div>
@@ -512,7 +512,7 @@ export default function Header({ phone, whatsapp, transparent = false }) {
           ) : null}
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Button href="/reservation" size="lg">
+            <Button href="/vehicules" size="lg">
               {t('book')}
             </Button>
             {waLink ? (
