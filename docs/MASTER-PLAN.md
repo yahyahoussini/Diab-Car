@@ -133,7 +133,7 @@ Existing routing (`src/i18n/routing.js`) already maps internal keys to localized
 | `/suv` | `/location-suv-casablanca` | `/suv-rental-casablanca` | same | `/alquiler-suv-casablanca` | category intent | P1 |
 | `/quartier/[q]` | `/location-voiture-casablanca-maarif`, `-anfa`, `-ain-diab`, `-centre-ville`, `-casa-voyageurs`, `-sidi-maarouf` | `/car-rental-casablanca-maarif` … | same | `/alquiler-coches-casablanca-maarif` … | neighbourhood delivery pages, each with unique local content (landmarks, hotels, parking, delivery time) | P1 |
 | `/livraison` | `/livraison-voiture-casablanca` | `/car-delivery-casablanca` | same | `/entrega-coche-casablanca` | delivery service | P1 |
-| `/avec-chauffeur` | existing | existing | existing | existing | **confirmed** — Diab Car's own announcement (Sept 2026) lists "professional driver on request" | P1 |
+| ~~`/avec-chauffeur`~~ | — | — | — | — | **CUT (owner, 2026-09-09)**. The agency rents self-drive and delivers to the places it configures; a driver, if offered at all, is an OPTION on a booking (the `chauffeur` row in `extras`), not a service page. The route and its four localized slugs are deleted. | — |
 | `/villes/[city]` | `/location-voiture-marrakech` … | … | … | … | only for cities with confirmed delivery/one-way | P2 |
 | `/guides/[slug]` | `/guides/conduire-au-maroc`, `/guides/casablanca-marrakech-en-voiture` … | … | … | … | tourist pre-intent content | P2 |
 | `/comparer` | `/comparer` | `/compare` | same | `/comparar` | comparison (noindex) | v1.1 |

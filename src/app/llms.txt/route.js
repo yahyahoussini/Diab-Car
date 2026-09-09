@@ -20,7 +20,6 @@ export async function GET() {
     `- [Flotte / tarifs par jour](${absoluteUrl('fr', '/vehicules')}): toutes les voitures avec prix MAD/jour, caution, kilométrage`,
     `- [Location aéroport Mohammed V](${absoluteUrl('fr', '/aeroport')}): livraison 24/7, suivi de vol, 31 km du centre`,
     `- [Longue durée / mensuel](${absoluteUrl('fr', '/longue-duree')}): dès 6 500 MAD/mois`,
-    `- [Avec chauffeur](${absoluteUrl('fr', '/avec-chauffeur')}): transferts, événements, excursions`,
     `- [FAQ](${absoluteUrl('fr', '/faq')}): documents, âge minimum, caution, assurance, frontières`,
     `- [Guide du voyageur](${absoluteUrl('fr', '/blog')}): conduire au Maroc, péages, aéroport`,
     `- [Contact](${absoluteUrl('fr', '/contact')})`,

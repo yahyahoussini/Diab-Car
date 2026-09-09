@@ -92,7 +92,6 @@
     "fleet": "Notre flotte",
     "airport": "Aéroport",
     "longTerm": "Longue durée",
-    "chauffeur": "Avec chauffeur",
     "blog": "Guide",
     "faq": "FAQ",
     "about": "À propos",
@@ -165,7 +164,6 @@
     "addPromo": "+ Ajouter un code promo",
     "submit": "Rechercher une voiture",
     "submitLong": "Demander un devis mensuel",
-    "submitChauffeur": "Demander un chauffeur",
     "manage": "Gérer ma réservation",
     "trust": {
       "noFees": "Sans frais cachés",
@@ -699,40 +697,6 @@
       "category": "Catégorie souhaitée"
     }
   },
-  "chauffeur": {
-    "title": "Location de voiture avec chauffeur à Casablanca",
-    "answer": "Diab Car propose des voitures avec chauffeur professionnel à Casablanca à partir de {price} par jour (8 heures), ainsi que des transferts aéroport, mises à disposition pour mariages, événements et déplacements d’affaires. Berlines premium, SUV et vans jusqu’à 9 places.",
-    "eyebrow": "Chauffeur privé · Transferts · Événements",
-    "uses": {
-      "title": "Pour quels besoins ?",
-      "items": {
-        "transfer": {
-          "title": "Transferts aéroport",
-          "text": "Accueil personnalisé à Mohammed V, trajet direct vers votre hôtel ou vos bureaux. Prix fixe annoncé à l’avance."
-        },
-        "business": {
-          "title": "Déplacements d’affaires",
-          "text": "Mise à disposition à la journée ou à la demi-journée. Chauffeurs discrets, ponctuels, francophones et anglophones."
-        },
-        "wedding": {
-          "title": "Mariages & événements",
-          "text": "Berline ou SUV premium décoré, chauffeur en tenue, coordination avec le cortège."
-        },
-        "tours": {
-          "title": "Excursions",
-          "text": "Marrakech, Rabat, El Jadida ou Chefchaouen à la journée, avec un chauffeur qui connaît la route."
-        }
-      }
-    },
-    "cta": "Demander un chauffeur",
-    "pricing": {
-      "title": "Tarifs indicatifs",
-      "day": "Journée (8 h)",
-      "halfDay": "Demi-journée (4 h)",
-      "transfer": "Transfert aéroport",
-      "note": "Carburant et péages inclus dans Casablanca. Hors Casablanca : devis."
-    }
-  },
   "about": {
     "title": "Diab Car, agence de location de voitures à Casablanca",
     "eyebrow": "À propos",
@@ -923,10 +887,6 @@
     "longTerm": {
       "title": "Location voiture longue durée Casablanca dès 6 500 MAD/mois | Diab Car",
       "description": "Location de voiture au mois à Casablanca pour particuliers, MRE et entreprises : entretien, assurance et assistance inclus, facture, véhicule de remplacement. Devis en 24 h."
-    },
-    "chauffeur": {
-      "title": "Location voiture avec chauffeur Casablanca — Transferts & événements | Diab Car",
-      "description": "Voiture avec chauffeur professionnel à Casablanca : transferts aéroport Mohammed V, déplacements d’affaires, mariages, excursions. Berlines premium, SUV, vans 9 places. Prix fixes."
     },
     "booking": {
       "title": "Réserver une voiture à Casablanca | Diab Car",

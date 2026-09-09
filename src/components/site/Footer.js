@@ -23,7 +23,6 @@ const NAVIGATION_LINKS = [
    when prompt 13 lands them in routing.js. Nothing is invented here. */
 const SERVICE_LINKS = [
   { key: 'longTerm', href: '/longue-duree' },
-  { key: 'chauffeur', href: '/avec-chauffeur' },
 ];
 
 const LINK_CLASS =

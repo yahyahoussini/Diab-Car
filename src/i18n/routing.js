@@ -68,12 +68,6 @@ export const routing = defineRouting({
       ar: '/long-term-car-rental-casablanca',
       es: '/alquiler-coches-larga-duracion-casablanca',
     },
-    '/avec-chauffeur': {
-      fr: '/location-voiture-avec-chauffeur-casablanca',
-      en: '/car-rental-with-driver-casablanca',
-      ar: '/car-rental-with-driver-casablanca',
-      es: '/coche-con-conductor-casablanca',
-    },
     '/a-propos': {
       fr: '/a-propos',
       en: '/about',

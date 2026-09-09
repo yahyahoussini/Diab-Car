@@ -7,7 +7,6 @@ const STATIC = [
   { href: '/vehicules', priority: 0.9, changeFrequency: 'daily' },
   { href: '/aeroport', priority: 0.9, changeFrequency: 'monthly' },
   { href: '/longue-duree', priority: 0.8, changeFrequency: 'monthly' },
-  { href: '/avec-chauffeur', priority: 0.8, changeFrequency: 'monthly' },
   { href: '/faq', priority: 0.7, changeFrequency: 'monthly' },
   { href: '/blog', priority: 0.7, changeFrequency: 'weekly' },
   { href: '/a-propos', priority: 0.5, changeFrequency: 'yearly' },

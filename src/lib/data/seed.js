@@ -40,7 +40,13 @@ export const seedSettings = {
     weekly: true, // "أسبوعي"
     monthly: true, // "وشهري" — the /longue-duree offer is real
     delivery: true, // "توصيل السيارة إلى موقعك"
-    chauffeur: true, // "إمكانية توفير سائق محترف عند الحاجة" — /avec-chauffeur is real
+    /* A driver on request, from Diab Car's own announcement: "إمكانية توفير سائق
+       محترف عند الحاجة". It is an OPTION on a booking, not a service page: the
+       owner removed /avec-chauffeur in Sept 2026, saying the agency does
+       delivery to its configured places and offers anything else through the
+       options. This flag only drives the homepage trust line, and the owner
+       can switch it off in /admin/parametres. */
+    chauffeur: true,
     onlinePayment: false, // decided: cash or TPE at pickup, never online
   },
   bookingChannels: ['whatsapp', 'website'], // "احجز الآن عبر واتساب او عبر موقعنا الألكتروني"

@@ -1,5 +1,5 @@
 /** Namespaces needed by client components — keeps the client bundle small. */
-export const CLIENT_NAMESPACES = ['common', 'nav', 'widget', 'locations', 'booking', 'fleet', 'vehicle', 'cookie', 'contact', 'longTerm', 'chauffeur'];
+export const CLIENT_NAMESPACES = ['common', 'nav', 'widget', 'locations', 'booking', 'fleet', 'vehicle', 'cookie', 'contact', 'longTerm'];
 
 export function pickMessages(messages, namespaces = CLIENT_NAMESPACES) {
   const out = {};

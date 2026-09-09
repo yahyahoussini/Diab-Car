@@ -75,7 +75,7 @@ export async function indexNowAll() {
   const [settings, vehicles, posts] = await Promise.all([getSettingsAdmin(), listVehicles({ published: true }), listPosts({ published: true })]);
   const urls = [];
   for (const l of routing.locales) {
-    ['/', '/vehicules', '/aeroport', '/longue-duree', '/avec-chauffeur', '/faq', '/blog', '/contact', '/a-propos'].forEach((h) => urls.push(absoluteUrl(l, h)));
+    ['/', '/vehicules', '/aeroport', '/longue-duree', '/faq', '/blog', '/contact', '/a-propos'].forEach((h) => urls.push(absoluteUrl(l, h)));
     vehicles.forEach((v) => urls.push(absoluteUrl(l, { pathname: '/vehicules/[slug]', params: { slug: v.slug } })));
     posts.forEach((p) => urls.push(absoluteUrl(l, { pathname: '/blog/[slug]', params: { slug: p.slug } })));
   }

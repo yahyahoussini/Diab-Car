@@ -92,7 +92,6 @@
     "fleet": "Our fleet",
     "airport": "Airport",
     "longTerm": "Long term",
-    "chauffeur": "With driver",
     "blog": "Guide",
     "faq": "FAQ",
     "about": "About",
@@ -165,7 +164,6 @@
     "addPromo": "+ Add a promo code",
     "submit": "Find a car",
     "submitLong": "Request a monthly quote",
-    "submitChauffeur": "Request a driver",
     "manage": "Manage my booking",
     "trust": {
       "noFees": "No hidden fees",
@@ -699,40 +697,6 @@
       "category": "Desired category"
     }
   },
-  "chauffeur": {
-    "title": "Car rental with driver in Casablanca",
-    "answer": "Diab Car offers cars with a professional driver in Casablanca from {price} per day (8 hours), plus airport transfers and hire for weddings, events and business travel. Premium sedans, SUVs and vans up to 9 seats.",
-    "eyebrow": "Private driver · Transfers · Events",
-    "uses": {
-      "title": "What is it for?",
-      "items": {
-        "transfer": {
-          "title": "Airport transfers",
-          "text": "Personal welcome at Mohammed V, direct ride to your hotel or office. Fixed price announced in advance."
-        },
-        "business": {
-          "title": "Business travel",
-          "text": "Full-day or half-day hire. Discreet, punctual drivers who speak French and English."
-        },
-        "wedding": {
-          "title": "Weddings & events",
-          "text": "Decorated premium sedan or SUV, uniformed driver, coordination with the procession."
-        },
-        "tours": {
-          "title": "Excursions",
-          "text": "Marrakech, Rabat, El Jadida or Chefchaouen for the day, with a driver who knows the road."
-        }
-      }
-    },
-    "cta": "Request a driver",
-    "pricing": {
-      "title": "Indicative prices",
-      "day": "Full day (8 h)",
-      "halfDay": "Half day (4 h)",
-      "transfer": "Airport transfer",
-      "note": "Fuel and tolls included within Casablanca. Outside Casablanca: quote."
-    }
-  },
   "about": {
     "title": "Diab Car, car rental agency in Casablanca",
     "eyebrow": "About",
@@ -923,10 +887,6 @@
     "longTerm": {
       "title": "Long-Term Car Rental Casablanca from MAD 6,500/month | Diab Car",
       "description": "Monthly car rental in Casablanca for individuals, expats and companies: maintenance, insurance and assistance included, invoicing, replacement vehicle. Quote within 24 h."
-    },
-    "chauffeur": {
-      "title": "Car Rental with Driver Casablanca — Transfers & events | Diab Car",
-      "description": "Car with professional driver in Casablanca: Mohammed V Airport transfers, business travel, weddings, excursions. Premium sedans, SUVs, 9-seat vans. Fixed prices."
     },
     "booking": {
       "title": "Book a car in Casablanca | Diab Car",

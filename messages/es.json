@@ -92,7 +92,6 @@
     "fleet": "Nuestra flota",
     "airport": "Aeropuerto",
     "longTerm": "Larga duración",
-    "chauffeur": "Con conductor",
     "blog": "Guía",
     "faq": "FAQ",
     "about": "Nosotros",
@@ -165,7 +164,6 @@
     "addPromo": "+ Añadir un código promocional",
     "submit": "Buscar un coche",
     "submitLong": "Pedir presupuesto mensual",
-    "submitChauffeur": "Solicitar un conductor",
     "manage": "Gestionar mi reserva",
     "trust": {
       "noFees": "Sin costes ocultos",
@@ -699,40 +697,6 @@
       "category": "Categoría deseada"
     }
   },
-  "chauffeur": {
-    "title": "Alquiler de coche con conductor en Casablanca",
-    "answer": "Diab Car ofrece coches con conductor profesional en Casablanca desde {price} al día (8 horas), además de traslados al aeropuerto y servicios para bodas, eventos y viajes de negocios. Berlinas premium, SUV y furgonetas de hasta 9 plazas.",
-    "eyebrow": "Conductor privado · Traslados · Eventos",
-    "uses": {
-      "title": "¿Para qué necesidades?",
-      "items": {
-        "transfer": {
-          "title": "Traslados al aeropuerto",
-          "text": "Recepción personalizada en Mohammed V, trayecto directo a tu hotel u oficina. Precio fijo anunciado por adelantado."
-        },
-        "business": {
-          "title": "Viajes de negocios",
-          "text": "Disposición por día o medio día. Conductores discretos, puntuales, que hablan francés e inglés."
-        },
-        "wedding": {
-          "title": "Bodas y eventos",
-          "text": "Berlina o SUV premium decorado, conductor uniformado, coordinación con el cortejo."
-        },
-        "tours": {
-          "title": "Excursiones",
-          "text": "Marrakech, Rabat, El Jadida o Chefchaouen en el día, con un conductor que conoce la carretera."
-        }
-      }
-    },
-    "cta": "Solicitar un conductor",
-    "pricing": {
-      "title": "Tarifas orientativas",
-      "day": "Día completo (8 h)",
-      "halfDay": "Medio día (4 h)",
-      "transfer": "Traslado al aeropuerto",
-      "note": "Combustible y peajes incluidos dentro de Casablanca. Fuera de Casablanca: presupuesto."
-    }
-  },
   "about": {
     "title": "Diab Car, agencia de alquiler de coches en Casablanca",
     "eyebrow": "Nosotros",
@@ -923,10 +887,6 @@
     "longTerm": {
       "title": "Alquiler de coches larga duración Casablanca desde 6.500 MAD/mes | Diab Car",
       "description": "Alquiler de coche por meses en Casablanca para particulares, expatriados y empresas: mantenimiento, seguro y asistencia incluidos, factura, vehículo de sustitución. Presupuesto en 24 h."
-    },
-    "chauffeur": {
-      "title": "Coche con conductor Casablanca — Traslados y eventos | Diab Car",
-      "description": "Coche con conductor profesional en Casablanca: traslados al aeropuerto Mohammed V, viajes de negocios, bodas, excursiones. Berlinas premium, SUV, furgonetas de 9 plazas. Precios fijos."
     },
     "booking": {
       "title": "Reservar un coche en Casablanca | Diab Car",
