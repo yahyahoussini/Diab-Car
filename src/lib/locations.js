@@ -64,3 +64,39 @@ export function resolvePickup(locations = [], value) {
 
 /** A pick-up value is safe to accept from a URL if it looks like a slug. */
 export const LOCATION_KEY_PATTERN = /^[a-z0-9][a-z0-9-]{0,63}$/;
+
+/**
+ * What a `locations` row charges for delivery — a number, or null for
+ * « sur devis ».
+ *
+ * The table carries two fee columns. `delivery_fee_mad` (plan 6.2) is the one
+ * the admin writes and the only one that is authoritative; `fee` is the
+ * starter's original column, kept alive until it can be dropped. `fee` is
+ * `numeric default 0`, so EVERY row that predates the admin screen holds a 0
+ * there that means "nobody ever set this", not "delivery is free".
+ *
+ * Reading them as `deliveryFeeMad ?? fee ?? null` therefore answered 0 for
+ * every place the owner had not priced yet, and the live table is exactly that
+ * shape: the agency is a true 0, while the airport and all six districts are
+ * `fee = 0, delivery_fee_mad = null`. The site quoted free delivery to Aïn
+ * Diab, to Anfa and to Mohammed V, and the agency would have had to either
+ * absorb the cost or charge at the counter for something the page never showed
+ * — rule 11 and rule 4 in one bug.
+ *
+ * Migration 0002 had the rule right when it backfilled `set delivery_fee_mad =
+ * fee where … fee > 0`: a zero in the legacy column is not a price. This is the
+ * same test, applied on the way out.
+ */
+export function deliveryFeeOf(row) {
+  /* Three spellings of the same figure, most-resolved first: `deliveryFee` is
+     what the adapter has already worked out and what every caller downstream
+     reads, `deliveryFeeMad` is the camelCased column, `delivery_fee_mad` the
+     raw one. `??` and not `||`, so a genuine 0 — the agency — survives. */
+  const own = row?.deliveryFee ?? row?.deliveryFeeMad ?? row?.delivery_fee_mad;
+  if (own !== null && own !== undefined && own !== '') {
+    const n = Number(own);
+    if (Number.isFinite(n)) return n;
+  }
+  const legacy = Number(row?.fee);
+  return Number.isFinite(legacy) && legacy > 0 ? legacy : null;
+}

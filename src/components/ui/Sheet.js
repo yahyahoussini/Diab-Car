@@ -21,12 +21,13 @@ import { cn } from '@/lib/cn';
  *   title: string,
  *   side?: 'bottom'|'end',
  *   children: React.ReactNode,
+ *   subheader?: React.ReactNode,
  *   footer?: React.ReactNode,
  *   labelClose?: string,
  *   wide?: boolean,
  * }} props
  */
-export default function Sheet({ open, onClose, title, side = 'bottom', children, footer, labelClose = 'Fermer', wide = false }) {
+export default function Sheet({ open, onClose, title, side = 'bottom', children, subheader, footer, labelClose = 'Fermer', wide = false }) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -82,6 +83,11 @@ export default function Sheet({ open, onClose, title, side = 'bottom', children,
             </svg>
           </button>
         </header>
+
+        {/* Between the title and the scrolling body, and NOT part of it: a
+            stepper that scrolls away stops telling you where you are exactly
+            when a long step makes you want to know. */}
+        {subheader ? <div className="border-b border-border px-5 pb-4 pt-3">{subheader}</div> : null}
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5">{children}</div>
 

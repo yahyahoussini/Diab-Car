@@ -388,6 +388,27 @@ describe('delivery fee per place (plan 6.2)', () => {
     assert.equal(q.deliveryOnRequest, true, 'and the page must say so rather than show 0 MAD');
   });
 
+  /* The row shape PRODUCTION actually produces. Every test above hands
+     `quote()` a hand-built object with a single `deliveryFee` key, and on that
+     shape `deliveryFee ?? deliveryFeeMad` is `null ?? undefined` = undefined,
+     which is correctly read as "unset". A row off the wire carries BOTH keys,
+     both null — and then the coalesce yields null, `Number(null)` is 0, and an
+     unpriced destination silently became a free one. Every green test in this
+     file missed it because none of them used a real row. */
+  test('a real row with both fee columns null is sur devis, not free', () => {
+    const row = { key: 'ain-diab', kind: 'district', fee: 0, deliveryFee: null, deliveryFeeMad: null };
+    const q = quote({ vehicle: VEHICLE, ...win, settings: {}, pickupKey: 'address', pickupLocation: row });
+    assert.equal(q.deliveryOnRequest, true, 'an unpriced district must be quoted by hand');
+    assert.equal(q.deliveryFee, 0, 'and nothing is charged for it');
+  });
+
+  test('a real row still takes its category default when one exists', () => {
+    const row = { key: 'aeroport-mohammed-v', kind: 'airport', fee: 0, deliveryFee: null, deliveryFeeMad: null };
+    const q = quote({ vehicle: VEHICLE, ...win, settings, pickupKey: 'airport', pickupLocation: row });
+    assert.equal(q.deliveryFee, 250);
+    assert.equal(q.deliveryOnRequest, false);
+  });
+
   test('collecting at the agency is never a delivery, whatever the city default is', () => {
     const q = quote({ vehicle: VEHICLE, ...win, settings, pickupKey: 'agency' });
     assert.equal(q.deliveryFee, 0);

@@ -128,6 +128,10 @@ export async function GET(request) {
           extras: q.extras,
           extrasTotal: q.extrasTotal,
           deliveryFee: q.deliveryFee,
+          /* Whether that 0 means "free" or "we will quote it by hand". Without
+             it the caller cannot tell the two apart and prints a free delivery
+             the agency never offered (rule 11). */
+          deliveryOnRequest: q.deliveryOnRequest,
           oneWayFee: q.oneWayFee,
           total: q.total,
           deposit: q.deposit,

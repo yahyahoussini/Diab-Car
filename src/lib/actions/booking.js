@@ -27,7 +27,15 @@ const schema = z.object({
   extras: z.array(z.string()).optional().default([]),
   name: z.string().trim().min(3).max(120),
   phone: z.string().trim().regex(/^\+?[\d\s().-]{8,20}$/),
-  email: z.email(),
+  /* Optional (owner, Sept 2026): the pop-up asks for a full name and a phone
+     number and nothing else, because a reservation here is a REQUEST that
+     Diab Car confirms by calling back — the phone is the channel that matters
+     and an e-mail field only loses bookings. `customers.email` has always been
+     nullable and sendBookingEmails() already notifies the agency alone when
+     the customer left none, so this is a validation change, not a data one.
+     An empty string is accepted as "not given" so a form can post the field
+     unconditionally. */
+  email: z.union([z.email(), z.literal('')]).optional().default(''),
   /* Optional for the quick per-car flow (plan 4.7). A reservation is a
      REQUEST that a human confirms — Diab Car calls back — and the driver's age
      and licence are checked against the physical document at the counter, by
@@ -149,7 +157,7 @@ export async function submitBooking(input) {
       firstName,
       lastName: rest.join(' ') || '-',
       phone: d.phone.replace(/[\s().-]/g, ''),
-      email: d.email.toLowerCase(),
+      email: d.email ? d.email.toLowerCase() : null,
       locale: d.locale,
     },
     /* The snapshot. Everything the customer was shown, frozen. */
@@ -189,7 +197,7 @@ export async function submitBooking(input) {
     locale: d.locale,
     customerName: d.name,
     customerPhone: d.phone.replace(/[\s().-]/g, ''),
-    customerEmail: d.email.toLowerCase(),
+    customerEmail: d.email ? d.email.toLowerCase() : null,
     flightNumber: d.flightNumber || null,
     notes: d.notes || null,
     pickupLabel: label(d.pickup, d.pickupAddress),

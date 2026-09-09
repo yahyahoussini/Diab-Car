@@ -3,6 +3,8 @@
  * Server Actions and the admin. All amounts in MAD.
  */
 
+import { deliveryFeeOf } from './locations.js';
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export function countDays(startAt, endAt) {
@@ -113,8 +115,13 @@ export function quote({ vehicle, startAt, endAt, seasons = [], extras = [], sele
  * @returns {{ amount: number, onRequest: boolean }}
  */
 export function deliveryFeeFor(location, feeKey = 'agency', settings = {}) {
-  const own = Number(location?.deliveryFee ?? location?.deliveryFeeMad);
-  if (Number.isFinite(own)) return { amount: own, onRequest: false };
+  /* Through `deliveryFeeOf()` rather than `Number(a ?? b)`. A row off the wire
+     carries both fee columns and both are null for an unpriced place, so the
+     coalesce yielded null — and `Number(null)` is 0, which reads as "delivery
+     is free" instead of "nobody set this". Every place the owner had not
+     priced was being quoted at 0 MAD in production. */
+  const own = location ? deliveryFeeOf(location) : null;
+  if (own !== null) return { amount: own, onRequest: false };
 
   /* Only two categories are a delivery at all. `agency` is collecting the car
      where it already lives, and `station` has no configured fee — charging

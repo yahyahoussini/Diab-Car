@@ -1,4 +1,5 @@
 import { createPublicClient, createServiceClient, createSessionClient } from '@/lib/supabase/server';
+import { deliveryFeeOf } from '@/lib/locations';
 import { summarise } from './summarise';
 
 /* camelCase <-> snake_case mapping between the app model and Postgres columns */
@@ -255,8 +256,11 @@ export const supabaseAdapter = {
     /* The booking module and the demo seed call it `deliveryFee`; the column
        is `delivery_fee_mad` (plan 6.2) with the starter's `fee` still behind
        it. Without this alias every place rendered « sur devis » in production
-       while working in demo — the exact class of bug rule 12 exists to catch. */
-    return rows.map((l) => ({ ...l, deliveryFee: l.deliveryFeeMad ?? l.fee ?? null }));
+       while working in demo — the exact class of bug rule 12 exists to catch.
+       The falling-back is `deliveryFeeOf()`, not `?? l.fee ??`: `fee` is
+       `numeric default 0`, so the plain coalesce answered 0 — « livraison
+       gratuite » — for every destination the owner had not priced yet. */
+    return rows.map((l) => ({ ...l, deliveryFee: deliveryFeeOf(l) }));
   },
   async upsertLocation(data, reason) {
     return rpcRow('save_location', { p: data, p_reason: reason || 'lieu' }, 'location');

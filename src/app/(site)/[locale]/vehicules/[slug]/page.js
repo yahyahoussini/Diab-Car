@@ -6,9 +6,10 @@ import VehicleCard from '@/components/site/VehicleCard';
 import { carShot } from '@/components/site/CarImage';
 import VehicleGallery from '@/components/site/vehicle/VehicleGallery';
 import VehicleBooking from '@/components/site/vehicle/VehicleBooking';
+import ReserveButton from '@/components/site/booking/ReserveButton';
 import { Link } from '@/i18n/navigation';
 import { photosByVehicle, photosFor, uploadedAlt } from '@/components/site/vehiclePhotos';
-import { getSettings, getVehicleBySlug, listExtras, listFaqs, listLocations, listVehiclePhotos, listVehicles, t as pick } from '@/lib/data';
+import { getSettings, getVehicleBySlug, listFaqs, listLocations, listVehiclePhotos, listVehicles, t as pick } from '@/lib/data';
 import { formatMAD } from '@/lib/format';
 import { absoluteUrl, breadcrumbJsonLd, faqJsonLd, localizedMetadata, ogImageUrl, vehicleJsonLd } from '@/lib/seo';
 
@@ -81,7 +82,7 @@ export default async function VehiclePage({ params }) {
   const v = await getVehicleBySlug(slug);
   if (!v || v.published === false) notFound();
 
-  const [settings, locations, all, faqs, photoRows, extras] = await Promise.all([
+  const [settings, locations, all, faqs, photoRows] = await Promise.all([
     getSettings(),
     listLocations(),
     listVehicles({ published: true }),
@@ -91,7 +92,6 @@ export default async function VehiclePage({ params }) {
        unfiltered read beats four filtered ones. Public read, no cookies — the
        route stays statically rendered (plan 7.1). */
     listVehiclePhotos({}),
-    listExtras(),
   ]);
   const byVehicle = photosByVehicle(photoRows);
   const ownPhotos = photosFor(byVehicle, v);
@@ -278,6 +278,16 @@ export default async function VehiclePage({ params }) {
 
           {/* ---------------------------------------------- right column */}
           <aside className="lg:col-span-4">
+            {/* The way this car is booked (owner, Sept 2026): dates, delivery
+                and options for THIS car, in a pop-up, without leaving the page.
+                The panel below keeps the live availability readout and the
+                WhatsApp route for anyone who would rather talk to someone. */}
+            <ReserveButton
+              vehicle={{ slug: v.slug, name }}
+              whatsappNumber={settings?.whatsapp || null}
+              size="lg"
+              className="mb-4 w-full"
+            />
             <VehicleBooking
               vehicle={{ slug: v.slug, name, basePerDay: v.pricePerDay, category: v.category }}
               locations={locations}
