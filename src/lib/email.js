@@ -87,7 +87,11 @@ function buildAgencyEmail({ booking, name, q, settings }) {
     ['Options', (q.extras || []).map((e) => `${e.name || e.key} ×${e.qty}`).join(', ') || '—'],
     ['Location', q.days ? `${formatMAD(q.basePerDay, 'fr')} × ${q.days} = ${formatMAD(q.subtotal, 'fr')}` : '—'],
     ['Remise', q.discountAmount ? `− ${formatMAD(q.discountAmount, 'fr')} (${q.discountPct}%)` : '—'],
-    ['Livraison', formatMAD(q.deliveryFee || 0, 'fr')],
+    /* « Sur devis » is not 0 MAD. When the place carries no price the total
+       deliberately excludes the delivery (rule 4: nothing is charged that was
+       not shown), so the counter has to be told a figure is still owed --
+       printing 0 reads as "free" and the fee is never collected. */
+    ['Livraison', q.deliveryOnRequest ? 'À DEVIS — non incluse dans le total' : formatMAD(q.deliveryFee || 0, 'fr')],
     ['Aller simple', formatMAD(q.oneWayFee || 0, 'fr')],
     ['TOTAL affiché', formatMAD(booking.totalMad, 'fr')],
     ['Caution', formatMAD(q.deposit, 'fr')],

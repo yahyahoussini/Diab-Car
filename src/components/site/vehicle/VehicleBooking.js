@@ -5,7 +5,6 @@ import dynamic from 'next/dynamic';
 import Sheet from '@/components/ui/Sheet';
 import { formatMAD } from '@/lib/format';
 import { whatsappLink, vehicleInquiryMessage } from '@/lib/whatsapp';
-import { cn } from '@/lib/cn';
 
 /**
  * The right column of the vehicle page (plan 4.6): price object, availability
@@ -30,12 +29,17 @@ const BookingWidget = dynamic(() => import('@/components/site/BookingWidget'), {
   loading: () => <div className="silhouette h-64 w-full rounded-xl" aria-hidden="true" />,
 });
 
+/* Fetched on the first « Réserver », not with the page: most visitors read the
+   specs and leave, and the pop-up carries a calendar, a catalogue and a server
+   action (rule 7). */
+const BookingModal = dynamic(() => import('@/components/site/booking/BookingModal'));
+
 function subscribeToUrl(onChange) {
   window.addEventListener('popstate', onChange);
   return () => window.removeEventListener('popstate', onChange);
 }
 
-export default function VehicleBooking({ vehicle, locations = [], labels, locale, whatsappNumber, bookHref }) {
+export default function VehicleBooking({ vehicle, locations = [], labels, locale, whatsappNumber }) {
   const urlSearch = useSyncExternalStore(subscribeToUrl, () => window.location.search, () => '');
   const params = useMemo(() => Object.fromEntries(new URLSearchParams(urlSearch)), [urlSearch]);
 
@@ -56,6 +60,16 @@ export default function VehicleBooking({ vehicle, locations = [], labels, locale
 
   const [datesOpen, setDatesOpen] = useState(false);
   const [everOpened, setEverOpened] = useState(false);
+
+  /* The booking pop-up, opened by this panel's own buttons. Kept mounted after
+     the first open so closing it to re-read the page does not throw away the
+     dates the customer had already chosen. */
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const [bookingEverOpened, setBookingEverOpened] = useState(false);
+  const openBooking = useCallback(() => {
+    setBookingEverOpened(true);
+    setBookingOpen(true);
+  }, []);
 
   const openDates = useCallback(() => {
     setEverOpened(true);
@@ -138,19 +152,11 @@ export default function VehicleBooking({ vehicle, locations = [], labels, locale
       )
     : null;
 
-  /* The booking flow was removed (owner, Sept 2026) pending a redesign, so
-     `bookHref` is absent and the primary button opens the same WhatsApp thread
-     the panel already prepares — car, dates and price prefilled. A dead button
-     would be worse than a conversation.
-     The dates are only appended to an INTERNAL href: a wa.me URL already
-     carries them inside its `text` parameter, and bolting `&from=` onto it
-     would just be junk in the address bar. */
-  const internal = typeof bookHref === 'string' && bookHref.startsWith('/');
-  const href = internal
-    ? (hasDates
-        ? `${bookHref}${bookHref.includes('?') ? '&' : '?'}${new URLSearchParams({ from: search.from, to: search.to, ...(search.pickup ? { pickup: search.pickup } : {}) })}`
-        : bookHref)
-    : waHref;
+  /* « Réserver cette voiture » opens the pop-up. It used to fall back to the
+     WhatsApp thread, which was the honest answer for the fortnight when no
+     booking flow existed — but it left the page with two red buttons reading
+     « Réserver » that both went to WhatsApp, next to a third that said so.
+     WhatsApp keeps its own clearly-labelled button below. */
 
   return (
     <>
@@ -240,20 +246,21 @@ export default function VehicleBooking({ vehicle, locations = [], labels, locale
 
           {/* ---- actions ---- */}
           <div className="mt-6 space-y-3">
-            <a
-              href={href}
+            {/* Never disabled, even when these dates are sold out: the pop-up
+                is where a customer picks OTHER dates, so shutting the door on
+                the way in is exactly backwards. */}
+            <button
+              type="button"
+              onClick={openBooking}
               data-testid="vehicle-book"
-              className={cn(
-                'flex w-full items-center justify-center gap-2 rounded-full px-5 py-3.5 text-[13px] font-semibold',
-                available === false ? 'pointer-events-none bg-surface-3 text-text-muted' : 'bg-red text-white',
-              )}
-              aria-disabled={available === false}
+              aria-haspopup="dialog"
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-red px-5 py-3.5 text-[13px] font-semibold text-on-red"
             >
               {labels.book}
               <svg viewBox="0 0 24 24" className="h-4 w-4 rtl:-scale-x-100" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M5 12h14M13 5l7 7-7 7" />
               </svg>
-            </a>
+            </button>
 
             {waHref ? (
               <a
@@ -287,15 +294,29 @@ export default function VehicleBooking({ vehicle, locations = [], labels, locale
               </svg>
             </a>
           ) : null}
-          <a
-            href={href}
-            className={cn('shrink-0 rounded-full px-5 py-3 text-[13px] font-semibold', available === false ? 'pointer-events-none bg-surface-3 text-text-muted' : 'bg-red text-white')}
-            aria-disabled={available === false}
+          <button
+            type="button"
+            onClick={openBooking}
+            data-testid="vehicle-book-mobile"
+            aria-haspopup="dialog"
+            className="shrink-0 rounded-full bg-red px-5 py-3 text-[13px] font-semibold text-on-red"
           >
             {labels.bookShort}
-          </a>
+          </button>
         </div>
       </div>
+
+      {bookingEverOpened ? (
+        <BookingModal
+          open={bookingOpen}
+          onClose={() => setBookingOpen(false)}
+          vehicle={{ slug: vehicle.slug, name: vehicle.name }}
+          whatsappNumber={whatsappNumber || null}
+          /* The dates the panel is already quoting, so the pop-up opens on the
+             same booking the visitor is looking at rather than a blank one. */
+          initial={{ from: search.from, to: search.to, pickup: search.pickup }}
+        />
+      ) : null}
 
       <Sheet open={datesOpen} onClose={() => setDatesOpen(false)} title={labels.pickDates} labelClose={labels.close}>
         {everOpened ? <BookingWidget locations={locations} compact initial={{ pickup: search.pickup, dropoff: search.dropoff }} onSearch={onSearch} /> : null}

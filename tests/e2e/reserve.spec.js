@@ -16,6 +16,10 @@
 /* ------------------------------------------------------------------ */
 
 const { test, expect } = require('@playwright/test');
+const db = require('./helpers/db');
+
+/** The fixture car. Same one vehicle.spec.js books out, and it has units. */
+const SLUG = 'dacia-logan-diesel';
 
 /** Digits only, so "1 320 MAD" and "1.320 MAD" compare equal. */
 const digits = (s) => (s || '').replace(/[^\d]/g, '');
@@ -34,8 +38,28 @@ async function openOnFirstCar(page) {
   await card.locator('a').first().click();
   await page.waitForURL(/\/fr\/[^/]+\/[^/]+$/, { timeout: 20000 });
 
-  await page.getByTestId('reserve-button').click();
+  await page.getByTestId('vehicle-book').click();
   await expect(page.getByTestId('booking-modal')).toBeVisible({ timeout: 20000 });
+}
+
+/**
+ * Page the calendar forward until `day` is on screen.
+ *
+ * The grid renders one month at a time and opens on the current one, so a
+ * fixture window far enough out to avoid colliding with real reservations is
+ * necessarily several clicks away. Bounded, and it waits for each month's
+ * counts to arrive before judging the next -- an unread month renders every
+ * day enabled, so looking at one would prove nothing.
+ */
+async function pageTo(page, day) {
+  for (let i = 0; i < 14; i += 1) {
+    if (await page.locator(`[data-day="${day}"]`).count()) return true;
+    await page.getByRole('button', { name: /mois suivant/i }).click();
+    await expect
+      .poll(async () => page.locator('[data-day][data-free]').count(), { timeout: 20000 })
+      .toBeGreaterThan(0);
+  }
+  return (await page.locator(`[data-day="${day}"]`).count()) > 0;
 }
 
 test.describe('the booking pop-up', () => {
@@ -131,7 +155,86 @@ test.describe('the booking pop-up', () => {
     expect(errors, 'no uncaught exception during the whole flow').toEqual([]);
   });
 
-  test('a car that is not free for the chosen dates cannot be confirmed', async ({ page }) => {
+  /* ------------------------------------------------------------------ */
+  /* The owner's requirement, Sept 2026: a car booked from X to Z must    */
+  /* not offer those days, and must SHOW that they are taken.            */
+  /*                                                                     */
+  /* Proved against a real booking rather than a fixture, because the     */
+  /* thing being tested is the join between what Postgres knows and what  */
+  /* the grid paints - and that join is exactly where it broke once       */
+  /* already: the demo adapter labelled every cell with the PREVIOUS      */
+  /* day's count, so the calendar blocked free days and offered booked    */
+  /* ones. A test built on a hand-made map would have passed throughout.  */
+  /* ------------------------------------------------------------------ */
+  test('a car booked from X to Z shows those days as taken and refuses them', async ({ page }) => {
+    test.skip(!db.available, 'needs SUPABASE_SERVICE_ROLE_KEY to create the booking being tested');
+
+    /* Far enough out that no real reservation collides, and a Monday-to-
+       Thursday shape so the blocked run sits inside one month. */
+    const start = new Date(Date.now() + 150 * 86400000);
+    start.setUTCHours(10, 0, 0, 0);
+    const end = new Date(start.getTime() + 3 * 86400000);
+    const startAt = start.toISOString();
+    const endAt = end.toISOString();
+
+    /* Every unit of the model, so the days are genuinely unavailable rather
+       than merely scarce. */
+    const taken = await db.bookOut(SLUG, startAt, endAt);
+    expect(taken, 'setup must actually take every unit').toBeGreaterThan(0);
+
+    try {
+      await page.goto(`/fr/vehicules/${SLUG}`);
+      await page.getByTestId('vehicle-book').click();
+      await expect(page.getByTestId('booking-modal')).toBeVisible({ timeout: 20000 });
+      await expect.poll(async () => page.locator('[data-day][data-free]').count(), { timeout: 20000 }).toBeGreaterThan(0);
+
+      /* The rental runs 10:00 on day 0 to 10:00 on day 3, so days 0, 1 and 2
+         are occupied. Day 3 is a hand-back morning and is deliberately NOT
+         asserted either way - free_units decides it, not this test. */
+      const blocked = [0, 1, 2].map((i) => new Date(start.getTime() + i * 86400000).toISOString().slice(0, 10));
+
+      expect(await pageTo(page, blocked[0]), 'the fixture month must be reachable').toBe(true);
+
+      for (const day of blocked) {
+        const cell = page.locator(`[data-day="${day}"]`);
+        await expect(cell, `${day} must be in the visible month`).toHaveCount(1);
+        await expect(cell, `${day} is booked, so it must report zero free units`).toHaveAttribute('data-free', '0');
+        await expect(cell, `${day} must not be selectable`).toBeDisabled();
+      }
+
+      /* And it must LOOK taken, not merely refuse a click. */
+      await expect(page.getByTestId('calendar-legend')).toBeVisible();
+      await expect(page.locator(`[data-day="${blocked[0]}"]`)).toHaveAttribute('aria-label', /déjà réservé/i);
+
+      /* Clicking one changes nothing: no start date, no price, no way on. */
+      await page.locator(`[data-day="${blocked[0]}"]`).click({ force: true });
+      await expect(page.getByTestId('booking-total')).toContainText('—');
+      await expect(page.getByTestId('booking-next')).toBeDisabled();
+
+      /* A range that STRADDLES the blocked run must not be accepted either --
+         both ends free is not the same as the whole period free, which is the
+         one thing a per-day count cannot answer on its own. */
+      const before = new Date(start.getTime() - 86400000).toISOString().slice(0, 10);
+      const after = new Date(start.getTime() + 4 * 86400000).toISOString().slice(0, 10);
+      const beforeCell = page.locator(`[data-day="${before}"]`);
+      const afterCell = page.locator(`[data-day="${after}"]`);
+      /* Both ends only count when they are in the month currently on screen;
+         a run that straddles a month boundary is a different test. */
+
+      if ((await beforeCell.count()) && (await afterCell.count()) && (await beforeCell.isEnabled()) && (await afterCell.isEnabled())) {
+        await beforeCell.click();
+        await afterCell.click();
+        /* The second click restarts the range on that day rather than spanning
+           the blocked run, so no complete range exists and there is no price. */
+        await expect(page.getByTestId('booking-total')).toContainText('—');
+        await expect(page.getByTestId('booking-next')).toBeDisabled();
+      }
+    } finally {
+      await db.cleanup();
+    }
+  });
+
+  test('with no dates chosen there is no price, and no way forward', async ({ page }) => {
     await openOnFirstCar(page);
     await expect.poll(async () => page.locator('[data-day][data-free]').count(), { timeout: 20000 }).toBeGreaterThan(0);
 

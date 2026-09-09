@@ -185,6 +185,18 @@ export default function AvailabilityCalendar({
           );
         })}
       </div>
+
+      {/* What the hatching means, said once. A pattern nobody explains is
+          decoration; the owner asked for the taken days to be unselectable AND
+          legible as taken, and this is the half that makes them legible. */}
+      <p className="mt-3 flex items-center gap-2 text-[0.78rem] text-text-muted" data-testid="calendar-legend">
+        <span
+          aria-hidden="true"
+          className="inline-block h-4 w-4 shrink-0 rounded-full border border-border"
+          style={{ backgroundImage: 'repeating-linear-gradient(135deg, var(--border-strong) 0 1px, transparent 1px 5px)' }}
+        />
+        {labels.dayTaken}
+      </p>
     </div>
   );
 }

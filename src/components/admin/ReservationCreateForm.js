@@ -261,7 +261,11 @@ export default function ReservationCreateForm({ vehicles = [], locations = [], e
               {(q.extras || []).map((line) => (
                 <Line key={line.key} label={pick(line.name, 'fr') || line.key} value={formatMAD(line.total, 'fr')} />
               ))}
-              {q.deliveryFee ? <Line label="Livraison" value={formatMAD(q.deliveryFee, 'fr')} /> : null}
+              {q.deliveryOnRequest ? (
+                <Line label="Livraison" value="à devis — non incluse" />
+              ) : q.deliveryFee ? (
+                <Line label="Livraison" value={formatMAD(q.deliveryFee, 'fr')} />
+              ) : null}
               {q.oneWayFee ? <Line label="Aller simple" value={formatMAD(q.oneWayFee, 'fr')} /> : null}
               <div className="border-t border-border pt-2">
                 <Line label="Total" value={formatMAD(q.total, 'fr')} strong />

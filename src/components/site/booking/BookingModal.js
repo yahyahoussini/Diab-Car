@@ -44,28 +44,75 @@ const DEFAULT_TIME = '10:00';
    customer arriving on a 22:00 flight has to be able to state. */
 const HOURS = Array.from({ length: 29 }, (_, i) => `${String(Math.floor((i + 16) / 2)).padStart(2, '0')}:${(i + 16) % 2 ? '30' : '00'}`);
 
-export default function BookingModal({ open, onClose, vehicle, whatsappNumber = null }) {
+export default function BookingModal({ open, onClose, vehicle, whatsappNumber = null, initial = null }) {
   const t = useTranslations('booking');
   const locale = useLocale();
 
+  /* Whatever the page already knows. A visitor who arrived on ?from=…&to=…
+     has been looking at a price for those dates on the panel behind this
+     dialog; opening on an empty calendar makes them choose again and
+     contradicts the total they were just shown.
+
+     The site's URLs carry full ISO INSTANTS, while this dialog holds a day and
+     an hour separately, so the instant is split in Casablanca time (+01:00,
+     the fixed offset this codebase uses everywhere). `toISO(day, time)` then
+     reproduces exactly the instant that came in — the split is lossless, which
+     is what stops the pop-up quoting a different moment than the panel did.
+
+     Only a range that is complete, ordered and not already past is taken;
+     anything else is ignored rather than seeded into a state the server would
+     refuse. An hour that is not on the counter's half-hour grid falls back to
+     the default rather than leaving the select showing nothing. */
+  const seed = useMemo(() => {
+    const split = (value) => {
+      if (typeof value !== 'string' || !value) return null;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return { day: value, time: DEFAULT_TIME };
+      const ms = Date.parse(value);
+      if (!Number.isFinite(ms)) return null;
+      const local = new Date(ms + 60 * 60 * 1000).toISOString();
+      const time = local.slice(11, 16);
+      return { day: local.slice(0, 10), time: HOURS.includes(time) ? time : DEFAULT_TIME };
+    };
+
+    const a = split(initial?.from);
+    const b = split(initial?.to);
+    const ok = a && b && b.day > a.day && a.day >= todayISO();
+    return {
+      from: ok ? a.day : '',
+      to: ok ? b.day : '',
+      ft: ok ? a.time : DEFAULT_TIME,
+      tt: ok ? b.time : DEFAULT_TIME,
+      pickup: typeof initial?.pickup === 'string' ? initial.pickup : '',
+    };
+    /* First render only: the dialog stays mounted between opens and must keep
+       what the customer chose inside it, not snap back to the URL. */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [step, setStep] = useState(1);
-  const [from, setFrom] = useState('');
-  const [to, setTo] = useState('');
-  const [ft, setFt] = useState(DEFAULT_TIME);
-  const [tt, setTt] = useState(DEFAULT_TIME);
-  const [month, setMonth] = useState(() => monthOf(todayISO()));
+  const [from, setFrom] = useState(seed.from);
+  const [to, setTo] = useState(seed.to);
+  const [ft, setFt] = useState(seed.ft);
+  const [tt, setTt] = useState(seed.tt);
+  const [month, setMonth] = useState(() => monthOf(seed.from || todayISO()));
   /* Collapsed as soon as a complete range exists, and reopened by « Modifier »
      (owner's reference, Sept 2026). Driven from the click rather than from an
      effect watching `to`, so choosing dates is one render and reopening the
      calendar cannot be undone by the state that closed it. */
-  const [calendarOpen, setCalendarOpen] = useState(true);
+  const [calendarOpen, setCalendarOpen] = useState(!(seed.from && seed.to));
 
   const [freeByDay, setFreeByDay] = useState(() => new Map());
   const [loadedMonths, setLoadedMonths] = useState(() => new Set());
   const [calendarError, setCalendarError] = useState(false);
+  /* Bumped by « Réessayer ». The retry used to be setMonth(m => m), which
+     writes the same value: React bails out, the effect deps never change and
+     the refetch never happened -- the button cleared the error panel and left
+     the calendar loading for ever. A counter is a dep that always changes. */
+  const [reloadTick, setReloadTick] = useState(0);
   const requestedMonths = useRef(new Set());
 
   const [catalogue, setCatalogue] = useState(null);
+  const [catalogueError, setCatalogueError] = useState(false);
   const [place, setPlace] = useState('');
   const [chosen, setChosen] = useState([]);
 
@@ -86,16 +133,23 @@ export default function BookingModal({ open, onClose, vehicle, whatsappNumber = 
     fetch(`/api/booking-options?locale=${locale}`)
       .then((r) => r.json())
       .then((json) => {
-        if (!json?.ok) return;
+        /* A failed catalogue used to be swallowed, which left `place` empty and
+           still walked the customer to step 3, where the server refused the
+           booking with a generic error. Now it says so and step 2 will not let
+           them past without a pick-up point. */
+        if (!json?.ok) return setCatalogueError(true);
+        setCatalogueError(false);
         setCatalogue(json);
         /* Collecting the car at the agency is the default because it is the
            only option that is certainly free; a delivery is a deliberate
            choice the customer makes, never one made for them. */
-        const agency = json.places.find((p) => p.kind === 'agency') || json.places[0];
-        if (agency) setPlace(agency.key);
+        const carried = seed.pickup ? json.places.find((p) => p.key === seed.pickup) : null;
+        const chosen = carried || json.places.find((p) => p.kind === 'agency') || json.places[0];
+        if (chosen) setPlace(chosen.key);
+        return undefined;
       })
-      .catch(() => {});
-  }, [open, catalogue, locale]);
+      .catch(() => setCatalogueError(true));
+  }, [open, catalogue, locale, seed.pickup]);
 
   /* -------------------------------------------------------------- calendar */
   /* Deliberately WITHOUT an `alive` flag, and the reason matters. The dedupe
@@ -131,10 +185,13 @@ export default function BookingModal({ open, onClose, vehicle, whatsappNumber = 
           return next;
         });
         setLoadedMonths((prev) => new Set(prev).add(month).add(ahead));
+        /* A month that loads clears the panel a DIFFERENT month's failure put
+           up; otherwise a stale error hides data that is already on screen. */
+        setCalendarError(false);
         return undefined;
       })
       .catch(forget);
-  }, [open, month, vehicle.slug]);
+  }, [open, month, vehicle.slug, reloadTick]);
 
   /* ----------------------------------------------------------------- quote */
   /* Everything that can move the price, in one string. Nothing else belongs
@@ -201,11 +258,25 @@ export default function BookingModal({ open, onClose, vehicle, whatsappNumber = 
 
   const toggleExtra = useCallback((key) => {
     setChosen((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
+    /* Any edit invalidates the reason the last submit was refused. « Cette
+       voiture vient d'être réservée » must not still be on screen for a
+       booking the customer has since changed. */
+    setFailure(null);
+  }, []);
+
+  const goToStep = useCallback((n) => {
+    setStep(n);
+    setFailure(null);
+  }, []);
+
+  const retryCatalogue = useCallback(() => {
+    setCatalogueError(false);
+    setCatalogue(null);
   }, []);
 
   const retryCalendar = useCallback(() => {
     setCalendarError(false);
-    setMonth((m) => m);
+    setReloadTick((n) => n + 1);
   }, []);
 
   /* ---------------------------------------------------------------- submit */
@@ -220,9 +291,19 @@ export default function BookingModal({ open, onClose, vehicle, whatsappNumber = 
       if (!consent) return setFailure('consent');
       if (!breakdown) return setFailure('server');
 
+      /* Cloudflare Turnstile. The widget only renders when a site key is
+         configured, and in that case its script injects a hidden
+         `cf-turnstile-response` input into this form -- so reading the form is
+         enough and no global callback is needed. Sending nothing while
+         TURNSTILE_SECRET_KEY is set makes verifyTurnstile() answer
+         'missing-input-response', which would have refused EVERY booking from
+         this pop-up the day the owner configured the keys. */
+      const token = String(new FormData(event.currentTarget).get('cf-turnstile-response') || '');
+
       setSubmitting(true);
       setFailure(null);
       const result = await submitBooking({
+        turnstileToken: token,
         vehicle: vehicle.slug,
         from,
         ft,
@@ -245,11 +326,31 @@ export default function BookingModal({ open, onClose, vehicle, whatsappNumber = 
       }
       /* Sold out is a normal outcome, not a failure of the form: someone else
          can legitimately take the last car while this one is being filled in. */
-      setFailure(result?.error === 'sold_out' ? 'sold_out' : result?.error || 'server');
+      setFailure(result?.error === 'sold_out' ? 'sold_out' : result?.error === 'captcha' ? 'captcha' : result?.error || 'server');
       return undefined;
     },
     [nameOk, phoneOk, consent, breakdown, vehicle.slug, from, ft, to, tt, place, chosen, name, phone, email, locale],
   );
+
+  /* Closing after a success starts the next booking from a clean sheet. The
+     dialog is deliberately never unmounted -- so that closing it to re-read the
+     page does not discard the dates already chosen -- which means nothing else
+     ever resets `done`. Without this, pressing « Réserver » a second time
+     re-opened the OLD confirmation, complete with the previous reference and
+     with no stepper, no footer and no way to start again short of reloading.
+     The dates and options survive; the identity and the outcome do not. */
+  const handleClose = useCallback(() => {
+    if (done) {
+      setDone(null);
+      setStep(1);
+      setName('');
+      setPhone('');
+      setEmail('');
+      setConsent(false);
+    }
+    setFailure(null);
+    onClose();
+  }, [done, onClose]);
 
   /* ------------------------------------------------------------------ view */
   const money = useCallback((amount) => formatMAD(amount, locale), [locale]);
@@ -257,13 +358,18 @@ export default function BookingModal({ open, onClose, vehicle, whatsappNumber = 
   const placesByKey = useMemo(() => new Map((catalogue?.places || []).map((p) => [p.key, p])), [catalogue]);
   const chosenPlace = placesByKey.get(place) || null;
 
-  const canContinue = step === 1 ? Boolean(from && to && breakdown && availability?.available) : true;
+  const canContinue =
+    step === 1
+      ? Boolean(from && to && breakdown && availability?.available)
+      : step === 2
+        ? Boolean(place)
+        : true;
   const subtitle = [t('subtitleDates'), t('subtitleOptions'), t('subtitleDetails')][step - 1];
 
   return (
     <Sheet
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       title={t('title')}
       labelClose={t('close')}
       wide
@@ -285,14 +391,14 @@ export default function BookingModal({ open, onClose, vehicle, whatsappNumber = 
             canContinue={canContinue}
             submitting={submitting}
             onCancel={onClose}
-            onBack={() => setStep(step - 1)}
-            onContinue={() => setStep(Math.min(STEPS, step + 1))}
+            onBack={() => goToStep(step - 1)}
+            onContinue={() => goToStep(Math.min(STEPS, step + 1))}
           />
         )
       }
     >
       {done ? (
-        <Success reference={done.reference} t={t} onClose={onClose} />
+        <Success reference={done.reference} t={t} onClose={handleClose} />
       ) : (
         <div data-testid="booking-modal" data-step={step}>
           <CarCard vehicle={vehicle} place={chosenPlace} />
@@ -326,6 +432,8 @@ export default function BookingModal({ open, onClose, vehicle, whatsappNumber = 
               t={t}
               money={money}
               catalogue={catalogue}
+              error={catalogueError}
+              onRetry={retryCatalogue}
               place={place}
               onPlace={setPlace}
               chosen={chosen}
@@ -517,7 +625,10 @@ function StepDates({ t, locale, month, onMonthChange, freeByDay, loading, error,
           <p className="text-[15px] font-semibold text-text">{t('soldOut')}</p>
           <p className="mt-1 text-[0.85rem] text-text-2">
             {availability.nextAvailableAt
-              ? t('nextAvailable', { date: new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(new Date(availability.nextAvailableAt)) })
+              /* Pinned to the agency's timezone. Formatted in the viewer's,
+                 a customer in Sydney reads a date one day off the one the
+                 counter is holding the car from. */
+              ? t('nextAvailable', { date: new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeZone: 'Africa/Casablanca' }).format(new Date(availability.nextAvailableAt)) })
               : t('soldOutHint')}
           </p>
         </div>
@@ -551,7 +662,17 @@ function TimeSelect({ id, value, onChange }) {
 
 /* ---------------------------------------------------------- step 2: options */
 
-function StepOptions({ t, money, catalogue, place, onPlace, chosen, onToggle }) {
+function StepOptions({ t, money, catalogue, error, onRetry, place, onPlace, chosen, onToggle }) {
+  if (error && !catalogue) {
+    return (
+      <div className="rounded-[var(--radius-card)] border border-border bg-surface-2 p-5 text-center">
+        <p className="text-[0.88rem] text-text-2">{t('catalogueError')}</p>
+        <Button variant="secondary" size="sm" className="mt-3" onClick={onRetry}>
+          {t('retry')}
+        </Button>
+      </div>
+    );
+  }
   if (!catalogue) return <p className="text-[0.88rem] text-text-muted">{t('loadingCalendar')}</p>;
 
   /* « +300,00 MAD », not « 300,00 MAD » (owner's reference): the figure is what
@@ -686,6 +807,8 @@ function StepConfirm({
 
         <Checkbox id="dc-consent" checked={consent} onChange={(e) => onConsent(e.target.checked)} label={t('consent')} />
         {failure === 'consent' ? <p className="text-[0.8rem] text-red-signal">{t('errorConsent')}</p> : null}
+
+        <Turnstile locale={locale} />
       </div>
 
       <div className="mt-5 rounded-[var(--radius-card)] border border-border bg-surface-1 p-4">
@@ -700,7 +823,9 @@ function StepConfirm({
         </div>
       ) : null}
 
-      {failure && !['name', 'phone', 'consent', 'sold_out'].includes(failure) ? (
+      {failure === 'captcha' ? <p className="mt-4 text-[0.85rem] text-red-signal">{t('errorCaptcha')}</p> : null}
+
+      {failure && !['name', 'phone', 'consent', 'sold_out', 'captcha'].includes(failure) ? (
         <p className="mt-4 text-[0.85rem] text-red-signal">
           {t('errorServer')}
           {whatsappNumber ? (
@@ -717,9 +842,47 @@ function StepConfirm({
   );
 }
 
-function Success({ reference, t, onClose }) {
+/**
+ * Cloudflare Turnstile, in implicit mode.
+ *
+ * Renders nothing at all when no site key is configured, which is the state
+ * Diab Car is in today - and `verifyTurnstile()` skips the check in exactly
+ * that case, so the flow is unchanged until the keys exist. When they do, the
+ * script injects a hidden `cf-turnstile-response` input into the surrounding
+ * form and the submit handler reads it straight off the FormData.
+ *
+ * The script tag is plain, not next/script: this subtree is inside a <dialog>
+ * that mounts on demand, and the widget must appear with it.
+ */
+function Turnstile({ locale }) {
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  if (!siteKey) return null;
   return (
-    <div className="py-6 text-center" data-testid="booking-success">
+    <>
+      <div className="cf-turnstile" data-sitekey={siteKey} data-language={locale} data-appearance="interaction-only" />
+      <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
+    </>
+  );
+}
+
+function Success({ reference, t, onClose }) {
+  /* The dialog's whole content is swapped for this panel. Without a live region
+     and a focus move, a screen-reader user hears nothing at all: the button
+     they pressed has gone, and focus is left on a detached node. */
+  const ref = useRef(null);
+  useEffect(() => {
+    ref.current?.focus();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      tabIndex={-1}
+      role="status"
+      aria-live="polite"
+      className="py-6 text-center outline-none"
+      data-testid="booking-success"
+    >
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-success-soft">
         <svg viewBox="0 0 24 24" className="h-6 w-6 text-success" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M20 6 9 17l-5-5" />
@@ -727,7 +890,7 @@ function Success({ reference, t, onClose }) {
       </div>
       <h3 className="mt-4 text-h3 text-text">{t('successTitle')}</h3>
       <p className="mx-auto mt-2 max-w-sm text-[0.88rem] text-text-2">{t('successBody')}</p>
-      <p className="mt-4 text-[0.7rem] font-semibold uppercase tracking-wide text-text-muted">{t('successRef')}</p>
+      <p className="text-meta mt-4 font-semibold text-text-muted">{t('successRef')}</p>
       <p className="text-h3 tabular-nums text-text">{reference}</p>
       <Button variant="secondary" size="md" className="mt-6" onClick={onClose}>
         {t('close')}
@@ -771,7 +934,7 @@ function Footer({ t, money, locale, step, quoting, breakdown, chosenPlace, optio
               <span className="text-text-muted">{quoting ? '…' : '—'}</span>
             )}
           </p>
-          <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-text-muted">{t('total')}</p>
+          <p className="text-meta font-semibold text-text-muted">{t('total')}</p>
         </div>
 
         {has ? (
@@ -825,15 +988,37 @@ function Footer({ t, money, locale, step, quoting, breakdown, chosenPlace, optio
  */
 function Breakdown({ t, money, breakdown, chosen, optionsByKey, place, totalTestid }) {
   if (!breakdown) return null;
+
+  /* The extras lines come from the SERVER's answer, not from what is ticked.
+     quote() silently drops an option that has been deactivated or deleted since
+     the pop-up opened, so rendering from `chosen` printed it at 0 MAD -- a line
+     the customer reads as "included, free" for something they will not get.
+     Anything still ticked but absent from the answer is called out instead. */
+  const priced = breakdown.extras || [];
+  const dropped = chosen.filter((key) => !priced.some((line) => line.key === key));
+
   return (
     <dl className="space-y-1.5 text-[0.85rem]">
-      <Line label={`${t('rental')} · ${breakdown.days === 1 ? t('oneDay') : t('nDays', { n: breakdown.days })}`} value={money(breakdown.subtotal)} />
+      {/* Rule 4 in full: the price per day AND the total for the dates. The
+          per-day figure is the EFFECTIVE one -- after season and duration
+          discount -- because that is the number the customer is actually
+          paying, not the headline rate. */}
+      <Line
+        label={`${t('rental')} · ${breakdown.days === 1 ? t('oneDay') : t('nDays', { n: breakdown.days })}`}
+        value={money(breakdown.subtotal)}
+      />
+      {breakdown.perDayEffective > 0 ? (
+        <Line label={t('pricePerDay')} value={`${money(breakdown.perDayEffective)} ${t('perDay')}`} muted />
+      ) : null}
       {breakdown.discountAmount > 0 ? <Line label={`${t('discount')} −${breakdown.discountPct}%`} value={`−${money(breakdown.discountAmount)}`} /> : null}
 
-      {chosen.map((key) => {
-        const line = breakdown.extras?.find((e) => e.key === key);
-        return <Line key={key} label={optionsByKey.get(key)?.name || key} value={money(line?.total ?? 0)} />;
-      })}
+      {priced.map((line) => (
+        <Line key={line.key} label={optionsByKey.get(line.key)?.name || line.name?.fr || line.key} value={money(line.total)} />
+      ))}
+
+      {dropped.map((key) => (
+        <Line key={key} label={optionsByKey.get(key)?.name || key} value={t('optionUnavailable')} muted />
+      ))}
 
       {breakdown.deliveryOnRequest ? (
         <Line label={`${t('delivery')}${place ? ` · ${place.name}` : ''}`} value={t('onRequest')} muted />

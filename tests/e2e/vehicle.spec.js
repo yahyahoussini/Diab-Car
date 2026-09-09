@@ -113,10 +113,21 @@ test.describe('availability for the visitor dates', () => {
     /* Rule 4: the total for those dates appears with the per-day price. */
     await expect(page.getByText(/total pour 3 jours/i)).toBeVisible();
 
-    /* The dates travel to the funnel. */
-    const href = await page.getByTestId('vehicle-book').getAttribute('href');
-    expect(href).toContain('from=');
-    expect(href).toContain('to=');
+    /* The dates travel INTO the booking pop-up. They used to be asserted as
+       `from=`/`to=` on the button's href, back when the button was a link to
+       the funnel; « Réserver cette voiture » now opens the dialog on this page,
+       so the thing worth checking is that the dialog opens and already knows
+       the dates and the price the panel was showing — which is the rule-4
+       promise the href only stood in for. */
+    await page.getByTestId('vehicle-book').click();
+    const modal = page.getByTestId('booking-modal');
+    await expect(modal).toBeVisible({ timeout: 20000 });
+    await expect(modal).toHaveAttribute('data-step', '1');
+
+    /* The same total the panel quoted, carried across without re-asking. */
+    await expect(page.getByTestId('booking-total-amount')).toContainText(/\d/, { timeout: 20000 });
+    const inModal = (await page.getByTestId('booking-total-amount').textContent()).replace(/[^\d]/g, '');
+    expect(Number(inModal), 'the pop-up opens already priced for the visitor dates').toBeGreaterThan(0);
   });
 
   test('says sold out and offers alternatives when every unit is taken', async ({ page }) => {
@@ -144,8 +155,16 @@ test.describe('availability for the visitor dates', () => {
         expect(href).not.toContain(SLUG);
       }
 
-      /* And the CTA must not invite a booking that cannot happen. */
-      await expect(page.getByTestId('vehicle-book')).toHaveAttribute('aria-disabled', 'true');
+      /* And the CTA must not invite a booking that cannot happen. It used to
+         assert aria-disabled on a link into the funnel; the CTA now opens the
+         booking pop-up, and disabling it would strand the visitor, because the
+         pop-up is precisely where they pick OTHER dates. So the refusal moved
+         inside: the dialog opens on these dates and says no to THEM. */
+      await page.getByTestId('vehicle-book').click();
+      const modal = page.getByTestId('booking-modal');
+      await expect(modal).toBeVisible({ timeout: 20000 });
+      await expect(modal).toContainText(/pas libre sur ces dates/i, { timeout: 20000 });
+      await expect(page.getByTestId('booking-next')).toBeDisabled();
     } finally {
       await db.cleanup();
     }

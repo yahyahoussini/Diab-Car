@@ -118,7 +118,14 @@ export default async function ReservationDetail({ params }) {
             {q.days ? <Row label="Location" value={<span className="tnum">{formatMAD(q.basePerDay, 'fr')} × {q.days}</span>} /> : null}
             {q.discountAmount ? <Row label="Remise" value={<span className="tnum">− {formatMAD(q.discountAmount, 'fr')}</span>} /> : null}
             {q.extrasTotal ? <Row label="Options" value={<span className="tnum">{formatMAD(q.extrasTotal, 'fr')}</span>} /> : null}
-            {q.deliveryFee ? <Row label="Livraison" value={<span className="tnum">{formatMAD(q.deliveryFee, 'fr')}</span>} /> : null}
+            {/* A « sur devis » delivery has a fee of 0 and is EXCLUDED from the
+                total, so hiding the row leaves the counter unaware that a figure
+                is still owed. Shown explicitly instead. */}
+            {q.deliveryOnRequest ? (
+              <Row label="Livraison" value={<span className="text-warning">à devis — non incluse</span>} />
+            ) : q.deliveryFee ? (
+              <Row label="Livraison" value={<span className="tnum">{formatMAD(q.deliveryFee, 'fr')}</span>} />
+            ) : null}
             <Row label="Total" value={<span className="tnum font-semibold text-text">{q.total != null ? formatMAD(q.total, 'fr') : '—'}</span>} />
             <Row label="Caution" value={<span className="tnum">{q.deposit != null ? formatMAD(q.deposit, 'fr') : '—'}</span>} />
           </dl>

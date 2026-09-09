@@ -840,7 +840,14 @@ export const demoAdapter = {
       const startAt = new Date(day0.getTime() + i * 86400000).toISOString();
       const endAt = new Date(day0.getTime() + (i + 1) * 86400000).toISOString();
       const free = freeUnits(s, vehicleId, startAt, endAt);
-      days.push({ day: startAt.slice(0, 10), free });
+      /* The LABEL is counted forward from `from`, not sliced off the UTC form
+         of the instant. `day0` is a Casablanca midnight (+01:00), so its ISO
+         string is 23:00 on the PREVIOUS day -- slicing it labelled every cell
+         with the day before, and the booking calendar in demo mode therefore
+         blocked free days and offered booked ones. Postgres does not have the
+         problem: casablanca_day() does this arithmetic in the right zone. */
+      const label = new Date(Date.parse(`${from}T00:00:00Z`) + i * 86400000).toISOString().slice(0, 10);
+      days.push({ day: label, free });
       if (free > 0) {
         run += 1;
         if (run > best) best = run;
