@@ -561,7 +561,7 @@ function StepDates({ t, locale, month, onMonthChange, freeByDay, loading, error,
                 {t('period')}
               </p>
               <p className="mt-1.5 text-[0.85rem] text-text-2">
-                {long.format(new Date(`${from}T00:00:00Z`))} · {ft} → {long.format(new Date(`${to}T00:00:00Z`))} · {tt}
+                {long.format(new Date(`${from}T00:00:00Z`))} · {ft} <span className="inline-block rtl:-scale-x-100" aria-hidden="true">→</span> {long.format(new Date(`${to}T00:00:00Z`))} · {tt}
               </p>
               <p className="mt-0.5 text-[0.85rem] font-semibold tabular-nums text-text">{nights === 1 ? t('oneDay') : t('nDays', { n: nights })}</p>
             </div>
@@ -781,7 +781,14 @@ function StepConfirm({
       <section className="rounded-[var(--radius-card)] border border-border bg-surface-2 p-4">
         <h3 className="text-[15px] font-semibold text-text">{t('summaryTitle')}</h3>
         <dl className="mt-3 space-y-1.5 text-[0.85rem]">
-          <Line label={t('period')} value={`${date(from, ft)} → ${date(to, tt)}`} />
+          <Line
+            label={t('period')}
+            value={
+              <>
+                {date(from, ft)} <span className="inline-block rtl:-scale-x-100" aria-hidden="true">→</span> {date(to, tt)}
+              </>
+            }
+          />
           {place ? <Line label={t('pickupPlace')} value={place.name} /> : null}
         </dl>
         <div className="mt-2 border-t border-border pt-2">

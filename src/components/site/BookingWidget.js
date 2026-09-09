@@ -618,6 +618,13 @@ export default function BookingWidget({ locations = [], compact = false, classNa
     [different, dropoff, locations, pickupLocation],
   );
 
+  /* `+ 150 MAD`, `sur devis`, or '' when the place is free — never `+ 0 MAD`
+     and never a number nobody configured (rule 11). */
+  const pickupFee = useMemo(
+    () => (pickupLocation ? feeLabel(pickupLocation.deliveryFee, locale, tl('feeOnRequest')) : ''),
+    [pickupLocation, locale, tl],
+  );
+
   const pickupTimes = isRoundTheClock(pickupLocation) ? TIMES : DAY_TIMES;
   const returnTimes = isRoundTheClock(dropoffLocation) ? TIMES : DAY_TIMES;
 
@@ -757,6 +764,19 @@ export default function BookingWidget({ locations = [], compact = false, classNa
             </div>
           ) : null}
 
+          {/* The chosen place keeps its price on screen. `feeLabel` was only
+              ever rendered inside the dropdown, so the moment a visitor picked
+              the airport the figure vanished and they reached the results page
+              without having been told a delivery fee applies at all — the
+              opposite of rule 4, and plan 4.2 asks for it inline. A place that
+              costs nothing says nothing; there is no « + 0 MAD ». */}
+          {pickupFee ? (
+            <p className="mt-2 text-[13px] text-text-2 first-letter:uppercase" data-testid="pickup-fee">
+              <span className="text-text-muted">{tl('deliveryHint')} </span>
+              <span className="tnum">{pickupFee}</span>
+            </p>
+          ) : null}
+
           <p id={errorId('location')} aria-live="polite" className="text-meta mt-2 text-red-signal empty:mt-0">
             {showError('location')}
           </p>
@@ -806,20 +826,53 @@ export default function BookingWidget({ locations = [], compact = false, classNa
             data-testid="date-range-trigger"
             onClick={() => setDatesOpen((v) => !v)}
             className={cn(
-              'flex min-h-12 w-full flex-wrap items-center gap-x-3 gap-y-1 rounded-[var(--radius-input)] border bg-surface-1 px-4 py-2 text-start',
+              'relative flex min-h-12 w-full items-center gap-3 rounded-[var(--radius-input)] border bg-surface-1 px-4 pe-10 py-2 text-start',
               'transition-colors duration-[var(--dur-micro)]',
               showError('dates') ? 'border-red-signal' : 'border-border hover:border-border-strong',
             )}
           >
-            <span id={`${uid}-dates-value`} className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <DayStamp date={from} locale={locale} />
-              <RangeRule />
-              <DayStamp date={to} locale={locale} />
-              <span className="text-meta text-text-muted">· {t('days', { count: days, n: String(days) })}</span>
+            {/* The control used to be bare text. Beside a location select that
+                carries a chevron, that reads as a caption, not as something you
+                can press — so the dates looked fixed and the calendar behind
+                them was undiscoverable. A calendar mark opens it and a chevron
+                closes the pair; both are decorative, the button already names
+                itself through aria-labelledby. */}
+            <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-text-muted" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="16" rx="2" />
+              <path d="M8 3v4M16 3v4M3 11h18" />
+            </svg>
+
+            {/* Two lines, deliberately: the stamp, then everything that
+                qualifies it. Letting the duration share the first line made it
+                wrap to a third line on a 390px phone and pushed the icon down
+                beside « 4 jours », where it read as decorating the duration
+                rather than opening the calendar. */}
+            <span id={`${uid}-dates-value`} className="min-w-0 flex-1">
+              <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <DayStamp date={from} locale={locale} />
+                <RangeRule />
+                <DayStamp date={to} locale={locale} />
+              </span>
+              <span className="tnum block text-[12px] text-text-muted">
+                {t('days', { count: days, n: String(days) })} · {ft} <span className="inline-block rtl:-scale-x-100" aria-hidden="true">→</span> {tt}
+              </span>
             </span>
-            <span className="tnum w-full text-[12px] text-text-muted">
-              {ft} → {tt}
-            </span>
+
+            <svg
+              viewBox="0 0 24 24"
+              className={cn(
+                'pointer-events-none absolute end-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted transition-transform duration-[var(--dur-micro)]',
+                datesOpen && 'rotate-180',
+              )}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
           </button>
 
           <p id={errorId('dates')} aria-live="polite" className="text-meta mt-2 text-red-signal empty:mt-0">
