@@ -272,13 +272,45 @@ function LocationSelect({ id, label, value, onChange, locations, recentKey, desc
   const optionId = (groupId, key) => `${listboxId}-${groupId}-${key}`;
   const activeOption = flat[active];
 
+  /* What the typed text actually names: a label typed out in full, or the only
+     row still standing after filtering. Anything vaguer is not a choice and is
+     deliberately NOT guessed at. */
+  const resolveTyped = useCallback(() => {
+    const needleNow = fold(text);
+    if (!needleNow) return null;
+    const exact = flat.find((o) => fold(o.label) === needleNow);
+    if (exact) return exact;
+    return flat.length === 1 ? flat[0] : null;
+  }, [text, flat]);
+
+  /* Closing WITHOUT having clicked a row used to throw the typed text away and
+     put the old label back. That is the worst path in this module: a visitor
+     types « Anfa », sees Anfa in the list, and goes straight for the red CTA.
+     The pointerdown that begins that click lands outside the combobox, fires
+     this first — on the capture phase, before the button ever sees it — and
+     reverted the field while leaving `pickup` on the airport. The search then
+     ran on a place they had not chosen, with a delivery fee they had not
+     chosen, and the only tell was a field flickering back as the page left.
+     Tab did the same thing.
+     So a close now COMMITS what the text unambiguously names. When it names
+     nothing definite the old label comes back, as before — but that is a
+     genuinely ambiguous entry, not a discarded choice. */
   const dismiss = useCallback(
     (restoreFocus) => {
       setOpen(false);
-      setText(selected);
+      const hit = resolveTyped();
+      if (hit) {
+        if (hit.key !== value) {
+          onChange(hit.key);
+          if (hit.key !== OTHER_LOCATION_KEY) writeStore(RECENT_KEY, hit.key);
+        }
+        setText(hit.label);
+      } else {
+        setText(selected);
+      }
       if (restoreFocus && inputRef.current) inputRef.current.focus();
     },
-    [selected],
+    [selected, resolveTyped, onChange, value],
   );
 
   // Same pattern: the highlight resets when the filter or the open state
@@ -385,7 +417,9 @@ function LocationSelect({ id, label, value, onChange, locations, recentKey, desc
           onKeyDown={onKeyDown}
           className={cn(
             'min-h-12 w-full rounded-[var(--radius-input)] border bg-surface-1 px-4 pe-10 text-[15px] text-text placeholder:text-text-muted',
-            'transition-colors duration-[var(--dur-micro)] focus:outline-none',
+            /* The house pattern from ui/Field.js. `focus:outline-none` alone
+               removed the base-layer red ring and put nothing back. */
+            'transition-colors duration-[var(--dur-micro)] focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25',
             invalid ? 'border-red-signal' : 'border-border hover:border-border-strong',
           )}
         />
@@ -415,7 +449,12 @@ function LocationSelect({ id, label, value, onChange, locations, recentKey, desc
           className="absolute start-0 top-[calc(100%+0.5rem)] z-50 max-h-[min(22rem,60vh)] w-full overflow-y-auto rounded-[var(--radius-card)] border border-border bg-surface-1 p-1.5 shadow-[var(--shadow-float)]"
         >
           {flat.length === 0 ? (
-            <p className="px-3 py-4 text-sm text-text-muted">{t('noLocation')}</p>
+            /* role=status: with nothing to highlight, Enter has nothing to
+               pick and is a no-op, so the only thing that can tell a keyboard
+               or screen-reader user why is this line — and it was silent. */
+            <p role="status" className="px-3 py-4 text-sm text-text-muted">
+              {t('noLocation')}
+            </p>
           ) : (
             groups.map((group) => (
               <div key={group.id} role="group" aria-label={group.label}>
@@ -675,6 +714,12 @@ export default function BookingWidget({ locations = [], compact = false, classNa
     };
     const onKeyDown = (event) => {
       if (event.key !== 'Escape') return;
+      /* Cancelled, exactly as LocationSelect cancels its own Escape. On the
+         results and vehicle pages this module lives inside a native <dialog>;
+         an un-cancelled Escape closed the calendar AND the sheet around it,
+         throwing away everything the visitor was editing. */
+      event.preventDefault();
+      event.stopPropagation();
       setDatesOpen(false);
       if (datesTriggerRef.current) datesTriggerRef.current.focus();
     };
@@ -759,7 +804,7 @@ export default function BookingWidget({ locations = [], compact = false, classNa
                 data-testid="pickup-address"
                 aria-describedby={errorId('location')}
                 aria-invalid={showError('location') ? true : undefined}
-                className="min-h-12 w-full rounded-[var(--radius-input)] border border-border bg-surface-1 px-4 text-[15px] text-text placeholder:text-text-muted focus:outline-none"
+                className="min-h-12 w-full rounded-[var(--radius-input)] border border-border bg-surface-1 px-4 text-[15px] text-text placeholder:text-text-muted transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
               />
             </div>
           ) : null}

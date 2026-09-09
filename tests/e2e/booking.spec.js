@@ -108,3 +108,72 @@ for (const { locale, dir, fleetPath } of LOCALES) {
     });
   });
 }
+
+/* ------------------------------------------------------------------ */
+/* The typed place must survive going straight for the CTA.            */
+/*                                                                     */
+/* This is the module's worst failure mode and it was silent: the      */
+/* outside-pointerdown that begins the click on « Rechercher une       */
+/* voiture » fires on the CAPTURE phase, before the button sees it,    */
+/* and used to revert the field to the previously selected label while */
+/* leaving `pickup` untouched. The visitor was then sent to results    */
+/* for a place they never chose. Nothing on screen said so.            */
+/* ------------------------------------------------------------------ */
+test.describe('booking module — the typed place is not thrown away', () => {
+  test('typing a place and pressing the CTA searches THAT place', async ({ page }) => {
+    await page.goto('/fr', { waitUntil: 'load' });
+
+    const pickup = page.getByTestId('pickup-combobox');
+    await pickup.click();
+    await expect(pickup).toHaveAttribute('aria-expanded', 'true');
+
+    /* What the module starts on, so the assertion below cannot pass by
+       accident on the default. */
+    const before = await pickup.inputValue();
+
+    /* A place that is NOT the default. « Autre adresse à Casablanca » always
+       survives filtering, so the match is identified by its label rather than
+       by being the only row left. */
+    await pickup.fill('Anfa');
+    const listboxId = await pickup.getAttribute('aria-controls');
+    /* By id, not by text: each option's id ends in its location key (see
+       optionId()), and the visible row also carries its delivery fee, so any
+       text match is hostage to that label's wording in four languages. */
+    const row = page.locator(`#${listboxId} [role="option"][id$="-anfa"]`);
+    await expect(row, 'the typed place must appear in the list').toHaveCount(1, { timeout: 10000 });
+    expect(before, 'the module must not already be on Anfa').not.toMatch(/Anfa/i);
+
+    /* Straight to the CTA — never clicking the row, which is the whole point. */
+    await page.getByTestId('booking-submit').click();
+    await page.waitForURL(/[?&]pickup=/, { timeout: 20000 });
+
+    const pickupParam = new URL(page.url()).searchParams.get('pickup');
+    expect(pickupParam, 'the search must run on the place that was typed').toBe('anfa');
+  });
+
+  test('Escape inside the calendar closes only the calendar', async ({ page }) => {
+    await page.goto('/fr', { waitUntil: 'load' });
+    const trigger = page.getByTestId('date-range-trigger');
+    await trigger.click();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+    await page.keyboard.press('Escape');
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    /* The module itself must still be there — on the results and vehicle
+       pages this same Escape used to close the <dialog> wrapped around it. */
+    await expect(page.getByTestId('booking-widget')).toBeVisible();
+  });
+
+  test('the location field shows a focus ring', async ({ page }) => {
+    await page.goto('/fr', { waitUntil: 'load' });
+    const pickup = page.getByTestId('pickup-combobox');
+    await pickup.focus();
+    const ring = await pickup.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { outline: s.outlineStyle + ' ' + s.outlineWidth, shadow: s.boxShadow };
+    });
+    /* Either a real outline or the ring shadow the house pattern paints. */
+    const visible = (ring.outline && !/none/.test(ring.outline)) || (ring.shadow && ring.shadow !== 'none');
+    expect(visible, `focused combobox must be visible: ${JSON.stringify(ring)}`).toBe(true);
+  });
+});

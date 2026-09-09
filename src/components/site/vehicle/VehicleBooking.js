@@ -319,7 +319,16 @@ export default function VehicleBooking({ vehicle, locations = [], labels, locale
       ) : null}
 
       <Sheet open={datesOpen} onClose={() => setDatesOpen(false)} title={labels.pickDates} labelClose={labels.close}>
-        {everOpened ? <BookingWidget locations={locations} compact initial={{ pickup: search.pickup, dropoff: search.dropoff }} onSearch={onSearch} /> : null}
+        {everOpened ? (
+          <BookingWidget
+            locations={locations}
+            compact
+            /* Same dates the panel above is quoting; see BookingModal's initial
+               on the line above. */
+            initial={{ from: search.from, to: search.to, pickup: search.pickup, dropoff: search.dropoff }}
+            onSearch={onSearch}
+          />
+        ) : null}
       </Sheet>
     </>
   );

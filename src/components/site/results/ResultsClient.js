@@ -464,7 +464,14 @@ export default function ResultsClient({ children, vehicles = [], photos = {}, lo
             dynamic import would still be requested on first paint and the
             deferral would buy nothing. */}
         {everOpened ? (
-          <BookingWidget locations={locations} compact initial={{ pickup: search.pickup, dropoff: search.dropoff }} onSearch={onSearch} />
+          <BookingWidget
+            locations={locations}
+            compact
+            /* The dates the visitor actually searched. Without them the module
+               opened on its defaults and the CTA rewrote their search. */
+            initial={{ from: search.from, to: search.to, pickup: search.pickup, dropoff: search.dropoff }}
+            onSearch={onSearch}
+          />
         ) : null}
       </Sheet>
 
