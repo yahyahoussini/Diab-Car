@@ -253,6 +253,7 @@ export default function VehicleBooking({ vehicle, locations = [], labels, locale
               type="button"
               onClick={openBooking}
               data-testid="vehicle-book"
+              data-cursor="reserver"
               aria-haspopup="dialog"
               className="flex w-full items-center justify-center gap-2 rounded-full bg-red px-5 py-3.5 text-[13px] font-semibold text-on-red"
             >

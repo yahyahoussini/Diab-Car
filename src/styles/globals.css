@@ -758,3 +758,58 @@ select { --chevron: var(--chevron-light); }
 @media (prefers-reduced-motion: reduce) {
   .gallery-iris { animation: none; }
 }
+
+/* ------------------------------------------------------------------ */
+/* The custom cursor (plan 5.3, prompt 14).                            */
+/* ------------------------------------------------------------------ */
+
+/* The platform cursor is hidden ONLY while the custom one is really mounted:
+   the component stamps [data-cursor-on] on <html> and removes it again on
+   unmount. So a touch device, a coarse pointer, a reduced-motion visitor and
+   a JavaScript failure all keep the cursor they already had — hiding it from
+   a stylesheet alone is how sites end up with no pointer at all.
+   `cursor` inherits, but the UA sheet sets `pointer` on links and buttons, so
+   those have to be named or they win. */
+html[data-cursor-on],
+html[data-cursor-on] a,
+html[data-cursor-on] button,
+html[data-cursor-on] label,
+html[data-cursor-on] summary,
+html[data-cursor-on] [role='button'],
+html[data-cursor-on] [role='option'] {
+  cursor: none;
+}
+
+/* A caret is not decoration: without it, text cannot be placed (plan 5.3). */
+html[data-cursor-on] :is(input, textarea, select, [contenteditable='true']) {
+  cursor: auto;
+}
+
+/* ------------------------------------------------------------------ */
+/* Theme change: the new theme opens as a circle from the toggle       */
+/* (plan 5.3), instead of the whole page crossfading.                  */
+/* ------------------------------------------------------------------ */
+
+/* Scoped to [data-theme-sweep], which ThemeToggle sets for the duration of
+   the transition and always removes again. Every other root transition —
+   a page navigation, say — keeps the plain crossfade above. The selector is
+   more specific than that rule, so it wins without !important. */
+html[data-theme-sweep]::view-transition-old(root) {
+  animation: none;
+}
+
+html[data-theme-sweep]::view-transition-new(root) {
+  animation: theme-iris var(--dur-panel) var(--ease-out);
+  mix-blend-mode: normal;
+}
+
+/* The centre and the radius are measured from the button and passed in as
+   custom properties; the fallbacks keep this sane if they are ever missing. */
+@keyframes theme-iris {
+  from { clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 50%)); }
+  to   { clip-path: circle(var(--vt-r, 150vmax) at var(--vt-x, 50%) var(--vt-y, 50%)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme-sweep]::view-transition-new(root) { animation: none; }
+}

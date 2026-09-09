@@ -1022,5 +1022,12 @@
       "nextAvailable": "Disponible a partir del {date}",
       "seats": "{n} plazas"
     }
+  },
+  "cursor": {
+    "voir": "Ver",
+    "explorer": "Explorar",
+    "reserver": "Reservar",
+    "drag": "Arrastrar ↔",
+    "whatsapp": "WhatsApp"
   }
 }

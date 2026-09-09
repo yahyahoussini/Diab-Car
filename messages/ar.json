@@ -1022,5 +1022,12 @@
       "nextAvailable": "متوفرة ابتداءً من {date}",
       "seats": "{n} مقاعد"
     }
+  },
+  "cursor": {
+    "voir": "عرض",
+    "explorer": "استكشف",
+    "reserver": "احجز",
+    "drag": "↔ اسحب",
+    "whatsapp": "واتساب"
   }
 }

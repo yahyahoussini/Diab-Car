@@ -14,15 +14,37 @@ export default function ThemeToggle({ className }) {
   const isDark = mounted && resolvedTheme === 'dark';
   const label = isDark ? t('themeLight') : t('themeDark');
 
-  function toggle() {
+  function toggle(event) {
     const next = isDark ? 'light' : 'dark';
     const meta = document.querySelector('meta[name="theme-color"]:not([media])');
     if (meta) meta.setAttribute('content', next === 'dark' ? '#080808' : '#ffffff');
-    if (document.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      document.startViewTransition(() => setTheme(next));
-    } else {
+
+    if (!document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       setTheme(next);
+      return;
     }
+
+    /* The new theme opens as a circle FROM THIS BUTTON rather than crossfading
+       over the whole page (plan 5.3). The origin and the radius that reaches
+       the furthest corner are handed to CSS as custom properties, because a
+       clip-path cannot be computed in a stylesheet.
+       Duration comes from --dur-panel: the plan says 500 ms but rule 6 says
+       durations come from the motion tokens, and there is no 500 ms token. */
+    const root = document.documentElement;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const radius = Math.hypot(Math.max(cx, window.innerWidth - cx), Math.max(cy, window.innerHeight - cy));
+
+    root.style.setProperty('--vt-x', `${cx}px`);
+    root.style.setProperty('--vt-y', `${cy}px`);
+    root.style.setProperty('--vt-r', `${radius}px`);
+    root.setAttribute('data-theme-sweep', '');
+
+    const transition = document.startViewTransition(() => setTheme(next));
+    /* Always cleared, including when the transition is skipped or interrupted —
+       a stray attribute would iris every later root transition too. */
+    transition.finished.finally(() => root.removeAttribute('data-theme-sweep'));
   }
 
   return (

@@ -102,7 +102,7 @@ export default function VehicleGallery({ exterior = [], interior = [], labels, p
       <button
         type="button"
         onClick={() => setFullscreen(true)}
-        data-cursor="DRAG"
+        data-cursor="drag"
         aria-label={labels.open}
         className="chamfer group relative block w-full overflow-hidden bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-signal"
       >

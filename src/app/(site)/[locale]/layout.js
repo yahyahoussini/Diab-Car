@@ -11,6 +11,7 @@ import { CurrencyProvider } from '@/components/site/CurrencyProvider';
 import Header from '@/components/site/Header';
 import Footer from '@/components/site/Footer';
 import WhatsAppFab from '@/components/site/WhatsAppFab';
+import Cursor from '@/components/site/Cursor';
 import CookieBanner from '@/components/site/CookieBanner';
 import JsonLd from '@/components/site/JsonLd';
 import { getSettings } from '@/lib/data';
@@ -52,6 +53,7 @@ export default async function LocaleLayout({ children, params }) {
   const [messages, settings] = await Promise.all([getMessages(), getSettings()]);
   const dir = rtlLocales.includes(locale) ? 'rtl' : 'ltr';
   const tc = await getTranslations('common');
+  const tcur = await getTranslations('cursor');
 
   return (
     <html lang={locale} dir={dir} className={fontClassNames} suppressHydrationWarning>
@@ -69,6 +71,11 @@ export default async function LocaleLayout({ children, params }) {
                 </main>
                 <Footer settings={settings} />
                 <WhatsAppFab number={settings?.whatsapp} />
+                {/* Desktop, fine-pointer, non-reduced-motion only — the
+                    component decides and renders nothing otherwise. */}
+                <Cursor
+                  labels={{ voir: tcur('voir'), explorer: tcur('explorer'), reserver: tcur('reserver'), drag: tcur('drag'), whatsapp: tcur('whatsapp') }}
+                />
                 <CookieBanner gaId={settings?.gaId || process.env.NEXT_PUBLIC_GA_ID} />
               </CurrencyProvider>
             </MotionProvider>

@@ -1022,5 +1022,12 @@
       "nextAvailable": "Available from {date}",
       "seats": "{n} seats"
     }
+  },
+  "cursor": {
+    "voir": "View",
+    "explorer": "Explore",
+    "reserver": "Book",
+    "drag": "Drag ↔",
+    "whatsapp": "WhatsApp"
   }
 }

@@ -114,7 +114,7 @@ export default async function VehicleCard({ vehicle, photos = [], fleet = [], qu
       <div className="flex flex-1 flex-col p-5">
         <p className="text-meta text-text-muted">{tc(`categories.${v.category}`)}</p>
         <h3 className="text-h3 mt-1 text-text">
-          <Link href={href} className="after:absolute after:inset-0 after:z-10">
+          <Link href={href} data-cursor="voir" className="after:absolute after:inset-0 after:z-10">
             {name}
           </Link>
         </h3>

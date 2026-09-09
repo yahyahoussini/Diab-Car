@@ -994,7 +994,7 @@ export default function BookingWidget({ locations = [], compact = false, classNa
 
       {/* ---------------- CTA — full width of the module ---------------- */}
       <div className="mt-5">
-        <Button type="submit" size="xl" loading={isPending} loadingLabel={t('searching')} data-testid="booking-submit" className="w-full">
+        <Button type="submit" size="xl" loading={isPending} loadingLabel={t('searching')} data-testid="booking-submit" data-cursor="reserver" className="w-full">
           {t('submit')}
           <svg viewBox="0 0 24 24" className="h-4 w-4 rtl:-scale-x-100" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M5 12h14M13 5l7 7-7 7" />
