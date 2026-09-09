@@ -34,8 +34,10 @@ const RECENT_KEY = 'dc.booking.recentLocation';
 const ADDRESS_KEY = 'dc.booking.pickupAddress';
 
 /**
- * Every half hour of the day. Still exported: BookingForm.js and
- * VehicleQuote.js import it. Do not rename without grepping first.
+ * Every half hour of the day. The two components that used to import it
+ * (BookingForm, VehicleQuote) went with the old booking flow; it is kept
+ * exported because the widget itself is built from it and the new flow
+ * will want the same half-hour grid.
  */
 export const TIMES = Array.from({ length: 48 }, (_, i) => `${String(Math.floor(i / 2)).padStart(2, '0')}:${i % 2 ? '30' : '00'}`);
 
