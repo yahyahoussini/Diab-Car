@@ -345,6 +345,76 @@ log across four page loads; build pass · lint at the 10-error baseline · 92/92
 messages (765 keys × 4) and css pass · 100/101 e2e with one known homepage flake.
 
 ---
+## Full verification of the booking pop-up (2026-09-09)
+
+« Run and verify no errors at all ». Everything was run, and a five-dimension
+adversarial review (state, pricing, security, i18n/UI, integration — 20 agents,
+each candidate defect then attacked by a skeptic) was run over the new code in
+parallel. 12 findings survived refutation; all 12 are fixed, plus 2 the full
+Playwright suite caught on its own. Details in commit `da7ed77`.
+
+The ones that mattered most:
+
+| what | why it mattered |
+|---|---|
+| demo calendar off by one day | every cell carried the PREVIOUS day's count, so demo mode blocked free days and offered booked ones (rule 12). Postgres was always right. |
+| four booking buttons on the vehicle page | two red « Réserver » buttons went to WhatsApp, not to the booking flow. The panel now owns the pop-up; there is one Réserver per car. |
+| the pop-up ignored the visitor's dates | arrived on `?from=&to=`, saw a price on the panel, then got a blank calendar. It now inherits them, splitting the ISO instant in Casablanca time so the moment is preserved exactly. |
+| Turnstile token never sent | nothing is broken today because no keys are configured — but the day they are, `verifyTurnstile()` answers `missing-input-response` and EVERY booking fails. |
+| `done` never cleared | after one successful booking, re-opening showed the old confirmation with no way to start a second one. |
+| « Réessayer » never retried | `setMonth(m => m)` is a no-op React bails out of; the calendar stayed loading for ever. |
+| no price per day | rule 4 says price per day AND total. Only the total was shown. |
+| « sur devis » printed as 0 MAD | the agency e-mail and both admin surfaces read it as free, so the fee would never be collected. |
+| Arabic letter-spaced | hand-rolled `uppercase tracking-wide` instead of `.text-meta`, which globals.css already neutralises for `ar` (rule 3). |
+
+### Booked dates — the owner's specific request
+
+A car booked X→Z must not offer those days and must show they are taken. There
+is now a legend under the grid, and a test that proves it against a REAL
+booking: it books out every unit, pages the calendar to that month, and asserts
+each occupied day reports zero free units, is disabled, is labelled « déjà
+réservé », and that a range straddling the blocked run is refused. **Mutation-
+checked**: with the availability guard removed the test fails, so it is not
+asserting vacuously.
+
+### Numbers
+
+Build passes · lint 9 errors + 1 warning, the documented baseline, every one in
+a pre-existing file and **none in the booking code** · 111/111 unit · contrast,
+messages (756 keys × 4), css, i18n-keys pass.
+
+Full Playwright suite, both data modes:
+
+| mode | passed | skipped | failed |
+|---|---|---|---|
+| supabase (real config) | 81 | 11 | 0 |
+| demo (rule 12) | 79 | 13 | 0 |
+
+The 11–13 skips are the admin/loop/reservations specs, which need
+`E2E_ADMIN_PASSWORD`; that is not set here and they say so rather than passing
+vacuously.
+
+**Correction to an earlier note in this file's history:** the e2e suite CAN
+reach the live database — `tests/e2e/helpers/db.js` loads `.env.local` itself,
+so `db.available` is true regardless of the shell environment. The specs that
+write use the marker address `e2e-…@example.invalid` and delete their rows in a
+`finally`. Checked after every run: zero marker rows, zero test reservations.
+
+### One unexplained flake
+
+`home.spec.js › /es renders every section without console errors` failed once
+in one full run and passed on the two subsequent full runs and a targeted run.
+Playwright had already cleared the artefact by then, so the console message was
+lost and the cause is unknown. Recorded rather than dismissed.
+
+### Left deliberately
+
+`src/lib/actions/availability.js` (`holdVehicle`, `releaseHold`) is orphaned
+since the funnel was deleted. A 10-minute soft lock during checkout is a
+plausible addition to this pop-up, so it is flagged, not removed.
+
+---
+
 ## The booking pop-up — the owner's new flow (2026-09-09)
 
 The owner asked for the old reservation system to be removed **entirely**
