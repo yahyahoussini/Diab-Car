@@ -27,7 +27,7 @@ not *never touched again*.
 | 06 | 2b | Availability engine: RPCs, holds, realtime | **done and MEASURED — 8.2 ms median search, 23P01 overlap rejection, 5/5 concurrency** |
 | 07 | 3a | Results / fleet page with live availability | **done (a11y 100; Lighthouse perf 73, short of the >=90 target)** |
 | 08 | 3b | Vehicle page | **done (a11y/BP/SEO 100; Lighthouse perf 66, short of the >=90 target)** |
-| 09 | 3c | Booking funnel, confirmation, WhatsApp, email | **done** |
+| 09 | 3c | Booking funnel, confirmation, WhatsApp, email | **removed 2026-09-09** — both public flows deleted at the owner's request; replaced by the pop-up below |
 | 10 | 4a | Admin foundation: auth, roles, shell, dashboard | **partial — see PROMPT 10 notes; Web Push transport and 8 routes outstanding** |
 | 11 | 4b | Admin reservations, state machine, calendar | **done — 0010 + 0011 applied; 86 unit tests, 2 new e2e green** |
 | 12 | 4c | Admin fleet, operations, content, prices, settings | **done — 0012 applied; closed loop measured; two pre-existing trigger bugs fixed; e2e loop green** |
@@ -345,6 +345,125 @@ log across four page loads; build pass · lint at the 10-error baseline · 92/92
 messages (765 keys × 4) and css pass · 100/101 e2e with one known homepage flake.
 
 ---
+## The booking pop-up — the owner's new flow (2026-09-09)
+
+The owner asked for the old reservation system to be removed **entirely**
+and described its replacement: each car has a « Réserver » button; it
+opens a pop-up in the middle of the screen; step 1 is the dates with the
+total at the bottom and a next button; step 2 is a multi-choice of
+delivery destinations *set from the admin with their prices*, plus other
+options they can add later; step 3 is the confirmation, where the client
+writes their full name and phone and sees the total with everything.
+Reference screenshots followed for the LAYOUT (named step tabs, a car
+card, a « Période de location » card with « Modifier », `+300,00 MAD`
+rows with a tick, hatched unavailable days).
+
+Not taken from the reference: online payment (plan §9.5 says none), the
+competitor's trust badge, and their green — the palette stays on tokens.
+
+### What was removed, in two commits before the build
+
+Thirteen files: `/reservation`, `/reservation/confirmation` and the six
+funnel components (prompt 09), the per-car quickbook sheet and
+`/api/vehicle-calendar`, and two e2e specs. Then two orphans a sweep
+found still pointing at the deleted addresses, `BookingForm.js` and
+`VehicleQuote.js`, neither of which was rendered anywhere.
+
+Kept deliberately: the `reservations` table, the availability RPCs,
+`/api/quote`, `/api/availability`, `pricing.js` and the whole admin. Those
+are not "the way of reservation" — 34 admin files and 10 migrations run on
+them. Migration 0013 stayed too; only its route had gone, so restoring
+`/api/vehicle-calendar` for the new calendar was a file, not a migration.
+
+### The admin half already existed
+
+Nothing new was needed for "I set the destinations and their prices, and
+add other options later". Prompt 12 shipped it: `locations` rows carry
+`delivery_fee_mad`, `save_location()` writes them with a mandatory reason,
+and `/admin/tarifs` has « Ajouter le lieu » and « Ajouter l'option ». The
+pop-up simply READS that catalogue at open time through the new
+`/api/booking-options`, so a row added in the dashboard reaches customers
+with no deploy and the component knows nothing about any given option.
+
+### A production pricing bug, found by running the endpoint
+
+Every delivery destination was quoting **0 MAD**. `locations` has two fee
+columns: `delivery_fee_mad`, which the admin writes, and the starter's
+`fee`, `numeric default 0`. The adapter read `deliveryFeeMad ?? fee ??
+null` — so an unpriced place answered 0 — and `deliveryFeeFor()` then
+computed `Number(null ?? null)`, which is 0 as well. The live table is
+exactly that shape:
+
+```
+key                       kind       fee   delivery_fee_mad
+agence-zerktouni          agency     0     0        <- genuinely free
+aeroport-mohammed-v       airport    0     null     <- « sur devis »
+maarif / anfa / ain-diab / centre-ville / casa-voyageurs / sidi-maarouf
+                          district   0     null     <- « sur devis »
+```
+
+So the site was promising free delivery to Aïn Diab, to Anfa and to
+Mohammed V, and the agency would have had to absorb the cost or charge at
+the counter for something the page never showed — rule 11 and rule 4 in
+one line. Migration 0002 had the rule right when it backfilled only
+`where fee > 0`; that test now lives in `deliveryFeeOf()` and both call
+sites go through it.
+
+Why every existing test missed it: each one builds a location by hand with
+a single `deliveryFee` key, and on that shape `deliveryFee ??
+deliveryFeeMad` is `null ?? undefined` = undefined, which reads correctly
+as "unset". A row off the wire carries BOTH keys, both null. The new tests
+use a real row.
+
+### Two bugs found by running the UI rather than reading it
+
+- **« Continuer vers les détails » submitted the form.** React reused one
+  `<button>` for next and submit, `setStep` flushed synchronously during
+  the click, and the browser ran that click's default action on the node
+  it had just turned into a submit button. Step 3 opened with "indiquez
+  votre nom complet" under a field nobody had been given the chance to
+  fill. Fixed with distinct keys; pinned by a test.
+- **The calendar never filled in development.** The month dedupe lives in
+  a ref, which survives an effect teardown, while the `alive` flag does
+  not — so under StrictMode the second pass skipped the fetch the first
+  pass had already disowned. All three effects now let their answers land.
+
+Also fixed while looking at screenshots: `.text-meta` is a LABEL style
+(uppercase, 0.12em tracking) and had been used on car names and whole
+sentences; red was on the progress bar, the period card AND the primary
+button, past the 5% of rule 2; and a Latin street address inside the
+Arabic page reordered to "boulevard Zerktouni 356" until it was wrapped
+in `<bdi>`.
+
+### Verified
+
+Build passes · lint at the 9-error baseline (10 → 9: one error lived in a
+deleted orphan) · **111/111 unit** (99 + 9 for `locations` + 2 for the
+real-row fee shape) · contrast, messages (803 keys × 4), css and
+i18n-keys all pass.
+
+`tests/e2e/reserve.spec.js` passes in **both** data modes. It drives the
+full submit on the demo store — asserting a real `DC-…` reference — and
+stops at an armed confirm button when `/api/health` reports `supabase`,
+so a test run cannot leave fake customers in the agency's Postgres
+(rule 10). Confirmed afterwards that it did not: the test phone is absent
+from the live `customers` table.
+
+Screenshots checked at every step in light, dark and Arabic RTL.
+
+### Open
+
+- The delivery destinations all read « sur devis » until the owner sets
+  their prices on `/admin/tarifs` → Lieux. That is now the truth rather
+  than a wrong 0, but it is the one thing waiting on the owner.
+- `extras` is empty in the live database, so step 2 shows "aucune option".
+  Adding one on `/admin/tarifs` makes it appear with no deploy.
+- « Réserver » is on the vehicle page. Whether it should also sit on every
+  fleet CARD is a judgement call left open: the card is a server component
+  with a whole-card overlay link, so a button there needs care.
+
+---
+
 ## Fix — the button sweep never reversed in Arabic (2026-09-08)
 
 **Symptom** (reported from `npm run dev`, any URL, any locale): the dev overlay refused
