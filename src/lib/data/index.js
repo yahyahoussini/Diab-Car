@@ -1,4 +1,5 @@
 import { isSupabaseConfigured } from '@/lib/auth/session';
+import { publishable } from '@/lib/faq';
 import { demoAdapter } from './demo-adapter';
 
 /**
@@ -32,7 +33,25 @@ export const getVehicleById = async (id) => (await db()).getVehicleById(id);
 export const listSeasons = async () => (await db()).listSeasons();
 export const listExtras = async () => (await db()).listExtras();
 export const listLocations = async () => (await db()).listLocations();
-export const listFaqs = async (f) => (await db()).listFaqs(f);
+/**
+ * FAQ rows, with unfinished ones withheld from the public site.
+ *
+ * `docs/inputs/faq.csv` is a template whose answers all read "TODO — réponse
+ * complète" until Diab Car writes them. One such row was published in the live
+ * database and rendered on seven public pages AND inside the FAQPage structured
+ * data, where it would have been indexed as the agency's own answer.
+ * Rule 11: unverified is hidden, not shown.
+ *
+ * Filtered here rather than in a page, because five public callers read these
+ * rows — the FAQ page, the homepage block, the airport, long-term and vehicle
+ * pages — and a guard in one protects only one. `asStaff` passes everything
+ * through untouched: the admin is the one place these must stay visible, or the
+ * owner can never find the ones still to write.
+ */
+export const listFaqs = async (f) => {
+  const rows = await (await db()).listFaqs(f);
+  return f?.asStaff ? rows : publishable(rows);
+};
 export const listPosts = async (f) => (await db()).listPosts(f);
 export const getPostBySlug = async (slug) => (await db()).getPostBySlug(slug);
 export const listReviews = async (f) => (await db()).listReviews(f);

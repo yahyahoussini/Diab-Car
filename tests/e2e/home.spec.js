@@ -28,9 +28,28 @@ test.describe('homepage sections', () => {
 
       for (const id of SECTIONS) {
         const section = page.locator(`#${id}`);
+
+        /* The FAQ block is CONTENT-driven: it renders the published questions,
+           and Diab Car has not written any answers yet, so it correctly renders
+           nothing at all. Asserting it always exists asserted that the content
+           existed, which it never did — the block was only ever there because
+           one row held the template's "TODO — réponse complète", and that is
+           now withheld from the public site (rule 11).
+           The invariant that IS always true, and is the one worth guarding:
+           the section is either absent or populated, never present and empty.
+           When the answers are written this tightens back up by itself. */
+        if (id === 'faq' && (await section.count()) === 0) {
+          expect(await page.locator('#faq [data-faq-item], #faq details, #faq li').count(), 'an absent FAQ block must render no orphan questions either').toBe(0);
+          continue;
+        }
+
         await expect(section, `section #${id} on /${locale}`).toHaveCount(1);
         await section.scrollIntoViewIfNeeded();
         await expect(section).toBeVisible();
+
+        if (id === 'faq') {
+          expect(await section.locator('h3, summary, [data-faq-item]').count(), 'a rendered FAQ block must carry at least one question').toBeGreaterThan(0);
+        }
       }
 
       /* The road divider replaced the marquee: at least one between sections, no marquee track left. */

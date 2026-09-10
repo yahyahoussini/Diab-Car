@@ -197,7 +197,17 @@ export function breadcrumbJsonLd(items) {
   };
 }
 
+/**
+ * FAQPage structured data, or nothing at all.
+ *
+ * An FAQPage whose `mainEntity` is `[]` is invalid — Search Console reports it
+ * as a missing-field error — and that is exactly what this emitted once the
+ * unfinished answers stopped being published: the markup stayed, the questions
+ * did not. `JsonLd` filters falsy values, so returning null here removes the
+ * script entirely on all four pages that call this.
+ */
 export function faqJsonLd(faqs, locale) {
+  if (!Array.isArray(faqs) || faqs.length === 0) return null;
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',

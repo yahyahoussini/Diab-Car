@@ -57,8 +57,16 @@ test.describe('SEO', () => {
     const res = await request.get(vehicleUrl('fr'));
     const html = await res.text();
 
-    for (const type of ['"Product","Car"', 'UnitPriceSpecification', 'BreadcrumbList', 'FAQPage']) {
+    for (const type of ['"Product","Car"', 'UnitPriceSpecification', 'BreadcrumbList']) {
       expect(html, `JSON-LD must include ${type}`).toContain(type);
+    }
+
+    /* FAQPage is content-driven and Diab Car has written no answers yet, so the
+       page emits none. What must never happen is the broken middle state this
+       replaced: an FAQPage with an empty mainEntity, which Search Console
+       reports as an error. Either real questions or no FAQPage at all. */
+    if (html.includes('FAQPage')) {
+      expect(html, 'an FAQPage with no questions is invalid structured data').not.toContain('"mainEntity":[]');
     }
     /* The price specification is per DAY in MAD (plan 8.2). */
     expect(html).toContain('"unitCode":"DAY"');
